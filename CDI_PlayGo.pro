@@ -30,7 +30,8 @@ SOURCES += main.cpp \
     tabletapplication.cpp \
     cdiwindow.cpp \
     uimanager.cpp \
-    cdigraphicspathitem.cpp
+    cdigraphicspathitem.cpp \
+    cdisketchview.cpp
 
 HEADERS += \
     playgo.h \
@@ -43,11 +44,12 @@ HEADERS += \
     cdi2qtwrapper.h \
     pointcloudrecognizer.h \
     line2d.h \
-    shape.h \
     stroke.h \
     component.h \
     tabletapplication.h \
     cdiwindow.h \
     uimanager.h \
     cdigraphicspathitem.h \
-    customdebugger.h
+    customdebugger.h \
+    cdisketchview.h \
+    uisettings.h

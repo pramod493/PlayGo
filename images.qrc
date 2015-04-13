@@ -7,5 +7,16 @@
         <file>images/spline.png</file>
         <file>images/ellipse.png</file>
         <file>images/filledSpline.png</file>
+        <file>images/marquee.png</file>
+        <file>images/eraser.png</file>
+        <file>images/play.png</file>
+        <file>images/reset.png</file>
+        <file>images/pause.png</file>
+        <file>images/copy.png</file>
+        <file>images/cut.png</file>
+        <file>images/new.png</file>
+        <file>images/open.png</file>
+        <file>images/paste.png</file>
+        <file>images/save.png</file>
     </qresource>
 </RCC>

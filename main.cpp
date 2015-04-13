@@ -1,14 +1,18 @@
 #include <QApplication>
 #include <QMainWindow>
+#include "tabletapplication.h"
 #include "cdiwindow.h"
-
+#include "uimanager.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    CDI::TabletApplication app(argc, argv);
 
     CDI::CDIWindow *window =  new CDI::CDIWindow();
+
+	window->InitWidgets();
+
     window->show();
 
-    return a.exec();
+    return app.exec();
 }

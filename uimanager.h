@@ -9,13 +9,21 @@
 #include <QGraphicsView>
 #include <QToolBar>
 #include <QIcon>
+#include <QStatusBar>
 
 namespace CDI
 {
-    class UIManager : public QObject
+    class UIManager : public QWidget
     {
         Q_OBJECT
     public:
+        //// Customizable variables
+        QString title;
+
+        QWidget* parentWidget;
+
+        // TODO - Create action groups in order to simplify interactions as well as menus
+
         // actions
         QAction* openPageAction;
         QAction* closePageAction;
@@ -23,7 +31,7 @@ namespace CDI
 
         QAction* brushSelectAction;
         QAction* eraseSelectAction;
-        QAction* lineSelectAction;
+        QAction* marqueeAction;
         QAction* polygonSelectAction;
 
         QAction* selectorAction;        // Enable selection of components.
@@ -31,6 +39,10 @@ namespace CDI
         QAction* searchAction;          // Search the marqueed region
         QAction* marqueeEnableAction;   // Enable the marquee widget
 
+        QAction *playAction, *pauseAction, *resetAction;
+
+        // Toolbars
+        QToolBar* mainToolbar;
         // menus
         QMenuBar* menubar;
         QMenu* editMenu;
@@ -44,15 +56,16 @@ namespace CDI
         QGraphicsScene* searchScene;
         QGraphicsScene* gestureScene;
 
-
-
+        QStatusBar* statusBar;
 
     public:
-        /*explicit*/ UIManager(QObject *parent = 0);
+        /*explicit*/ UIManager(QWidget *parent = 0);
 
         void CreateActions();
 
-        void SetUI(QWidget* widget);
+        void SetupToolbar();
+
+        void SetUI();
 
 
     signals:

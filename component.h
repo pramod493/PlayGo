@@ -2,8 +2,7 @@
 
 #include <QObject>
 #include <Vector>
-#include "shape.h"
-#include "item.h"
+#include "cdicommon.h"
 
 using namespace std;
 
