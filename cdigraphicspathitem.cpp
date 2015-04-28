@@ -18,15 +18,27 @@ namespace CDI
 
 	void CDIGraphicsPathItem::push_back(QPointF point)
     {
-		painterPath.lineTo(point);
-
-//		parentStroke->points.push_back(new Point2DPT(point.x(),point.y(),0,0));
-//		painterPath.lineTo(point);
+        painterPath.lineTo(point);
+        setPath(painterPath);
+        parentStroke->points.push_back(new Point2DPT(point.x(), point.y(), 0,0));
 		update();
     }
 
 	void CDIGraphicsPathItem::push_back(Point2DPT point)
 	{
-		Q_UNUSED(point);
+        painterPath.lineTo(QPointF(point.x,point.y));
+        setPath(painterPath);
+        parentStroke->points.push_back(new Point2DPT(point,point._pressure,point._time));
+        update();
 	}
+
+    void CDIGraphicsPathItem::ApplySmoothing(int order)
+    {
+        parentStroke->ApplySmoothing(order);
+        painterPath = QPainterPath(QPointF(parentStroke->points[0]->x, parentStroke->points[0]->y));
+        for (int i=1; i<parentStroke->points.size();i++)
+            painterPath.lineTo(QPointF(parentStroke->points[i]->x, parentStroke->points[i]->y));
+        setPath(painterPath);
+        update();
+    }
 }

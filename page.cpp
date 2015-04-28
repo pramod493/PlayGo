@@ -3,9 +3,9 @@ namespace CDI
 {
 
     Page::Page(QObject *parent) : QObject(parent),
-        isCurrent(false)
+        _isCurrent(false)
     {
-
+        _parent = parent;
     }
 
     Page::~Page()
@@ -13,20 +13,20 @@ namespace CDI
 
     }
 
-    void Load()
+    void Page::Load()
     {
 
     }
 
-    void Close()
+    void Page::Close()
     {
 
     }
 
-    Page* Clone()
+    Page* Page::Clone()
     {
-        // Deep copy
-        return NULL;
+        Page* clonePage = new Page(_parent);
+        return clonePage;
     }
 
 }

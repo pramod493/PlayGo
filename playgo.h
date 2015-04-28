@@ -1,9 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <vector>
-#include <map>
-#include <string>
+#include <QVector>
 #include "page.h"
 
 using namespace std;
@@ -15,7 +13,8 @@ namespace CDI
         Q_OBJECT
     public:
 
-        map<Page*, string> pages;
+        QVector<Page*> pageList;
+        //map<Page*, string> pages;
 
     protected:
         Page* currentPage;
@@ -23,6 +22,8 @@ namespace CDI
         explicit PlayGo(QObject *parent = 0);
 
         ~PlayGo();
+
+        void SetCurrent(Page* page);
     protected:
         void Init();
 

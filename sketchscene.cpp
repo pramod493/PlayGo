@@ -1,23 +1,28 @@
 #include "sketchscene.h"
+#include <QDebug>
 
 namespace CDI
 {
 	SketchScene::SketchScene(QObject* parent) :
 		QGraphicsScene(parent)
 	{
-		mouse_mode_enabled = true;	// Keep only for the testing stages.
+        qDebug() << "Creating sketch scene widget\n";
+
+        mouse_mode_enabled = false;	// Keep only for the testing stages.
+
+        brushWidth = 3.0;
 
 		defaultPen = QPen(QColor(0,0,0));
 		defaultPen.setStyle(Qt::SolidLine);
-		defaultPen.setWidth(3.0);
+        defaultPen.setWidth(brushWidth);
 
 		highlightPen = QPen(QColor(0.5,0,1.0));
 		highlightPen.setStyle(Qt::SolidLine);
-		highlightPen.setWidth(5.0);
+        highlightPen.setWidth(brushWidth+3);
 
 		marqueeSelectPen = QPen(QColor(0.25,0.25,0.25));
 		marqueeSelectPen.setStyle(Qt::DashLine);
-		marqueeSelectPen.setWidth(2.5);
+        marqueeSelectPen.setWidth(2);
 
 		defaultBrush = QBrush(QColor(1.0,1.0,1.0), Qt::NoBrush);
 		fillBrush = QBrush(QColor(0.75,0.75,0.75), Qt::SolidPattern);
@@ -34,6 +39,7 @@ namespace CDI
 		current_stroke = NULL;
 
 		setBackgroundBrush(fillBrush);
+
 	}
 
 	SketchScene::~SketchScene()
@@ -70,6 +76,7 @@ namespace CDI
 
 	void SketchScene::BrushPress(QPointF scenePos)
 	{
+        qDebug() << "Brush down at " << scenePos;
 		if (0) {
 			QGraphicsLineItem* line = new QGraphicsLineItem();
 			line->setPen(marqueeSelectPen);
@@ -85,6 +92,7 @@ namespace CDI
 
 	void SketchScene::BrushMove(QPointF scenePos)
 	{
+        qDebug() << "Brush Move to " << scenePos;
 		if (!(current_stroke == NULL))
 			current_stroke->push_back(scenePos);
 	}
@@ -93,6 +101,8 @@ namespace CDI
 	{
 		if (!(current_stroke == NULL))
 			current_stroke->push_back(scenePos);
+        qDebug() << "Apply smoothing to the stroke";
+        current_stroke->ApplySmoothing(1);
 
 		// Trigger signal in order to update related/connected components
 		current_stroke = NULL;
@@ -215,15 +225,65 @@ namespace CDI
 
 	void SketchScene::slotTabletEvent(QTabletEvent* event, QPointF scenePos)
 	{
-		if (event->pointerType() == QTabletEvent::Pen)
+        // Temporarily disable mouse event because we don't know how to prevent trigger of mouse events
+        if (event->pointerType() == QTabletEvent::Pen && current_mode == MODE::Draw)
 			DrawAction(event, scenePos);
 		if (event->pointerType() == QTabletEvent::Eraser)
 			EraseAction(event, scenePos);
 	}
 
+    void SketchScene::setBrushWidth(int size)
+    {
+        qDebug() << "Brush width: " << size;
+        defaultPen.setWidth(size);
+        highlightPen.setWidth(size+3);
+    }
+
 	void SketchScene::slotSetSceneMode(MODE newMode)
 	{
+        if (current_mode == newMode) return;
 		current_mode = newMode;
-		emit ModeChanged(newMode);
+        emit ModeChanged(current_mode);
 	}
+
+    void SketchScene::setToNone()
+    {
+        current_mode = None;
+        emit ModeChanged(current_mode);
+    }
+
+    void SketchScene::setToDraw()
+    {
+        current_mode = Draw;
+        emit ModeChanged(current_mode);
+    }
+
+    void SketchScene::setToErase()
+    {
+        current_mode = Erase;
+        emit ModeChanged(current_mode);
+    }
+
+    void SketchScene::setToTransform()
+    {
+        current_mode = Transform;
+        emit ModeChanged(current_mode);
+    }
+
+    void SketchScene::setToEdit()
+    {
+        current_mode = Edit;
+        emit ModeChanged(current_mode);
+    }
+
+    void SketchScene::setToSelect()
+    {
+        current_mode = Select;
+        emit ModeChanged(current_mode);
+    }
+
+    void SketchScene::setToSearch()
+    {
+        current_mode = Search;
+    }
 }

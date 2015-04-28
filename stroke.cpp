@@ -51,6 +51,19 @@ namespace CDI
         return newStroke;
     }
 
+    void Stroke::ApplySmoothing(int order)
+    {
+        int n_points = points.size() -1;
+        for (int i =0;i<order;i++)
+        {
+            for (int index=1; index < n_points; index++)
+            {
+                points[index]->x = 0.5* (points[index-1]->x +points[index+1]->x);
+                points[index]->y = 0.5* (points[index-1]->y +points[index+1]->y);
+            }
+        }
+    }
+
     /* ---------------------------------------------------------------------------------
      * Pont2DPT class contains extra informaion which might be utilized by some gesture
      * recognizers as well as can be used as rendering aid.

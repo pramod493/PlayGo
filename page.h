@@ -9,8 +9,9 @@ namespace CDI
     class Page : public QObject
     {
         Q_OBJECT
+
     protected:
-        bool isCurrent;
+        QObject *_parent;
 
     public:
         explicit Page(QObject *parent = 0);

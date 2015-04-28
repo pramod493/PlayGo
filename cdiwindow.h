@@ -15,6 +15,8 @@
 #include <QVBoxLayout>
 #include <QTabletEvent>
 
+#include "playgo.h"
+
 #include "sketchview.h"
 #include "sketchscene.h"
 
@@ -25,6 +27,10 @@ namespace CDI
 		Q_OBJECT
 
 	public:
+        //// datastructure components
+        PlayGo *playgo;
+
+        //// Datastructure components end
 		QSize windowSize;
 
 		QString title;

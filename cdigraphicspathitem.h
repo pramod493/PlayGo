@@ -25,5 +25,7 @@ namespace CDI
 		void push_back(QPointF point);
 
 		void push_back(Point2DPT point);
+
+        void ApplySmoothing(int order);
     };
 }

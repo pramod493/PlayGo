@@ -1,15 +1,20 @@
 #pragma once
 
 #include <QGraphicsPixmapItem>
+#include "cdicommon.h"
 
 namespace CDI
 {
-    class CDISearchGraphicsItem : public QGraphicsPixmapItem
+    class SearchGraphicsItem : public QGraphicsPixmapItem, public Item
     {
+    protected:
+        Item::Type _type;
         QString sourceFilePath;
     public:
-        CDISearchGraphicsItem(QGraphicsItem* parent = 0);
+        SearchGraphicsItem(QGraphicsItem* parent = 0);
 
-        CDISearchGraphicsItem(const QPixmap &pixmap, QString filePath, QGraphicsItem* parent = 0);
+        SearchGraphicsItem(const QPixmap &pixmap, QString filePath, QGraphicsItem* parent = 0);
+
+        Item::Type GetType();
     };
 }

@@ -4,6 +4,8 @@ namespace CDI
 {
 	CDIWindow::CDIWindow(QWidget *parent) : QMainWindow(parent)
 	{
+        playgo = new PlayGo();
+
 		tabletDevice = QTabletEvent::NoDevice;
 	}
 
@@ -37,8 +39,24 @@ namespace CDI
 		sketchView->setRenderHint(QPainter::Antialiasing);
 		sketchView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
+        // Tablet event
 		connect(sketchView, SIGNAL(signalViewTabletEvent(QTabletEvent*, QPointF)),
 				sketchScene, SLOT(slotTabletEvent(QTabletEvent*, QPointF)));
+        // NOTE - make sure that actions are intialized prior to this segment
+
+        // Draw
+        connect(brushSelectAction, SIGNAL(triggered()),
+                sketchScene,SLOT(setToDraw()));
+        // Erase
+        connect(eraseSelectAction, SIGNAL(triggered()),
+                sketchScene,SLOT(setToErase()));
+        // Select
+        connect(marqueeAction, SIGNAL(triggered()),
+                sketchScene,SLOT(setToSelect()));
+
+        connect(this, SIGNAL(signalBrushSizeChanged(int)),
+                sketchScene, SLOT(setBrushWidth(int)));
+
 
 		setCentralWidget(sketchView);
 	}

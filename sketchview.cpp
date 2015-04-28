@@ -44,19 +44,19 @@ namespace CDI
 	// Override stylus event handling
 	void SketchView::tabletEvent(QTabletEvent *event)
 	{
+        event->accept();
 		switch (event->type())
 		{
 			case QEvent::TabletPress :
 			case QEvent::TabletMove :
 			case QEvent::TabletRelease :
 			{
+
 				QPointF scenePos = mapToScene(event->pos());
 				emit signalViewTabletEvent(event, scenePos);
-				event->accept();
 				break;
 			}
 		}
-		update();
 	}
 
 }

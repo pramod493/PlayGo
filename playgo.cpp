@@ -5,11 +5,17 @@ namespace CDI
     PlayGo::PlayGo(QObject *parent) : QObject(parent)
     {
         currentPage = NULL;
+        pageList = QVector<Page*>();
     }
 
     PlayGo::~PlayGo()
     {
         emit OnExit();
+    }
+
+    void PlayGo::SetCurrent(Page *page)
+    {
+        currentPage = page;
     }
 
     void PlayGo::OnPageClose(Page* page)

@@ -38,10 +38,10 @@ namespace CDI
             EMPTY,
             POINT,        /*primitives*/
             STROKE,
-            LINE,
-            POLYGON,
-            ELLIPSE,
-            COMPOUND_SHAPE,
+            LINE,           // UNUSED
+            POLYGON,        // UNUSED
+            ELLIPSE,        // UNUSED
+            COMPOUND_SHAPE, // UNUSED
             BLOB,               // Closed stroke
             IMAGE,              // Image
             POLYGON_COLLIDER,   // Physics engine
@@ -60,8 +60,7 @@ namespace CDI
     class Shape : public Item
     {
     public:
-
-        virtual Shape* Clone() {return this;}
+        virtual Shape* Clone()=0;
 
     };
 }

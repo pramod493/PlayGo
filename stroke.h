@@ -26,6 +26,8 @@ namespace CDI
         ~Stroke();
 
         virtual Shape* Clone();
+
+        void ApplySmoothing(int order);
     };
 
     // Point2DPV add extra information about pressure and time information

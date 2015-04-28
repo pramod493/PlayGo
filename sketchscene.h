@@ -17,7 +17,7 @@ namespace CDI
 	{
 		Q_OBJECT
     public:
-        enum MODE {None, Draw, Erase, Transform, Edit};
+        enum MODE {None, Draw, Erase, Transform, Edit, Select, Search};
 
         QTabletEvent::PointerType pointerType;
         QTabletEvent::TabletDevice tabletDevice;
@@ -28,6 +28,8 @@ namespace CDI
         QPen marqueeSelectPen;
         QBrush defaultBrush;
         QBrush fillBrush;
+
+        int brushWidth;
 
         bool mouse_mode_enabled;
 
@@ -80,9 +82,28 @@ namespace CDI
 	signals:
 		void ModeChanged(MODE newMode);
 
-	public slots:
+	public slots:        
         void slotTabletEvent(QTabletEvent *event, QPointF scenePos);
 
+        void setBrushWidth(int size);
+
         void slotSetSceneMode(MODE newMode);
+
+        void setToNone();
+
+        void setToDraw();
+
+        void setToErase();
+
+        void setToTransform();
+
+        void setToEdit();
+
+        void setToSelect();
+
+        // NOTE - THis one makes no sense since this is an one time event
+        // Similar to play/pause/reset event which occur only once.
+        void setToSearch();
+
 	};
 }
