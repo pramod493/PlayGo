@@ -4,6 +4,7 @@
 #include <QPointF>
 #include <QPainterPath>
 #include "stroke.h"
+#include <vector>
 
 namespace CDI
 {
@@ -13,16 +14,16 @@ namespace CDI
 
         Stroke* parentStroke;
 
+		QPainterPath painterPath;
 
+		bool isOrphan;		// If there is  no parent. True as default
 
-        bool isOrphan;
-
-        CDIGraphicsPathItem(QGraphicsItem* parent = 0, Stroke* stroke = NULL);
+		CDIGraphicsPathItem(QGraphicsItem* parent, QPointF startPoint);
 
         ~CDIGraphicsPathItem();
 
-        void push_back(QPointF* point);
+		void push_back(QPointF point);
 
-        void push_back(Point2DPT* point);
+		void push_back(Point2DPT point);
     };
 }

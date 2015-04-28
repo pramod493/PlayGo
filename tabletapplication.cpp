@@ -19,4 +19,5 @@ namespace CDI
         }
         return QApplication::event(event);
     }
+
 }

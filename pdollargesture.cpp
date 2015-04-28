@@ -35,7 +35,7 @@ namespace CDI
         float miny = CDI_MAX_FLOAT;
         float maxx = CDI_MIN_FLOAT;
         float maxy = CDI_MIN_FLOAT;
-        int n = gesturePoints.size();
+        size_t n = gesturePoints.size();
 
         for (int i=0; i < n; i++)
         {
@@ -55,7 +55,7 @@ namespace CDI
 
     void PDollarGesture::TranslateTo(Point2D point)
     {
-        int n = gesturePoints.size();
+        size_t n = gesturePoints.size();
         for (int i=0; i < n; i++)
         {
             gesturePoints[i]->x -= point.x;
@@ -70,7 +70,7 @@ namespace CDI
                                   (gesturePoints[0]->x,gesturePoints[0]->y,
                                     gesturePoints[0]->strokeID ));
         int numPoints = 1;
-        int n = gesturePoints.size();
+        size_t n = gesturePoints.size();
 
         float I = PathLength()/SAMPLING_RESOLUTION;
         float D = 0;
@@ -92,8 +92,8 @@ namespace CDI
                         if (abs(d) < 0.0001) t = 0.5f;
                         GesturePoint2D* newPoint =
                                 new GesturePoint2D(
-                                    (1.0-t)*firstPoint.x + t*gesturePoints[i]->x,
-                                    (1.0-t)*firstPoint.y + t*gesturePoints[i]->y,
+                                    (1.0f-t)*firstPoint.x + t*gesturePoints[i]->x,
+                                    (1.0f-t)*firstPoint.y + t*gesturePoints[i]->y,
                                     firstPoint.strokeID);
                         resampledPoints.push_back(newPoint); numPoints++;
 
@@ -119,7 +119,7 @@ namespace CDI
                 it++)
                 delete (*it);
             gesturePoints.clear();
-            int n = resampledPoints.size();
+            size_t n = resampledPoints.size();
             for (int i=0; i<n;i++) gesturePoints.push_back(resampledPoints[i]);
         }
 
@@ -128,7 +128,7 @@ namespace CDI
     Point2D PDollarGesture::Centroid()
     {
         float cx=0, cy=0;
-        int n = gesturePoints.size();
+        size_t n = gesturePoints.size();
         for (int i=0; i < n; i++)
         {
             cx+= gesturePoints[i]->x;
@@ -141,7 +141,7 @@ namespace CDI
     float PDollarGesture::PathLength()
     {
         float length = 0;
-        int n = gesturePoints.size();
+        size_t n = gesturePoints.size();
         for (int i = 1; i< n; i++)
         {
             if(gesturePoints[i]->strokeID == gesturePoints[i-1]->strokeID)

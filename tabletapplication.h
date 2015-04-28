@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QTabletEvent>
+#include "cdiwindow.h"
 
 namespace CDI
 {

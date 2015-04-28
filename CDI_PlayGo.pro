@@ -29,9 +29,10 @@ SOURCES += main.cpp \
     component.cpp \
     tabletapplication.cpp \
     cdiwindow.cpp \
-    uimanager.cpp \
     cdigraphicspathitem.cpp \
-    cdisketchview.cpp
+    cdisearchgraphicsitem.cpp \
+    sketchview.cpp \
+    sketchscene.cpp
 
 HEADERS += \
     playgo.h \
@@ -48,8 +49,9 @@ HEADERS += \
     component.h \
     tabletapplication.h \
     cdiwindow.h \
-    uimanager.h \
     cdigraphicspathitem.h \
     customdebugger.h \
-    cdisketchview.h \
-    uisettings.h
+    uisettings.h \
+    cdisearchgraphicsitem.h \
+    sketchview.h \
+    sketchscene.h
