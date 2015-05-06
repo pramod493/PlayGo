@@ -5,6 +5,7 @@ SOURCES +=    \
     point2d.cpp \
     stroke.cpp \
     component.cpp \
+    $$PWD/searchitem.cpp
 
 HEADERS +=   \
     playgo.h \
@@ -13,5 +14,6 @@ HEADERS +=   \
     point2d.h \
     stroke.h \
     component.h \
+    $$PWD/searchitem.h
 
 # Removed Line2D class

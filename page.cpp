@@ -2,8 +2,7 @@
 namespace CDI
 {
 
-    Page::Page(QObject *parent) : QObject(parent),
-        _isCurrent(false)
+    Page::Page(QObject *parent) : QObject(parent)
     {
         _parent = parent;
     }
@@ -28,5 +27,4 @@ namespace CDI
         Page* clonePage = new Page(_parent);
         return clonePage;
     }
-
 }

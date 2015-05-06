@@ -1,15 +1,18 @@
 #pragma once
-
+#include <QLinkedList>
 #include <QGraphicsScene>
 #include <QEvent>
 #include <QTabletEvent>
 #include <QPen>
 #include <QBrush>
+#include <QPainter>
+#include <QTouchEvent>
 
 #include <QList>
 #include <QGraphicsSceneMouseEvent>
 #include "cdisearchgraphicsitem.h"
 #include "cdigraphicspathitem.h"
+#include "searchmanager.h"
 
 namespace CDI
 {
@@ -34,9 +37,9 @@ namespace CDI
         bool mouse_mode_enabled;
 
     protected:
-        QList<CDISearchGraphicsItem*> searchResults;
+        QList<SearchGraphicsItem*> searchResults;
 
-        QList<CDIGraphicsPathItem*> freeStrokes;
+        QList<GraphicsPathItem*> freeStrokes;
 
         MODE current_mode;
 
@@ -44,7 +47,9 @@ namespace CDI
 
         QGraphicsPathItem* parent_item;
 
-        CDIGraphicsPathItem* current_stroke;
+        GraphicsPathItem* current_stroke;
+
+        SearchManager* searchManager;
 
 	public:
 		SketchScene(QObject* parent = 0);
@@ -80,12 +85,21 @@ namespace CDI
         void SelectAction(QTabletEvent *event, QPointF scenePos);
 
 	signals:
-		void ModeChanged(MODE newMode);
+        void signalModeChanged(MODE newMode);
+
+        void signalBrushReleased(SketchScene* scene);
+
+    private slots:
+        void OnBrushRelease();
 
 	public slots:        
         void slotTabletEvent(QTabletEvent *event, QPointF scenePos);
 
+        void OnSearchComplete();
+
         void setBrushWidth(int size);
+
+        void setBrushColor(QString name, QColor color);
 
         void slotSetSceneMode(MODE newMode);
 

@@ -3,6 +3,9 @@
 #include <math.h>
 #include <algorithm>
 #include <vector>
+#include <QObject>
+#include <QColor>
+
 #include "point2d.h"
 
 #define CDI_MAX_FLOAT  100000000
@@ -14,14 +17,14 @@
 #define CDI_HIDE_IN_PHYSICS     0x08
 
 
-struct DeleteFromVector
-{
-    template <class T>
-    void operator() ( T* ptr) const
-    {
-        delete ptr;
-    }
-};
+//struct DeleteFromVector
+//{
+//    template <class T>
+//    void operator() ( T* ptr) const
+//    {
+//        delete ptr;
+//    }
+//};
 
 namespace CDI
 {
@@ -31,8 +34,9 @@ namespace CDI
 
     float EuclideanDistance(Point2D* a, Point2D* b);
 
-    class Item
+    class Item : public QObject
     {
+        Q_OBJECT
     public:
         enum Type {
             EMPTY,
@@ -54,13 +58,19 @@ namespace CDI
             PHYSICS_MATERIAL
         };
 
+        Item(QObject* parent=0) : QObject(parent) {}
+
         virtual Type GetType() {return Type::EMPTY;}
     };
 
     class Shape : public Item
     {
+        Q_OBJECT
     public:
-        virtual Shape* Clone()=0;
+        Shape(QObject* parent =0) : Item(parent) {}
 
+        virtual Shape* Clone() {return NULL;}
     };
+
+    bool ColorCompare(QColor c1, QColor c2);
 }

@@ -1,18 +1,53 @@
-#ifndef SEARCHMANAGER_H
-#define SEARCHMANAGER_H
-
+#pragma once
 #include <QObject>
+#include <QString>
+#include <QList>
+#include <QImage>
+#include <QFile>
+#include <QTextStream>
+#include <QTimer>
 
-class SearchManager : public QObject
+namespace CDI
 {
-    Q_OBJECT
-public:
-    explicit SearchManager(QObject *parent = 0);
-    ~SearchManager();
+    class SearchManager : public QObject
+    {
+        Q_OBJECT
+    public:
+        QString inputFilePath;
+        QString resultFilePath;
+        QString databaseDir;
+        QString controlFile;
 
-signals:
+        QList<QString> localFileList;
 
-public slots:
-};
+    protected:
+        QTimer* timer;
 
-#endif // SEARCHMANAGER_H
+        QImage searchInputImage;
+
+        bool isSearchRunning;
+
+        bool isAnotherInQueue;
+
+    public:
+        SearchManager(QObject *parent=0);
+
+        ~SearchManager();
+
+        void search(QImage &image);
+
+    protected:
+        void run();
+
+        bool CheckSearchStatus();
+
+        void ConvertResultsToLocalPath();
+
+    private slots:
+        void OnTimerComplete();
+
+
+    signals:
+        void signalSearchComplete(/*QString inputFilePath*/);
+    };
+}

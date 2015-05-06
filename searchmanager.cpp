@@ -3,67 +3,113 @@
 namespace CDI
 {
     SearchManager::SearchManager(QObject *parent)
-        : QThread(parent)
+        : QObject(parent)
     {
-        quit = false;
+        isSearchRunning = false;
+
+        isAnotherInQueue = false;
+
+        timer = new QTimer(this);
+        timer->start(4000);  // Check every 4s
+        connect(timer, SIGNAL(timeout()),
+                this, SLOT(OnTimerComplete()));
 
         inputFilePath   = QString("E:/Coding/Search/pramod/data/image.png");
         resultFilePath  = QString("E:/Coding/Search/pramod/data/results.txt");
         databaseDir     = QString("E:/Coding/Search/database/");
         controlFile     = QString("E:/Coding/Search/pramod/data/control.txt");
+
+        localFileList = QList<QString>();
     }
 
     SearchManager::~SearchManager()
     {
-        mutex.lock();
-        quit = true;
-        condition.wakeOne();
-        mutex.unlock();
-        wait();
+        delete timer;
     }
 
-    void SearchManager::search(QPixmap &pixmap)
+    void SearchManager::search(QImage &image)
     {
-        QMutexLocker locker(&mutex);
-
-        imageMap = new QPixmap(pixmap);
-
-        if (!isRunning())
+        searchInputImage = QImage(image);
+        if (isSearchRunning)
         {
-            start(LowPriority);
-        } else {
-            condition.wakeOne();
+            isAnotherInQueue = true;
+            return;
+        } else
+        {
+            isAnotherInQueue = false;
+            run();
         }
     }
 
     void SearchManager::run()
     {
-        forever {
-            mutex.lock();
-            imageMap->save(inputFilePath);
-            QFile file(controlFile);
-            file.open(QIODevice::WriteOnly | QIODevice::Text);
-            QTextStream out(&file);
-            out << "1\n";
-            file.close();
-             bool searchComplete = false;
-            mutex.unlock();
+        if(searchInputImage.isNull()) return;
+        isSearchRunning = true;
 
-            while (!quit)
+        searchInputImage.save(inputFilePath);           // Save image
+        QFile file(controlFile);                        // Trigger search
+        file.open(QIODevice::WriteOnly | QIODevice::Text);
+        QTextStream out(&file);
+        out << "1\n";
+        file.close();
+    }
+
+    bool SearchManager::CheckSearchStatus()
+    {
+        bool result = false;
+        QFile file(controlFile);
+        file.open(QFile::ReadOnly);
+        QTextStream inputstream(&file);
+        QString temp = inputstream.readLine(1);
+
+        if (QString::compare(temp, QString("0"), Qt::CaseInsensitive) == 0)
+            result = true;
+        file.close();
+        // Since auth is not working, always return true
+        return true;
+        return result;
+    }
+
+    void SearchManager::ConvertResultsToLocalPath()
+    {
+        localFileList.clear();      // Cleanup the search results
+        QFile file(resultFilePath);
+        if (file.open(QFile::ReadOnly))
+        {
+            int lineNumber = 1;
+            QTextStream in(&file);
+            while (!in.atEnd())
             {
-                QFile file(controlFile);
-                file.open(QFile::ReadOnly);
-                QTextStream inputstream(&file);
-                QString temp = inputstream.readLine(1);
-                if (QString::compare(temp, QString("0"), Qt::CaseInsensitive) == 0)
+                QString line = in.readLine();
+                if ((lineNumber > 1) && (lineNumber <= 40))
                 {
-                    emit SearchComplete(this);
-                    file.close();
-                    return;
+                    QStringList list1 = line.split("/");
+                    QString result(databaseDir);
+                    QString fileName = list1.at(list1.size()-1);
+                    fileName.remove('"');
+                    fileName.replace(".jpg", ".png");
+                    result.append(fileName);
+                    localFileList.push_back(result);
                 }
-                file.close();
+                lineNumber++;
             }
         }
     }
 
+    void SearchManager::OnTimerComplete()
+    {
+        if (!isSearchRunning) return;
+        if (CheckSearchStatus())
+        {
+            isSearchRunning = false;
+            if (isAnotherInQueue)
+            {
+                isAnotherInQueue = false;
+                run();
+            }
+            // Convert and store the file names to local path
+            ConvertResultsToLocalPath();
+            emit signalSearchComplete(/*resultFilePath*/);
+        }
+    }
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "cdicommon.h"
 #include <vector>
+#include <QObject>
+#include <QTransform>
 
 using namespace std;
 
@@ -10,24 +12,40 @@ namespace CDI
 
     class Stroke : public Shape
     {
+        Q_OBJECT
     protected:
         Type p_type;
+
+        QObject* p_parent;
     public:
+		int thickness;
+
+        QTransform transform;
+
         vector<Point2DPT*> points;
 
         bool closed;
 
-        Stroke();
+        Stroke(QObject* parent);
 
-        Stroke(vector<Point2DPT*> &pointList);
+        Stroke(QObject* parent, vector<Point2DPT*> &pointList);
 
-        Stroke(int len, Point2DPT* pointList);
+        Stroke(QObject* parent, int len, Point2DPT* pointList);
 
         ~Stroke();
+
+        virtual Type GetType() { return p_type;}
 
         virtual Shape* Clone();
 
         void ApplySmoothing(int order);
+
+        void update();
+
+		bool Selected(Point2D* p, float extraWidth);
+
+    signals:
+        void ItemChanged(Stroke*);
     };
 
     // Point2DPV add extra information about pressure and time information

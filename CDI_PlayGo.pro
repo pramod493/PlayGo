@@ -25,7 +25,10 @@ SOURCES += main.cpp \
     cdigraphicspathitem.cpp \
     cdisearchgraphicsitem.cpp \
     sketchview.cpp \
-    sketchscene.cpp
+    sketchscene.cpp \
+    gesturemanager.cpp \
+    searchmanager.cpp \
+    colorselectortoolbar.cpp
 
 HEADERS += \
     cdi2qtwrapper.h \
@@ -35,4 +38,7 @@ HEADERS += \
     uisettings.h \
     cdisearchgraphicsitem.h \
     sketchview.h \
-    sketchscene.h
+    sketchscene.h \
+    gesturemanager.h \
+    searchmanager.h \
+    colorselectortoolbar.h

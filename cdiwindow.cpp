@@ -1,47 +1,79 @@
 #include "cdiwindow.h"
+#include <QGraphicsProxyWidget>
+#include <QColorDialog>
+#include "colorselectortoolbar.h"
 
 namespace CDI
 {
-	CDIWindow::CDIWindow(QWidget *parent) : QMainWindow(parent)
-	{
+    CDIWindow::CDIWindow(QWidget *parent) : QMainWindow(parent)
+    {
         playgo = new PlayGo();
 
-		tabletDevice = QTabletEvent::NoDevice;
-	}
+        tabletDevice = QTabletEvent::NoDevice;
+    }
 
-	CDIWindow::~CDIWindow()
-	{
+    CDIWindow::~CDIWindow()
+    {
 
-	}
+    }
 
-	void CDIWindow::InitWidgets()
-	{
-		// Set up the main window propoerties
-		setObjectName(QStringLiteral("Main Sketch Window"));
-		setWindowTitle("CDI Sketcher - PlayGo");
+    void CDIWindow::InitWidgets()
+    {
+        // Set up the main window propoerties
+        setObjectName(QStringLiteral("Main Sketch Window"));
+        setWindowTitle("CDI Sketcher - PlayGo");
 
-		//setCentralWidget();
+        //setCentralWidget();
 
-		QSizePolicy sizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-		sizePolicy.setHorizontalStretch(0);
-		setSizePolicy(sizePolicy);
+        QSizePolicy sizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        sizePolicy.setHorizontalStretch(0);
+        setSizePolicy(sizePolicy);
 
-		// Initialize UI elements
-		CreateActions();
-		SetupToolbar();
+        // Initialize UI elements
+        CreateActions();
+        SetupToolbar();
+        ColorSelectorToolbar* colorToolbar = new ColorSelectorToolbar();
+        colorToolbar->InitToolbarItems();
+        colorToolbar->setOrientation(Qt::Vertical);
+        colorToolbar->setFloatable(true);
+        colorToolbar->setMovable(true);
+        insertToolBar(mainToolbar,colorToolbar);
+        colorToolbar->show();
 
-		////
-		mainLayout = new QVBoxLayout;
-		sketchView = new SketchView(this);
-		sketchScene = new SketchScene(sketchView);
-		sketchView->setScene(sketchScene);
-		sketchView->setSceneRect(0,0,sketchView->width(),sketchView->height());
-		sketchView->setRenderHint(QPainter::Antialiasing);
-		sketchView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+        ////
+        mainLayout = new QVBoxLayout;
+        sketchView = new SketchView(this);
+        sketchScene = new SketchScene(sketchView);
+        sketchView->setScene(sketchScene);
+        sketchView->setSceneRect(0,0,5000,5000);
+        sketchView->setRenderHint(QPainter::Antialiasing);
+        sketchView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+
+        if (0){
+            //             Testing out duplicate scenes. We can show same scene in multiple views.
+            // Zoom works too
+            QGraphicsView* view = new QGraphicsView();
+            view->setScene(sketchScene);
+            view->fitInView(0,0,5000,5000,Qt::KeepAspectRatio);
+            view->show();
+
+            view->setAttribute(Qt::WA_AcceptTouchEvents, true);
+            QLinearGradient gradient = QLinearGradient(0,0,0,1000);
+            gradient.setColorAt(0.0,QColor(255,175,175,100));
+            gradient.setColorAt(1.0, QColor(200,200,200,255));
+            view->setBackgroundBrush(QBrush(gradient));
+            //// Crashes the program
+            //            QColorDialog *_dialog = new QColorDialog();
+            //            _dialog->setOption(QColorDialog::NoButtons, true);
+            //            QGraphicsProxyWidget *proxyWidget = new QGraphicsProxyWidget();
+            //            proxyWidget->setWidget(_dialog);
+            //            sketchScene->addWidget(_dialog);
+            //            sketchScene->setSceneRect(_dialog->geometry());
+        }
 
         // Tablet event
-		connect(sketchView, SIGNAL(signalViewTabletEvent(QTabletEvent*, QPointF)),
-				sketchScene, SLOT(slotTabletEvent(QTabletEvent*, QPointF)));
+        connect(sketchView, SIGNAL(signalViewTabletEvent(QTabletEvent*, QPointF)),
+                sketchScene, SLOT(slotTabletEvent(QTabletEvent*, QPointF)));
         // NOTE - make sure that actions are intialized prior to this segment
 
         // Draw
@@ -53,106 +85,108 @@ namespace CDI
         // Select
         connect(marqueeAction, SIGNAL(triggered()),
                 sketchScene,SLOT(setToSelect()));
-
+        // Brush width
         connect(this, SIGNAL(signalBrushSizeChanged(int)),
                 sketchScene, SLOT(setBrushWidth(int)));
+        brushWidthSlider->setValue(3);
+        connect(colorToolbar, SIGNAL(signalColorChange(QString,QColor)),
+                sketchScene, SLOT(setBrushColor(QString,QColor)));
 
+        setCentralWidget(sketchView);
+    }
 
-		setCentralWidget(sketchView);
-	}
+    //// Protected functions. Called only for initialization only
+    void CDIWindow::CreateActions()
+    {
+        QActionGroup *sketchActions = new QActionGroup(this);
 
-	//// Protected functions. Called only for initialization only
-	void CDIWindow::CreateActions()
-	{
-		QActionGroup *sketchActions = new QActionGroup(this);
+        brushSelectAction = new QAction(QIcon(":/images/spline.png"), tr("Draw strokes"), sketchActions);
+        brushSelectAction->setCheckable(true);
+        brushSelectAction->setChecked(true);
 
-		brushSelectAction = new QAction(QIcon(":/images/spline.png"), tr("Draw strokes"), sketchActions);
-		brushSelectAction->setCheckable(true);
-		brushSelectAction->setChecked(false);
+        eraseSelectAction = new QAction(QIcon(":/images/eraser.png"), tr("Eraser"), sketchActions);
+        eraseSelectAction->setCheckable(true);
+        eraseSelectAction->setChecked(false);
 
-		eraseSelectAction = new QAction(QIcon(":/images/eraser.png"), tr("Eraser"), sketchActions);
-		eraseSelectAction->setCheckable(true);
-		eraseSelectAction->setChecked(false);
+        marqueeAction = new QAction(QIcon(":/images/marquee.png"), tr("Select"), sketchActions);
+        marqueeAction->setCheckable(true);
+        marqueeAction->setChecked(false);
 
-		marqueeAction = new QAction(QIcon(":/images/marquee.png"), tr("Select"), sketchActions);
-		marqueeAction->setCheckable(true);
-		marqueeAction->setChecked(false);
+        QActionGroup *playActions = new QActionGroup(this);
 
-		QActionGroup *playActions = new QActionGroup(this);
+        playAction = new QAction(QIcon(":/images/play.png"), tr("Play simulation"), playActions);
+        playAction->setCheckable(true);
+        playAction->setChecked(false);
 
-		playAction = new QAction(QIcon(":/images/play.png"), tr("Play simulation"), playActions);
-		playAction->setCheckable(true);
-		playAction->setChecked(false);
+        pauseAction = new QAction(QIcon(":/images/pause.png"), tr("Pause simulation"), playActions);
+        pauseAction->setCheckable(true);
 
-		pauseAction = new QAction(QIcon(":/images/pause.png"), tr("Pause simulation"), playActions);
-		pauseAction->setCheckable(true);
+        resetAction = new QAction(QIcon(":/images/reset.png"), tr("Reset simulation"), playActions);
+        pauseAction->setCheckable(true);
 
-		resetAction = new QAction(QIcon(":/images/reset.png"), tr("Reset simulation"), playActions);
-		pauseAction->setCheckable(true);
+        searchAction = new QAction(QIcon(":/images/search.png"), tr("Search selection"), this);
 
-		searchAction = new QAction(QIcon(":/images/search.png"), tr("Search selection"), this);
+        //// File opertaions
+        openPageAction = new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
+        saveImageAction = new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
+    }
 
-		//// File opertaions
-		openPageAction = new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
-		saveImageAction = new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
-	}
+    void CDIWindow::SetupToolbar()
+    {
+        //		mainToolbar = new QToolBar(this);
+        mainToolbar = addToolBar(tr("Main operations"));
 
-	void CDIWindow::SetupToolbar()
-	{
-		//		mainToolbar = new QToolBar(this);
-		mainToolbar = addToolBar(tr("Main operations"));
+        mainToolbar->addAction(openPageAction);
+        mainToolbar->addAction(saveImageAction);
 
-		mainToolbar->addAction(openPageAction);
-		mainToolbar->addAction(saveImageAction);
+        mainToolbar->addSeparator();
 
-		mainToolbar->addSeparator();
+        mainToolbar->addAction(brushSelectAction);
+        mainToolbar->addAction(eraseSelectAction);
+        mainToolbar->addAction(marqueeAction);
 
-		mainToolbar->addAction(brushSelectAction);
-		mainToolbar->addAction(eraseSelectAction);
-		mainToolbar->addAction(marqueeAction);
+        mainToolbar->addSeparator();
 
-		mainToolbar->addSeparator();
+        mainToolbar->addAction(searchAction);
 
-		mainToolbar->addAction(searchAction);
+        mainToolbar->addSeparator();
 
-		mainToolbar->addSeparator();
+        mainToolbar->addAction(playAction);
+        mainToolbar->addAction(pauseAction);
+        mainToolbar->addAction(resetAction);
 
-		mainToolbar->addAction(playAction);
-		mainToolbar->addAction(pauseAction);
-		mainToolbar->addAction(resetAction);
+        mainToolbar->setIconSize(QSize(64,64));
 
-		mainToolbar->setIconSize(QSize(96,96));
+        brushWidthSlider = new QSlider(Qt::Horizontal);
+        brushWidthSlider->setRange(2,20);
+        brushWidthSlider->setSingleStep(1);
+        connect(brushWidthSlider, SIGNAL(valueChanged(int)),
+                this, SLOT(setBrushValue(int)));
+        mainToolbar->addWidget(brushWidthSlider);
 
-		brushWidthSlider = new QSlider(Qt::Horizontal);
-		brushWidthSlider->setRange(2,20);
-		brushWidthSlider->setSingleStep(1);
-		connect(brushWidthSlider, SIGNAL(valueChanged(int)),
-				this, SLOT(setBrushValue(int)));
-		mainToolbar->addWidget(brushWidthSlider);
+        mainToolbar->show();
+    }
 
-		mainToolbar->show();
-	}
+    void CDIWindow::CreateStatusbar()
+    {
+        QStatusBar* bar = new QStatusBar(this);
+        setStatusBar(bar);
+        bar->showMessage(tr("Ready"));
+    }
 
-	void CDIWindow::CreateStatusbar()
-	{
-		QStatusBar* bar = new QStatusBar(this);
-		setStatusBar(bar);
-		bar->showMessage(tr("Ready"));
-	}
+    void CDIWindow::closeEvent(QCloseEvent* event)
+    {
+        // TODO - Trigger save warning
+        QMainWindow::closeEvent(event);
+    }
 
-	void CDIWindow::closeEvent(QCloseEvent* event)
-	{
-		// TODO - Trigger save warning
-		QMainWindow::closeEvent(event);
-	}
+    void CDIWindow::setBrushValue(int size)
+    {
+        emit signalBrushSizeChanged(size);
+    }
 
-	void CDIWindow::setBrushValue(int size)
-	{
-		emit signalBrushSizeChanged(size);
-	}
-
-	void CDIWindow::slotOnSignalProximity(QEvent* event)
-	{
-		tabletDevice = static_cast<QTabletEvent*>(event)->device();
-	}
+    void CDIWindow::slotOnSignalProximity(QEvent* event)
+    {
+        tabletDevice = static_cast<QTabletEvent*>(event)->device();
+    }
 }
