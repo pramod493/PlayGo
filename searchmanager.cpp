@@ -1,4 +1,6 @@
 #include "searchmanager.h"
+#include <QDir>
+#include <QDebug>
 
 namespace CDI
 {
@@ -19,7 +21,19 @@ namespace CDI
         databaseDir     = QString("E:/Coding/Search/database/");
         controlFile     = QString("E:/Coding/Search/pramod/data/control.txt");
 
+
         localFileList = QList<QString>();
+		if (QDir("Search_images").exists())
+		{
+			qDebug() << "search Directory exists!";
+			QDir dir = QDir("Search_images");
+			QStringList fileList = dir.entryList();
+			for (int i=2; i< fileList.size(); i++)
+			{
+				localFileList.push_back(dir.absoluteFilePath(fileList.at(i)));
+			}
+			qDebug() << localFileList.size() << "files added";
+		}
     }
 
     SearchManager::~SearchManager()

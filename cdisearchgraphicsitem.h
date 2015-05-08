@@ -16,5 +16,7 @@ namespace CDI
         SearchGraphicsItem(const QPixmap &pixmap, QString filePath, QGraphicsItem* parent = 0);
 
         Item::Type GetType();
+
+		bool sceneEvent(QEvent *event);
     };
 }

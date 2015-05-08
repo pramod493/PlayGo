@@ -35,7 +35,7 @@ namespace CDI
             case QEvent::TouchBegin :
 
             {
-                event->setAccepted(true);
+				event->setAccepted(true);
                 QTouchEvent* e = static_cast<QTouchEvent*>(event);
                 qDebug() << "Touch event received at " << e->touchPoints().count() << "places";
 				if (e->touchPoints().count() == 3)
@@ -45,7 +45,7 @@ namespace CDI
 					qDebug() << touchPoints[0].pos() << touchPoints[1].pos() << touchPoints[2].pos();
 
 				}
-                return true;
+				//return true;
             }
         }
 

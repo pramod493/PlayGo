@@ -19,6 +19,7 @@ namespace CDI
         toolbarColors.append(Qt::darkBlue);
         toolbarColors.append(Qt::magenta);
         toolbarColors.append(Qt::darkYellow);
+        toolbarColors.append(QColor(1,1,1,0));
     }
 
     void ColorSelectorToolbar::InitToolbarItems()

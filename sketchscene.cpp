@@ -8,7 +8,7 @@ namespace CDI
 	{
 		qDebug() << "Creating sketch scene widget\n";
 
-		mouse_mode_enabled = false;	// Keep only for the testing stages.
+        mouse_mode_enabled = false;	// Keep only for the testing stages.
 
 		brushWidth = 3.0;
 
@@ -226,7 +226,7 @@ namespace CDI
 					}
 			}
 			break;
-		}
+        }
 	}
 
 	void SketchScene::SelectAction(QTabletEvent *event, QPointF scenePos)
@@ -245,7 +245,9 @@ namespace CDI
 
 	void SketchScene::OnBrushRelease()
 	{
-		return; // Saving for surface
+        OnSearchComplete();
+		return;
+		 // Saving for surface
 		if (freeStrokes.size())
 		{
 			qDebug() << "Free strokes = " << freeStrokes.size();
@@ -284,7 +286,8 @@ namespace CDI
 			QImage croppedImage = image.copy(QRect(x_min,y_min,
 												   x_max-x_min, y_max-y_min));
 			searchManager->search(croppedImage);
-			//croppedImage.save("test.png");
+			croppedImage.save("test.png");
+			//OnSearchComplete();
 		}
 	}
 
@@ -311,8 +314,8 @@ namespace CDI
 		int margin = 10;
 		int offset = 0;
 
-		int index = rand() % (searchManager->localFileList.size()-10);
-		int maxIndex = index+9;
+        int index = rand() % (searchManager->localFileList.size()-20);
+        int maxIndex = index+16;
 
 		// Iterators work fine as well. Just not needed.
 		for (;index < maxIndex; index++)
