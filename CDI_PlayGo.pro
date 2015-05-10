@@ -18,6 +18,8 @@ include (PlayGoCore.pri)
 
 include (P_Dollar.pri)
 
+include (Indexer-Minimal/Indexer.pri)
+
 SOURCES += main.cpp \
     cdi2qtwrapper.cpp \
     tabletapplication.cpp \

@@ -3,6 +3,13 @@
 #include "tabletapplication.h"
 #include "cdiwindow.h"
 
+#include "wbbice.h"
+#include "wbsearchengine.h"
+#include <iostream>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
+
 int main(int argc, char *argv[])
 {
     CDI::TabletApplication app(argc, argv);
@@ -16,5 +23,18 @@ int main(int argc, char *argv[])
 
     window->show();
 
+    //namespace po = boost::program_options;
+    {
+        std::string file = "C:/Database/Input.png";
+        path data("C:/Database/");
+        wbBICE *bicedescriptor = new wbBICE();
+        wbSearchEngine *engine = new wbSearchEngine(data, bicedescriptor);
+
+        engine->Index();
+        engine->Load();
+        engine->Query(file, 40);
+        std::cout << "\n\n1Search complete...\n";
+        std::cout << "\n1Running UI program\n";
+    }
     return app.exec();
 }

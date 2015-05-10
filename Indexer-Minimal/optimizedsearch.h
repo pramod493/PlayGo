@@ -1,0 +1,6 @@
+#ifndef OPTIMIZEDSEARCH_H
+#define OPTIMIZEDSEARCH_H
+
+#endif // OPTIMIZEDSEARCH_H
+
+

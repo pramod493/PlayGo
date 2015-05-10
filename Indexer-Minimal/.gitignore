@@ -39,5 +39,7 @@ x64/
 *.vcxproj.filters
 *.suo
 
-###########
-Search_images/
+tbb/
+opencv/
+boost_1_58_0/
+Runtime_Libraries/
