@@ -1,5 +1,6 @@
 #include "sketchscene.h"
 #include <QDebug>
+#include <QtSvg/QSvgGenerator>
 
 namespace CDI
 {
@@ -79,7 +80,7 @@ void SketchScene::clear()
 
 }
 
-void SketchScene::BrushPress(QPointF scenePos)
+void SketchScene::BrushPress(QPointF scenePos, float pressure)
 {
     qDebug() << "Brush down at " << scenePos;
     if (0) {
@@ -91,25 +92,24 @@ void SketchScene::BrushPress(QPointF scenePos)
         //QGraphicsLineItem* line = addLine(QLineF(scenePos, QPointF(500,300)), defaultPen);
     }
 
-    current_stroke = new GraphicsPathItem(parent_item, scenePos);
+    current_stroke = new GraphicsPathItem(parent_item, scenePos, pressure, 0);
     current_stroke->parentStroke->thickness = defaultPen.width();
     addItem(current_stroke);
     current_stroke->setPen(defaultPen);
     freeStrokes.push_back(current_stroke);
 }
 
-void SketchScene::BrushMove(QPointF scenePos)
+void SketchScene::BrushMove(QPointF scenePos, float pressure)
 {
-    qDebug() << "Brush Move to " << scenePos;
+    qDebug() << pressure;
     if (!(current_stroke == NULL))
-        current_stroke->push_back(scenePos);
+        current_stroke->push_back(scenePos, pressure);
 }
 
-void SketchScene::BrushRelease(QPointF scenePos)
+void SketchScene::BrushRelease(QPointF scenePos, float pressure)
 {
     if (!(current_stroke == NULL))
-        current_stroke->push_back(scenePos);
-    qDebug() << "Apply smoothing to the stroke";
+        current_stroke->push_back(scenePos, pressure);
     current_stroke->ApplySmoothing(1);
 
     // Trigger signal in order to update related/connected components
@@ -193,13 +193,13 @@ void SketchScene::DrawAction(QTabletEvent *event, QPointF scenePos)
     switch (event->type())
     {
     case QEvent::TabletPress :
-        BrushPress(scenePos);
+        BrushPress(scenePos,event->pressure());
         break;
     case QEvent::TabletMove :
-        BrushMove(scenePos);
+        BrushMove(scenePos, event->pressure());
         break;
     case QEvent::TabletRelease :
-        BrushRelease(scenePos);
+        BrushRelease(scenePos, event->pressure());
         break;
     }
 }
@@ -249,6 +249,22 @@ void SketchScene::SelectAction(QTabletEvent *event, QPointF scenePos)
 
 void SketchScene::OnBrushRelease()
 {
+    return;
+    // Disable search at the end of each stroke
+    OnSearchTrigger();
+}
+
+void SketchScene::slotTabletEvent(QTabletEvent* event, QPointF scenePos)
+{
+    // Temporarily disable mouse event because we don't know how to prevent trigger of mouse events
+    if (event->pointerType() == QTabletEvent::Pen && current_mode == MODE::Draw)
+        DrawAction(event, scenePos);
+    if (event->pointerType() == QTabletEvent::Eraser)
+        EraseAction(event, scenePos);
+}
+
+void SketchScene::OnSearchTrigger()
+{
     // Saving for surface
     if (freeStrokes.size())
     {
@@ -274,9 +290,10 @@ void SketchScene::OnBrushRelease()
         for (int i=0; i<freeStrokes.size(); i++)
         {
             item = freeStrokes[i];
-            painter.setBrush(item->brush());
+            /*painter.setBrush(item->brush());
             painter.setPen(item->pen());
-            painter.drawPath(item->path());
+            painter.drawPath(item->path())*/;
+            item->paint(&painter, NULL);
             QRectF rectF = item->boundingRect();
             QRect rect = QRect(rectF.x(),rectF.y(),rectF.width(),rectF.height());
             x_min = (x_min < rect.x() ? x_min : rect.x());
@@ -295,17 +312,25 @@ void SketchScene::OnBrushRelease()
     }
 }
 
-void SketchScene::slotTabletEvent(QTabletEvent* event, QPointF scenePos)
-{
-    // Temporarily disable mouse event because we don't know how to prevent trigger of mouse events
-    if (event->pointerType() == QTabletEvent::Pen && current_mode == MODE::Draw)
-        DrawAction(event, scenePos);
-    if (event->pointerType() == QTabletEvent::Eraser)
-        EraseAction(event, scenePos);
-}
-
 void SketchScene::OnSearchComplete()
 {
+
+    /*{
+        // In here we will try to save as svg
+        // Works but need to fine tune the settings
+        QSvgGenerator svgGen;
+
+        svgGen.setFileName( "scene2svg.svg" );
+        svgGen.setSize(QSize(200, 200));
+        svgGen.setViewBox(QRect(0, 0, 200, 200));
+        svgGen.setTitle(tr("SVG Generator Example Drawing"));
+        svgGen.setDescription(tr("An SVG drawing created by the SVG Generator "
+                                    "Example provided with Qt."));
+
+        QPainter painter( &svgGen );
+        render( &painter );
+
+    }*/
     // Read file from SearchManager
     for (int i=0; i< searchResults.size(); i++)
     {

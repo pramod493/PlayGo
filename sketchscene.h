@@ -60,11 +60,11 @@ namespace CDI
 
         void clear();
 
-        void BrushPress(QPointF scenePos);
+        void BrushPress(QPointF scenePos, float pressure = 1.0);
 
-        void BrushMove(QPointF scenePos);
+        void BrushMove(QPointF scenePos, float pressure = 1.0);
 
-        void BrushRelease(QPointF scenePos);
+        void BrushRelease(QPointF scenePos, float pressure = 1.0);
 
         void SaveScene(QString file);
 
@@ -94,6 +94,8 @@ namespace CDI
 
 	public slots:        
         void slotTabletEvent(QTabletEvent *event, QPointF scenePos);
+
+        void OnSearchTrigger();
 
         void OnSearchComplete();
 

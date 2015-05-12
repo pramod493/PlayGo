@@ -22,8 +22,6 @@ private:
     //int patch_width_y = 100;
     double m_overlap;
     path m_settingspath;
-
-
 };
 
 #endif // WBBICE_H

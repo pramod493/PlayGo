@@ -53,14 +53,14 @@ namespace CDI
     class Point2DPT : public Point2D
     {
     public:
-        int _pressure;
-        long _time;
+        float pressure;
+        long time;
 
         Point2DPT();
 
-        Point2DPT(float X, float Y, int pressure = 0, long time = 0);
+        Point2DPT(float X, float Y, float _pressure = 1, long _time = 0);
 
-        Point2DPT(Point2D p, int pressure = 0, long time = 0);
+        Point2DPT(Point2D p, float _pressure = 1, long _time = 0);
 
         //Point2DPT(Point2DPT &orig);
     };

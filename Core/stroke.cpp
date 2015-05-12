@@ -24,7 +24,7 @@ namespace CDI
         {
             points.push_back(
                         new Point2DPT(pointList[i]->x, pointList[i]->y,
-                                      pointList[i]->_pressure, pointList[i]->_time));
+                                      pointList[i]->pressure, pointList[i]->time));
         }
     }
 
@@ -39,7 +39,7 @@ namespace CDI
         {
             points.push_back(new Point2DPT(
                                  pointList[i].x, pointList[i].y,
-                                 pointList[i]._pressure, pointList[i]._time));
+                                 pointList[i].pressure, pointList[i].time));
         }
     }
 
@@ -61,13 +61,15 @@ namespace CDI
 
     void Stroke::ApplySmoothing(int order)
     {
-        int n_points = points.size() -1;
+        size_t n_points = points.size() -1;
         for (int i =0;i<order;i++)
         {
             for (int index=1; index < n_points; index++)
             {
                 points[index]->x = 0.5* (points[index-1]->x +points[index+1]->x);
                 points[index]->y = 0.5* (points[index-1]->y +points[index+1]->y);
+                points[index]->pressure = 0.5 *(points[index-1]->pressure +
+                                           points[index+1]->pressure);
             }
         }
         update();
@@ -82,7 +84,7 @@ namespace CDI
 	{
 		float width = thickness + extraWidth;
 		float sqrWidth = width*width;
-		int n_points = points.size()-1;
+        size_t n_points = points.size()-1;
 		// TODO - We can check for this as well
 		if (n_points < 1) return false;
 
@@ -103,9 +105,9 @@ namespace CDI
 			// check normal distance
 			V2.x = V2.x*t; V2.y = V2.y*t;	// set to coord of projection point
 			float dist = (V1.x-V2.x)*(V1.x-V2.x) + (V1.y-V2.y)*(V1.y-V2.y);
-			if (dist < sqrWidth) return true;
+            if (dist < sqrWidth) result = true;
 		}
-		return false;
+        return result;
 	}
 
     /* ---------------------------------------------------------------------------------
@@ -113,20 +115,20 @@ namespace CDI
      * recognizers as well as can be used as rendering aid.
      * ------------------------------------------------------------------------------ */
     Point2DPT::Point2DPT() :
-        Point2D(0,0), _pressure(0), _time(0)
+        Point2D(0,0), pressure(1), time(0)
     {
 
     }
 
-    Point2DPT::Point2DPT(float X, float Y, int pressure, long time) :
-        Point2D(X,Y), _pressure(pressure), _time(time)
+    Point2DPT::Point2DPT(float X, float Y, float _pressure, long _time) :
+        Point2D(X,Y), pressure(_pressure), time(_time)
     {
 
     }
 
 
-    Point2DPT::Point2DPT(Point2D p, int pressure, long time) :
-        Point2D(p.x,p.y), _pressure(pressure), _time(time)
+    Point2DPT::Point2DPT(Point2D p, float _pressure, long _time) :
+        Point2D(p.x,p.y), pressure(_pressure), time(_time)
     {
 
     }

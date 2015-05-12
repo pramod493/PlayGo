@@ -1,10 +1,8 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2015-04-05T00:29:47
-#
-#-------------------------------------------------
-
-QT       += core gui widgets winextras
+#----------------------------------------------------------------------
+# Pramod Kumar
+# Purdue University
+#----------------------------------------------------------------------
+QT       += core gui widgets winextras svg
 
 TARGET = PlayGo
 
@@ -14,33 +12,33 @@ TEMPLATE = app
 
 RESOURCES += images.qrc
 
-include (PlayGoCore.pri)
+include (Core/PlayGoCore.pri)
 
 include (P_Dollar.pri)
 
 include (Indexer-Minimal/Indexer.pri)
 
-SOURCES += main.cpp \
-    cdi2qtwrapper.cpp \
-    tabletapplication.cpp \
-    cdiwindow.cpp \
-    cdigraphicspathitem.cpp \
-    cdisearchgraphicsitem.cpp \
-    sketchview.cpp \
-    sketchscene.cpp \
-    gesturemanager.cpp \
-    searchmanager.cpp \
-    colorselectortoolbar.cpp
+SOURCES += $$PWD/main.cpp \
+    $$PWD/cdi2qtwrapper.cpp \
+    $$PWD/tabletapplication.cpp \
+    $$PWD/cdiwindow.cpp \
+    $$PWD/cdigraphicspathitem.cpp \
+    $$PWD/cdisearchgraphicsitem.cpp \
+    $$PWD/sketchview.cpp \
+    $$PWD/sketchscene.cpp \
+    $$PWD/gesturemanager.cpp \
+    $$PWD/searchmanager.cpp \
+    $$PWD/colorselectortoolbar.cpp
 
 HEADERS += \
-    cdi2qtwrapper.h \
-    tabletapplication.h \
-    cdiwindow.h \
-    cdigraphicspathitem.h \
-    uisettings.h \
-    cdisearchgraphicsitem.h \
-    sketchview.h \
-    sketchscene.h \
-    gesturemanager.h \
-    searchmanager.h \
-    colorselectortoolbar.h
+    $$PWD/cdi2qtwrapper.h \
+    $$PWD/tabletapplication.h \
+    $$PWD/cdiwindow.h \
+    $$PWD/cdigraphicspathitem.h \
+    $$PWD/uisettings.h \
+    $$PWD/cdisearchgraphicsitem.h \
+    $$PWD/sketchview.h \
+    $$PWD/sketchscene.h \
+    $$PWD/gesturemanager.h \
+    $$PWD/searchmanager.h \
+    $$PWD/colorselectortoolbar.h

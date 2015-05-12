@@ -6,6 +6,7 @@
 #include <QObject>
 #include "stroke.h"
 #include <vector>
+#include <QStyleOptionGraphicsItem>
 
 namespace CDI
 {
@@ -20,13 +21,15 @@ namespace CDI
 
 		bool isOrphan;		// If there is  no parent. True as default
 
-        GraphicsPathItem(QGraphicsItem* parent, QPointF startPoint);
+        GraphicsPathItem(QGraphicsItem* parent, QPointF startPoint, float pressure=1.0, long time = 0);
 
         GraphicsPathItem(QGraphicsItem* parent, Stroke* stroke);
 
         ~GraphicsPathItem();
 
-		void push_back(QPointF point);
+        void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
+
+        void push_back(QPointF point, float pressure=1.0, long time = 0);
 
 		void push_back(Point2DPT point);
 

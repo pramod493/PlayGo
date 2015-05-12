@@ -10,21 +10,19 @@ using namespace boost::filesystem;
 class wb2DShapeDescriptor
 {
 public:
- wb2DShapeDescriptor();
- ~wb2DShapeDescriptor();
- //virtual void Index() = 0;
- virtual cv::Mat GetDescriptor(cv::Mat &img) = 0;
- virtual void ReadSettings(path settingspath) = 0;
- virtual void WriteSettings(path settingspath) = 0;
- std::string GetName();
+    wb2DShapeDescriptor();
+    ~wb2DShapeDescriptor();
+    //virtual void Index() = 0;
+    virtual cv::Mat GetDescriptor(cv::Mat &img) = 0;
+    virtual void ReadSettings(path settingspath) = 0;
+    virtual void WriteSettings(path settingspath) = 0;
+    std::string GetName();
 
 protected:
- bool m_verbose ; // print out the actions on the command prompt
- bool m_debug ; // save the intermediate images
- std::string m_name;
-
-
- };
+    bool m_verbose ; // print out the actions on the command prompt
+    bool m_debug ; // save the intermediate images
+    std::string m_name;
+};
 
 
 #endif // WB2DSHAPEDESCRIPTOR_H

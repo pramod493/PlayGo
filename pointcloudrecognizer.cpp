@@ -26,7 +26,7 @@ namespace CDI
     float PointCloudRecognizer::GreedyCloudMatch(vector<GesturePoint2D*> &points1,
                                                  vector<GesturePoint2D*> &points2)
     {
-        int n = points1.size();
+        size_t n = points1.size();
         float eps = 0.05f;
         int step = floor(pow(n, 1.0-eps));
 
@@ -44,7 +44,7 @@ namespace CDI
                                               vector<GesturePoint2D *> &points2,
                                               int startIndex)
     {
-        int n = points1.size();
+        size_t n = points1.size();
         bool* matched = new bool[n];
         // Initialize each element to false
         for(int i=0;i<n;i++) matched[i] = false;

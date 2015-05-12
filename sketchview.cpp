@@ -33,7 +33,6 @@ namespace CDI
             case QEvent::TouchEnd :
             case QEvent::TouchUpdate :
             case QEvent::TouchBegin :
-
             {
 				event->setAccepted(true);
                 QTouchEvent* e = static_cast<QTouchEvent*>(event);

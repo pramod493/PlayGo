@@ -1,4 +1,5 @@
 #include "cdiwindow.h"
+#include <QDebug>
 #include <QGraphicsProxyWidget>
 #include <QColorDialog>
 #include "colorselectortoolbar.h"
@@ -91,6 +92,10 @@ namespace CDI
         brushWidthSlider->setValue(3);
         connect(colorToolbar, SIGNAL(signalColorChange(QString,QColor)),
                 sketchScene, SLOT(setBrushColor(QString,QColor)));
+
+        // Search
+        connect(searchAction, SIGNAL(triggered()),
+                sketchScene, SLOT(OnSearchTrigger()));
 
         setCentralWidget(sketchView);
     }

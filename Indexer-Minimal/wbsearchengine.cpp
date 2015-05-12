@@ -64,14 +64,11 @@ void wbSearchEngine::Index()
             return;
 
         }
-
-
     }
     else
     {
         create_directory(desc_dir);
     }
-
 
     for (directory_iterator iter = directory_iterator(image_dir); iter
          != directory_iterator(); iter++) {
@@ -121,8 +118,6 @@ void wbSearchEngine::Load()
         cout<< "Database is not indexed for "<< desc_name<<endl;
         return;
     }
-
-
     boost::filesystem::path desc_dir = m_db_folder / desc_name;
 
     for (directory_iterator iter = directory_iterator(desc_dir); iter

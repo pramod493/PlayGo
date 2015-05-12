@@ -41,14 +41,14 @@ namespace CDI
 		QAction* openPageAction;
 		QAction* closePageAction;
 		QAction* saveImageAction;
+
 		// Sketching related operations
 		QAction* brushSelectAction;
 		QAction* eraseSelectAction;
 		QAction* marqueeAction;
-		//		QAction* polygonSelectAction;
-		//		QAction* selectorAction;        // Enable selection of components.
+        //QAction* selectorAction;        // Enable selection of components.
 		QAction* searchAction;          // Search the marqueed region
-		//		QAction* marqueeEnableAction;   // Enable the marquee widget
+        //QAction* marqueeEnableAction;   // Enable the marquee widget
 
 		// Simulation managed actions
 		QAction *playAction, *pauseAction, *resetAction;

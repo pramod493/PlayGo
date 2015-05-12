@@ -45,15 +45,7 @@ public:
 
                 double grad_val = in_grad->at<double>(i,j);
                 double grad_norm = grad_val/(grad_avg>epsil ? grad_avg:epsil);
-                //grad_norm_mat.at<double>(row,col) = grad_norm;
-
                 gthetamat.at<double>(i,j) = grad_norm;
-
-
-                //gthetamat.at<double>(i,j) = in_grad->at<double>(i,j);
-
-
-
             }
         }
     }
@@ -64,8 +56,6 @@ public:
     {
 
     }
-
-
 };
 
 class ComputeBICEPatchDescriptors{
@@ -120,21 +110,10 @@ public:
                 i_x_patch = i_x_patch +bin_width_x ;
             }
 
-            //Unused
-            //int tempsize =desc_vector.size();
-
-
             std::sort(desc_vector.begin(),desc_vector.end(), std::greater<int>());
             double thres_desc = desc_vector[top_tau];
 
-            //Unused
-            //double sum_of_tau_elems =std::accumulate(desc_vector.begin(),desc_vector.begin()+top_tau,0);
-
-            //            desc_vector.empty(); //empty the vector so that it does not accumulate over the older vals
-
             int i_desc=0;
-
-            //m_desc->at<int>(i,0) = 3;
 
             cv::Mat desc = m_desc->row(i);
             cv::Mat temp_desc = desc_mat_ch.clone();
@@ -146,8 +125,6 @@ public:
                 {
                     //  desc.at<int>(0,i_desc) =3; // set the element value to 1
                     m_desc->at<bool>(i,i_desc) = 1;
-                    //m_desc->at<bool>(i,1) = 1;
-                    // m_desc->at<bool>(i,2) = 1;
                 }
             }
 
@@ -157,12 +134,6 @@ public:
     ComputeBICEPatchDescriptors( std::vector<cv::Mat> patches,std::vector<int> classids,cv::Mat* desc,int num_theta,int num_bin_x, int num_bin_y,double tau)
         :listOfPatches(patches),theta_class(classids),m_desc(desc),m_num_theta(num_theta),m_num_bin_x(num_bin_x),m_num_bin_y(num_bin_y),m_tau(tau)
     {
-
-
     }
-
-
-
-
 };
 #endif // PARALLELBICE_H
