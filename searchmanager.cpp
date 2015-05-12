@@ -1,91 +1,54 @@
 #include "searchmanager.h"
 #include <QDir>
 #include <QDebug>
+#include <vector>
 
+using namespace std;
 namespace CDI
 {
     SearchManager::SearchManager(QObject *parent)
         : QObject(parent)
     {
-        isSearchRunning = false;
-
-        isAnotherInQueue = false;
-
-        timer = new QTimer(this);
-        timer->start(4000);  // Check every 4s
-        connect(timer, SIGNAL(timeout()),
-                this, SLOT(OnTimerComplete()));
-
-        inputFilePath   = QString("E:/Coding/Search/pramod/data/image.png");
-        resultFilePath  = QString("E:/Coding/Search/pramod/data/results.txt");
-        databaseDir     = QString("E:/Coding/Search/database/");
-        controlFile     = QString("E:/Coding/Search/pramod/data/control.txt");
-
-
+        inputFilePath   = QString("C:/Database/Input.png");
+        resultFilePath  = QString("C:/Database/results/results.yml");
+        databaseDir     = QString("C:/Database/");
         localFileList = QList<QString>();
-		if (QDir("Search_images").exists())
-		{
-			qDebug() << "search Directory exists!";
-			QDir dir = QDir("Search_images");
-			QStringList fileList = dir.entryList();
-			for (int i=2; i< fileList.size(); i++)
-			{
-				localFileList.push_back(dir.absoluteFilePath(fileList.at(i)));
-			}
-			qDebug() << localFileList.size() << "files added";
-		}
+
+        namespace po = boost::program_options;
+        path datapasePath = path(databaseDir.toStdString());
+        wbBICE *biceDescriptor = new wbBICE();
+        searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
+        searchEngine->Index(); searchEngine->Load();
     }
 
     SearchManager::~SearchManager()
     {
-        delete timer;
+        if (searchEngine!= NULL) delete searchEngine;
+        localFileList.clear();
     }
 
-    void SearchManager::search(QImage &image)
+    bool SearchManager::search(QImage &image, int numResults)
     {
-        searchInputImage = QImage(image);
-        if (isSearchRunning)
+        if (image.isNull()) return false;
+        image.save(inputFilePath);
+        vector<string> results = searchEngine->Query(inputFilePath.toStdString(), numResults);
+
+        localFileList.clear();
+        for (vector<string>::iterator it = results.begin();
+             it != results.begin()+numResults; ++it)
         {
-            isAnotherInQueue = true;
-            return;
-        } else
-        {
-            isAnotherInQueue = false;
-            run();
+            string name = *it;
+            qDebug() << "Adding file " << QString::fromStdString(name);
+            localFileList.push_back(QString::fromStdString(name));
         }
-    }
-
-    void SearchManager::run()
-    {
-        if(searchInputImage.isNull()) return;
-        isSearchRunning = true;
-
-        searchInputImage.save(inputFilePath);           // Save image
-        QFile file(controlFile);                        // Trigger search
-        file.open(QIODevice::WriteOnly | QIODevice::Text);
-        QTextStream out(&file);
-        out << "1\n";
-        file.close();
-    }
-
-    bool SearchManager::CheckSearchStatus()
-    {
-        bool result = false;
-        QFile file(controlFile);
-        file.open(QFile::ReadOnly);
-        QTextStream inputstream(&file);
-        QString temp = inputstream.readLine(1);
-
-        if (QString::compare(temp, QString("0"), Qt::CaseInsensitive) == 0)
-            result = true;
-        file.close();
-        // Since auth is not working, always return true
+        //ConvertResultsToLocalPath(numResults);
         return true;
-        return result;
     }
 
-    void SearchManager::ConvertResultsToLocalPath()
-    {
+    void SearchManager::ConvertResultsToLocalPath(int numResults)
+    {   // Populates the file list vector
+        // No longer needed since we are directly querying the file name from
+        // searchEngine
         localFileList.clear();      // Cleanup the search results
         QFile file(resultFilePath);
         if (file.open(QFile::ReadOnly))
@@ -95,7 +58,7 @@ namespace CDI
             while (!in.atEnd())
             {
                 QString line = in.readLine();
-                if ((lineNumber > 1) && (lineNumber <= 40))
+                if ((lineNumber > 1) && (lineNumber <= numResults))
                 {
                     QStringList list1 = line.split("/");
                     QString result(databaseDir);
@@ -107,23 +70,6 @@ namespace CDI
                 }
                 lineNumber++;
             }
-        }
-    }
-
-    void SearchManager::OnTimerComplete()
-    {
-        if (!isSearchRunning) return;
-        if (CheckSearchStatus())
-        {
-            isSearchRunning = false;
-            if (isAnotherInQueue)
-            {
-                isAnotherInQueue = false;
-                run();
-            }
-            // Convert and store the file names to local path
-            ConvertResultsToLocalPath();
-            emit signalSearchComplete(/*resultFilePath*/);
         }
     }
 }

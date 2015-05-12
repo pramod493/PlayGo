@@ -16,7 +16,7 @@ public:
     virtual void Index();
     virtual void Load();
     virtual vector<wbShape*>  Query(Mat &img,int k =20);
-    void Query(std::string query_str,int k =20);
+    vector<string> Query(std::string query_str,int k =20);
 protected:
     path m_db_folder;
     bool m_is_indexed;

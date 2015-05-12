@@ -5,7 +5,12 @@
 #include <QImage>
 #include <QFile>
 #include <QTextStream>
-#include <QTimer>
+
+// Juxtapoze
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include "wbbice.h"
+#include "wbsearchengine.h"
 
 namespace CDI
 {
@@ -16,38 +21,18 @@ namespace CDI
         QString inputFilePath;
         QString resultFilePath;
         QString databaseDir;
-        QString controlFile;
-
         QList<QString> localFileList;
 
-    protected:
-        QTimer* timer;
-
-        QImage searchInputImage;
-
-        bool isSearchRunning;
-
-        bool isAnotherInQueue;
+        wbSearchEngine* searchEngine;
 
     public:
         SearchManager(QObject *parent=0);
 
         ~SearchManager();
 
-        void search(QImage &image);
+        bool search(QImage &image, int numResults=10);
 
-    protected:
-        void run();
+        void ConvertResultsToLocalPath(int numResults);
 
-        bool CheckSearchStatus();
-
-        void ConvertResultsToLocalPath();
-
-    private slots:
-        void OnTimerComplete();
-
-
-    signals:
-        void signalSearchComplete(/*QString inputFilePath*/);
     };
 }

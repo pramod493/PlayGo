@@ -193,9 +193,6 @@ vector<wbShape*>  wbSearchEngine::Query(Mat &img, int k)
     {
         ret_vec.push_back(*it2);
     }
-
-    // std::copy ( new_shapes.begin(), new_shapes.begin()+20, ret_vec.begin() );
-
     double t_fin = (double)getTickCount();
 
     // Time related output
@@ -206,7 +203,7 @@ vector<wbShape*>  wbSearchEngine::Query(Mat &img, int k)
     return ret_vec;
 }
 
-void wbSearchEngine::Query(std::string query_str,int k)
+vector<std::string> wbSearchEngine::Query(std::string query_str,int k)
 {
 
     Mat img = imread(query_str,0);      // Read image
@@ -224,19 +221,16 @@ void wbSearchEngine::Query(std::string query_str,int k)
 
     FileStorage fs(results_file.string(), FileStorage::WRITE);
 
-    std::cout << "ok till here\n";
-    int i = 0;
+    vector<std::string> ret_vec;
     for (std::vector<wbShape*>::iterator it2 = results.begin() ; it2 != results.begin()+k; ++it2)
     {
-        // Debug output
-        //std::cout << "iterations " << i << "\n"; i++;
         wbShape * shape = *it2;
         fs << "filepath"<<shape->m_file_path;
-        //fs << shape->m_file_path;
-        //std::cout << shape->m_file_path << "\n";
+        ret_vec.push_back(shape->m_file_path);
     }
 
     fs.release();
+    return ret_vec;
 }
 
 
