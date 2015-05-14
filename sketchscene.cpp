@@ -54,7 +54,7 @@ SketchScene::SketchScene(QObject* parent) :
      * Initializing the physics engine as well as testing out the simulation aspect
      * See http://www.box2d.org/manual.html for tutorial for more
     */
-    {
+    if (true){
         b2Vec2 gravity(0.0, -10.0);
 //        bool doSleep = true;
         physicsWorld = new b2World(gravity);
@@ -93,13 +93,12 @@ SketchScene::SketchScene(QObject* parent) :
             b2PolygonShape dynamicBox;
 
             dynamicBox.Set(vertices, count);
-//            dynamicBox.SetAsBox(15.0,15.0);
 
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &dynamicBox;
             fixtureDef.density = 4.0f;
-            fixtureDef.friction = 0.0f;
-            fixtureDef.restitution = 1.0f;
+            fixtureDef.friction = 0.25f;
+            fixtureDef.restitution = 0.75f;
             testPhysicsBody[i]->CreateFixture(&fixtureDef);
         }
 
