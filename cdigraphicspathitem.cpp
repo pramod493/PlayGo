@@ -41,7 +41,6 @@ namespace CDI
         if (parentStroke->points.size() < 3) return;
         vector<Point2DPT*>::iterator it = parentStroke->points.begin();
         Point2DPT* p1 = (*it); ++it; Point2DPT* p2 = (*it);
-        //qDebug() << "Width" << width << p1->pressure << p2->pressure;
         for (; it != parentStroke->points.end(); ++it)
         {
             _pen.setWidthF(width * p1->pressure);

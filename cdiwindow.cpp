@@ -55,7 +55,7 @@ namespace CDI
             // Zoom works too
             QGraphicsView* view = new QGraphicsView();
             view->setScene(sketchScene);
-            view->fitInView(0,0,5000,5000,Qt::KeepAspectRatio);
+            view->fitInView(0,0,1000,1000,Qt::KeepAspectRatio);
             view->show();
 
             view->setAttribute(Qt::WA_AcceptTouchEvents, true);

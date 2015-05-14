@@ -18,6 +18,8 @@ include (P_Dollar.pri)
 
 include (Indexer-Minimal/Indexer.pri)
 
+include (Physics/QBox2D.pri)
+
 SOURCES += $$PWD/main.cpp \
     $$PWD/cdi2qtwrapper.cpp \
     $$PWD/tabletapplication.cpp \
@@ -28,7 +30,9 @@ SOURCES += $$PWD/main.cpp \
     $$PWD/sketchscene.cpp \
     $$PWD/gesturemanager.cpp \
     $$PWD/searchmanager.cpp \
-    $$PWD/colorselectortoolbar.cpp
+    $$PWD/colorselectortoolbar.cpp \
+    $$PWD/pixmapitem.cpp \
+    graphicsitemgroup.cpp
 
 HEADERS += \
     $$PWD/cdi2qtwrapper.h \
@@ -41,4 +45,6 @@ HEADERS += \
     $$PWD/sketchscene.h \
     $$PWD/gesturemanager.h \
     $$PWD/searchmanager.h \
-    $$PWD/colorselectortoolbar.h
+    $$PWD/colorselectortoolbar.h \
+    $$PWD/pixmapitem.h \
+    graphicsitemgroup.h

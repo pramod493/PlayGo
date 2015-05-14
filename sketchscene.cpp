@@ -2,13 +2,16 @@
 #include <QDebug>
 #include <QtSvg/QSvgGenerator>
 
+//// Box2D header(s)
+#include <Box2D/Box2D.h>
+#include <Box2D/Dynamics/b2Body.h>
+#include <QTimer>
+
 namespace CDI
 {
 SketchScene::SketchScene(QObject* parent) :
     QGraphicsScene(parent)
 {
-    qDebug() << "Creating sketch scene widget\n";
-
     mouse_mode_enabled = false;	// Keep only for the testing stages.
 
     brushWidth = 3.0;
@@ -46,6 +49,65 @@ SketchScene::SketchScene(QObject* parent) :
     // On stroke end
     QObject::connect(this, SIGNAL(signalBrushReleased(SketchScene*)),
                      this, SLOT(OnBrushRelease()));
+
+    /* -----------------------------------------------------------------
+     * Initializing the physics engine as well as testing out the simulation aspect
+     * See http://www.box2d.org/manual.html for tutorial for more
+    */
+    {
+        b2Vec2 gravity(0.0, -10.0);
+//        bool doSleep = true;
+        physicsWorld = new b2World(gravity);
+
+        // Create ground
+        b2BodyDef groundBodyDef;    // Create as object so that it automatically gets deleted at the end
+        groundBodyDef.position.Set(0.0,-10.0);
+
+        b2Body* groundBody = physicsWorld->CreateBody(&groundBodyDef);
+        b2PolygonShape groundBox;
+        groundBox.SetAsBox(500.0,10.0);
+        groundBody->CreateFixture(&groundBox, 0.0);
+
+        // Create a dynamic body
+        defaultPen.setWidth(1);
+        for (int i=0; i < 10; i++)
+        {
+            physicsItem[i] = new QGraphicsRectItem(10.0,40.0*i, 30,30);
+            physicsItem[i]->setPen(defaultPen);
+            physicsItem[i]->setBrush(fillBrush);
+            addItem(physicsItem[i]);
+
+            b2BodyDef bodyDef;
+            bodyDef.type = b2_dynamicBody;
+            bodyDef.position.Set(10.0,40.0*i);
+            bodyDef.angle = 10*i;
+
+            testPhysicsBody[i] = physicsWorld->CreateBody(&bodyDef);
+
+            b2Vec2 vertices[4];
+            vertices[0].Set(0.0f, 0.0f);
+            vertices[1].Set(30.0f, 0.0f);
+            vertices[2].Set(30.0f, 30.0f);
+            vertices[3].Set(0.0f,30.0f);
+            int32 count = 4;
+            b2PolygonShape dynamicBox;
+
+            dynamicBox.Set(vertices, count);
+//            dynamicBox.SetAsBox(15.0,15.0);
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &dynamicBox;
+            fixtureDef.density = 4.0f;
+            fixtureDef.friction = 0.0f;
+            fixtureDef.restitution = 1.0f;
+            testPhysicsBody[i]->CreateFixture(&fixtureDef);
+        }
+
+        QTimer* timer = new QTimer();
+        connect(timer, SIGNAL(timeout()),
+                this, SLOT(PhysicsStep()));
+        timer->start(10);
+    }
 }
 
 SketchScene::~SketchScene()
@@ -82,16 +144,6 @@ void SketchScene::clear()
 
 void SketchScene::BrushPress(QPointF scenePos, float pressure)
 {
-    qDebug() << "Brush down at " << scenePos;
-    if (0) {
-        QGraphicsLineItem* line = new QGraphicsLineItem();
-
-        line->setPen(marqueeSelectPen);
-        line->setLine(QLineF(scenePos, QPointF(500,300)));
-        addItem(line);
-        //QGraphicsLineItem* line = addLine(QLineF(scenePos, QPointF(500,300)), defaultPen);
-    }
-
     current_stroke = new GraphicsPathItem(parent_item, scenePos, pressure, 0);
     current_stroke->parentStroke->thickness = defaultPen.width();
     addItem(current_stroke);
@@ -101,7 +153,6 @@ void SketchScene::BrushPress(QPointF scenePos, float pressure)
 
 void SketchScene::BrushMove(QPointF scenePos, float pressure)
 {
-    qDebug() << pressure;
     if (!(current_stroke == NULL))
         current_stroke->push_back(scenePos, pressure);
 }
@@ -118,6 +169,30 @@ void SketchScene::BrushRelease(QPointF scenePos, float pressure)
     emit signalBrushReleased(this);
 }
 
+void SketchScene::SelectSearchResult(SearchGraphicsItem *searchItem)
+{   // TODO - Get the results file. Load the image and replace it
+    // with all strokes with search results in a way that it fits
+    // neatly in the same area
+    QString imageSourceFile = searchItem->sourceFilePath;
+    QPixmap pix = QPixmap(imageSourceFile); // Skip sanity checks since its coming from search image
+
+    GraphicsItemGroup *itemGroup = new GraphicsItemGroup(NULL, NULL);
+    addItem(itemGroup);
+    // NOTES - In here we want to allow create all items as ItemGroup of give type.. would that be better?
+    // Is it better to keep parent object = NULL if we are planning to reparent object during the workflow?
+    PixmapItem* sceneItem = new PixmapItem(pix, imageSourceFile, NULL, NULL);
+    itemGroup->addToGroup(sceneItem);
+    // Add all the strokes but set the invisible
+    for (QList<GraphicsPathItem*>::iterator it = freeStrokes.begin();
+         it != freeStrokes.end();
+         ++it)
+    {
+        itemGroup->addToGroup(*it);
+        (*it)->setVisible(false);
+    }
+    freeStrokes.clear();
+}
+
 void SketchScene::SaveScene(QString file)
 {
     Q_UNUSED(file);
@@ -126,6 +201,24 @@ void SketchScene::SaveScene(QString file)
 SketchScene* SketchScene::Clone()
 {
     return this;
+}
+
+void SketchScene::PhysicsStep()
+{
+    // Set up simulation settings
+    float timeStep = 1.0/60.0;
+    int velocityIterations = 6;
+    int positionIterations = 2;
+
+    physicsWorld->Step(timeStep, velocityIterations, positionIterations);
+    for (int i=0; i < 10; i++) {
+        b2Vec2 position = testPhysicsBody[i]->GetPosition();
+        float angle = testPhysicsBody[i]->GetAngle();
+
+        physicsItem[i]->setPos(position.x,position.y);
+        physicsItem[i]->setRotation(angle);
+        update(physicsItem[i]->boundingRect());
+    }
 }
 
 // Protected function
@@ -268,8 +361,6 @@ void SketchScene::OnSearchTrigger()
     // Saving for surface
     if (freeStrokes.size())
     {
-        qDebug() << "Free strokes = " << freeStrokes.size();
-
         int x_min = 0;  int y_min = 0;
         int x_max = 0; int y_max = 0;
 
@@ -306,7 +397,6 @@ void SketchScene::OnSearchTrigger()
                                                x_max-x_min, y_max-y_min));
         if (searchManager->search(croppedImage, 10))
         {
-            qDebug() << "Seach complete. Loading images now";
             OnSearchComplete();
         }
     }
@@ -339,7 +429,7 @@ void SketchScene::OnSearchComplete()
         delete (item);
     }
     searchResults.clear();
-    int searchItemSize = 100;
+    int searchItemSize = 150;
     int margin = 10;
     int offset = 0;
     int maxIndex = searchManager->localFileList.size();
@@ -365,7 +455,6 @@ void SketchScene::OnSearchComplete()
 
 void SketchScene::setBrushWidth(int size)
 {
-    qDebug() << "Brush width: " << size;
     defaultPen.setWidth(size);
     highlightPen.setWidth(size+3);
 }

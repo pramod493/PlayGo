@@ -38,7 +38,6 @@ namespace CDI
              it != results.begin()+numResults; ++it)
         {
             string name = *it;
-            qDebug() << "Adding file " << QString::fromStdString(name);
             localFileList.push_back(QString::fromStdString(name));
         }
         //ConvertResultsToLocalPath(numResults);

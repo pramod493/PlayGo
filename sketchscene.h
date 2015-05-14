@@ -7,12 +7,17 @@
 #include <QBrush>
 #include <QPainter>
 #include <QTouchEvent>
+#include <QGraphicsRectItem>
 
 #include <QList>
 #include <QGraphicsSceneMouseEvent>
 #include "cdisearchgraphicsitem.h"
 #include "cdigraphicspathitem.h"
 #include "searchmanager.h"
+#include "pixmapitem.h"
+#include "graphicsitemgroup.h"
+
+#include <Box2D/Box2D.h>
 
 namespace CDI
 {
@@ -20,6 +25,11 @@ namespace CDI
 	{
 		Q_OBJECT
     public:
+        // Physics variables
+        b2World* physicsWorld;
+        b2Body* testPhysicsBody[10];
+        QGraphicsRectItem* physicsItem[10];
+
         enum MODE {None, Draw, Erase, Transform, Edit, Select, Search};
 
         QTabletEvent::PointerType pointerType;
@@ -65,6 +75,8 @@ namespace CDI
         void BrushMove(QPointF scenePos, float pressure = 1.0);
 
         void BrushRelease(QPointF scenePos, float pressure = 1.0);
+
+        void SelectSearchResult(SearchGraphicsItem* searchItem);
 
         void SaveScene(QString file);
 
@@ -120,6 +132,8 @@ namespace CDI
         // NOTE - THis one makes no sense since this is an one time event
         // Similar to play/pause/reset event which occur only once.
         void setToSearch();
+
+        void PhysicsStep();
 
 	};
 }
