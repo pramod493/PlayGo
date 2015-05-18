@@ -7,7 +7,7 @@
 #include <QBrush>
 #include <QPainter>
 #include <QTouchEvent>
-#include <QGraphicsItem>
+#include <QGraphicsRectItem>
 
 #include <QList>
 #include <QGraphicsSceneMouseEvent>
@@ -28,7 +28,7 @@ namespace CDI
         // Physics variables
         b2World* physicsWorld;
         b2Body* testPhysicsBody[10];
-        QGraphicsItem* physicsItem[10];
+		QGraphicsRectItem* physicsItem[10];
 
         enum MODE {None, Draw, Erase, Transform, Edit, Select, Search};
 

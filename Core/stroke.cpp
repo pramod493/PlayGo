@@ -59,6 +59,11 @@ namespace CDI
         return newStroke;
     }
 
+	void Stroke::ApplyRamerDouglasSmoothing()
+	{
+		// TODO
+	}
+
     void Stroke::ApplySmoothing(int order)
     {
         size_t n_points = points.size() -1;

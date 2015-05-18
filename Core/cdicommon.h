@@ -34,6 +34,8 @@ namespace CDI
 
     float EuclideanDistance(Point2D* a, Point2D* b);
 
+	float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd);
+
     class Item : public QObject
     {
         Q_OBJECT

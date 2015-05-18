@@ -38,6 +38,8 @@ namespace CDI
 
         virtual Shape* Clone();
 
+		void ApplyRamerDouglasSmoothing();
+
         void ApplySmoothing(int order);
 
         void update();
