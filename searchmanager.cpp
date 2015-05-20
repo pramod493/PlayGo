@@ -18,7 +18,9 @@ namespace CDI
         path datapasePath = path(databaseDir.toStdString());
         wbBICE *biceDescriptor = new wbBICE();
         searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
-        searchEngine->Index(); searchEngine->Load();
+        // TODO - Enable indexing for test
+        searchEngine->Index();
+        searchEngine->Load();
     }
 
     SearchManager::~SearchManager()

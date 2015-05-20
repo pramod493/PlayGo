@@ -11,6 +11,12 @@ namespace CDI
     GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, QPointF startPoint, float pressure, long time)
         : QGraphicsPathItem(parent)
     {
+        {
+            physicsDivider = 0.01;
+            physicsMultiplier = 100;
+            physicsBody = NULL;
+        }
+
         painterPath = QPainterPath(startPoint);
         parentStroke = new Stroke(NULL);
         parentStroke->points.push_back(new Point2DPT(startPoint.x(), startPoint.y(),pressure,time));
@@ -24,6 +30,12 @@ namespace CDI
     GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, Stroke *stroke)
         : QGraphicsPathItem(parent)
     {
+        {
+            physicsDivider = 0.01;
+            physicsMultiplier = 100;
+            physicsBody = NULL;
+        }
+        
         parentStroke = stroke;
         QObject::connect(parentStroke, SIGNAL(ItemChanged(Stroke*)),
                          this, SLOT(OnStrokeUpdate(Stroke*)));

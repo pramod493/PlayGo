@@ -105,5 +105,7 @@ namespace CDI
 
 		void slotOnSignalProximity(QEvent* event);
 
+        void Save();
+
 	};
 }

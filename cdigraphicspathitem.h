@@ -7,6 +7,7 @@
 #include "stroke.h"
 #include <vector>
 #include <QStyleOptionGraphicsItem>
+#include <Box2D/Dynamics/b2Body.h>
 
 namespace CDI
 {
@@ -14,6 +15,10 @@ namespace CDI
     {
         Q_OBJECT
     public:
+        b2Body* physicsBody;
+
+        float physicsMultiplier;
+        float physicsDivider;
 
         Stroke* parentStroke;
 

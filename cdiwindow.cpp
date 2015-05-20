@@ -3,6 +3,9 @@
 #include <QGraphicsProxyWidget>
 #include <QColorDialog>
 #include "colorselectortoolbar.h"
+#include <QDir>
+#include <QFile>
+#include <QTextStream>
 
 namespace CDI
 {
@@ -77,6 +80,9 @@ namespace CDI
                 sketchScene, SLOT(slotTabletEvent(QTabletEvent*, QPointF)));
         // NOTE - make sure that actions are intialized prior to this segment
 
+        // Save
+        connect(saveImageAction, SIGNAL(triggered()),
+                this, SLOT(Save()));
         // Draw
         connect(brushSelectAction, SIGNAL(triggered()),
                 sketchScene,SLOT(setToDraw()));
@@ -193,5 +199,35 @@ namespace CDI
     void CDIWindow::slotOnSignalProximity(QEvent* event)
     {
         tabletDevice = static_cast<QTabletEvent*>(event)->device();
+    }
+
+    void CDIWindow::Save()
+    {
+        if (sketchScene!= NULL)
+        {
+            QTime time = QTime::currentTime();
+
+            QString filePath = QDir::currentPath() + "/" + time.toString("hh:mm:ss.zzz").replace(QRegExp(":"), "_");
+            qDebug() << "File" << filePath;
+            QFile file(filePath);
+            file.open(QIODevice::WriteOnly);
+            QTextStream out(&file);
+            out << "#Saving to file at "<< filePath;
+            {
+//                sketchScene
+//                sketchView
+                foreach (GraphicsPathItem* item, sketchScene->freeStrokes)
+                {
+                    out << "@POINT2DPT" << "\n";
+                    foreach (Point2DPT* point, item->parentStroke->points)
+                    {
+                        out << point->x << " " << point->y << " "
+                            << point->pressure << " " << point->time << "\n";
+                    }
+                }
+            }
+            file.close();
+
+        }
     }
 }

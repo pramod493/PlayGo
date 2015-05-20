@@ -28,7 +28,7 @@ SketchScene::SketchScene(QObject* parent) :
     marqueeSelectPen.setStyle(Qt::DashLine);
     marqueeSelectPen.setWidth(2);
 
-    defaultBrush = QBrush(QColor(1.0,1.0,1.0), Qt::NoBrush);
+    defaultBrush = QBrush(QColor(.75,0.75,0.75),Qt::BDiagPattern/* Qt::NoBrush*/);
     fillBrush = QBrush(QColor(0.75,0.75,0.75), Qt::SolidPattern);
 
     searchResults = QList<SearchGraphicsItem*>();
@@ -55,7 +55,7 @@ SketchScene::SketchScene(QObject* parent) :
      * See http://www.box2d.org/manual.html for tutorial for more
     */
     if (true){
-        b2Vec2 gravity(0.0, -10.0);
+        b2Vec2 gravity(0.0, -2.0);
 //        bool doSleep = true;
         physicsWorld = new b2World(gravity);
 
@@ -65,42 +65,8 @@ SketchScene::SketchScene(QObject* parent) :
 
         b2Body* groundBody = physicsWorld->CreateBody(&groundBodyDef);
         b2PolygonShape groundBox;
-        groundBox.SetAsBox(500.0,10.0);
+        groundBox.SetAsBox(50.0,10.0);
         groundBody->CreateFixture(&groundBox, 0.0);
-
-        // Create a dynamic body
-        defaultPen.setWidth(1);
-        for (int i=0; i < 10; i++)
-        {
-            physicsItem[i] = new QGraphicsRectItem(10.0,40.0*i, 30,30);
-            physicsItem[i]->setPen(defaultPen);
-            physicsItem[i]->setBrush(fillBrush);
-            addItem(physicsItem[i]);
-
-            b2BodyDef bodyDef;
-            bodyDef.type = b2_dynamicBody;
-            bodyDef.position.Set(10.0,40.0*i);
-            bodyDef.angle = 10*i;
-
-            testPhysicsBody[i] = physicsWorld->CreateBody(&bodyDef);
-
-            b2Vec2 vertices[4];
-            vertices[0].Set(0.0f, 0.0f);
-            vertices[1].Set(30.0f, 0.0f);
-            vertices[2].Set(30.0f, 30.0f);
-            vertices[3].Set(0.0f,30.0f);
-            int32 count = 4;
-            b2PolygonShape dynamicBox;
-
-            dynamicBox.Set(vertices, count);
-
-            b2FixtureDef fixtureDef;
-            fixtureDef.shape = &dynamicBox;
-            fixtureDef.density = 4.0f;
-            fixtureDef.friction = 0.25f;
-            fixtureDef.restitution = 0.75f;
-            testPhysicsBody[i]->CreateFixture(&fixtureDef);
-        }
 
         QTimer* timer = new QTimer();
         connect(timer, SIGNAL(timeout()),
@@ -147,6 +113,7 @@ void SketchScene::BrushPress(QPointF scenePos, float pressure)
     current_stroke->parentStroke->thickness = defaultPen.width();
     addItem(current_stroke);
     current_stroke->setPen(defaultPen);
+    current_stroke->setBrush(defaultBrush);
     freeStrokes.push_back(current_stroke);
 }
 
@@ -154,18 +121,45 @@ void SketchScene::BrushMove(QPointF scenePos, float pressure)
 {
     if (!(current_stroke == NULL))
         current_stroke->push_back(scenePos, pressure);
+    qDebug() << scenePos;
 }
 
 void SketchScene::BrushRelease(QPointF scenePos, float pressure)
 {
     if (!(current_stroke == NULL))
         current_stroke->push_back(scenePos, pressure);
-    current_stroke->ApplySmoothing(1);
+    current_stroke->ApplySmoothing(2);
+
+    qDebug() << "Stroke point count is " << current_stroke->parentStroke->points.size();
+
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position.Set(0.0,0.0);
+    bodyDef.angle = 25;
+    current_stroke->physicsBody = physicsWorld->CreateBody(&bodyDef);
+    b2ChainShape polygon;
+    b2Vec2* vec = new b2Vec2[current_stroke->parentStroke->points.size()];
+    int vertexCount =0;
+    for (int i=0; i < current_stroke->parentStroke->points.size();)
+    {
+        Point2D* pt = current_stroke->parentStroke->points[i];
+        vec[i] = b2Vec2(pt->x*current_stroke->physicsDivider,pt->y*current_stroke->physicsDivider);
+        vertexCount++;
+        i++;
+    }
+    polygon.CreateChain(vec, vertexCount);
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &polygon;
+    fixtureDef.density = 0.4f;
+    fixtureDef.friction = 0.25f;
+    fixtureDef.restitution = 0.75f;
+    current_stroke->physicsBody->CreateFixture(&fixtureDef);
 
     // Trigger signal in order to update related/connected components
     current_stroke = NULL;
 
     emit signalBrushReleased(this);
+
 }
 
 void SketchScene::SelectSearchResult(SearchGraphicsItem *searchItem)
@@ -207,16 +201,28 @@ void SketchScene::PhysicsStep()
     // Set up simulation settings
     float timeStep = 1.0/60.0;
     int velocityIterations = 6;
-    int positionIterations = 2;
+    int positionIterations = 4;
 
     physicsWorld->Step(timeStep, velocityIterations, positionIterations);
-    for (int i=0; i < 10; i++) {
-        b2Vec2 position = testPhysicsBody[i]->GetPosition();
-        float angle = testPhysicsBody[i]->GetAngle();
+    GraphicsPathItem* item = NULL;
 
-        physicsItem[i]->setPos(position.x,position.y);
-        physicsItem[i]->setRotation(angle);
-        update(physicsItem[i]->boundingRect());
+    foreach(item, freeStrokes)
+    {
+        if (item->physicsBody!= NULL)
+        {
+            b2Body* body = item->physicsBody;
+            b2Vec2 position = body->GetPosition();
+            float angle = body->GetAngle();
+            item->setPos(position.x*item->physicsMultiplier,position.y*item->physicsMultiplier);
+            item->setRotation(angle);
+            update(item->boundingRect());
+//            qDebug() << angle << position.x << position.y;
+        }
+    }
+    if (item != NULL)
+    if (item->physicsBody!= NULL)
+    {
+        qDebug() << item->physicsBody->GetAngle();
     }
 }
 
@@ -342,6 +348,7 @@ void SketchScene::SelectAction(QTabletEvent *event, QPointF scenePos)
 void SketchScene::OnBrushRelease()
 {
     return;
+
     // Disable search at the end of each stroke
     OnSearchTrigger();
 }

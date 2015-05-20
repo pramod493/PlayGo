@@ -27,8 +27,6 @@ namespace CDI
     public:
         // Physics variables
         b2World* physicsWorld;
-        b2Body* testPhysicsBody[10];
-		QGraphicsRectItem* physicsItem[10];
 
         enum MODE {None, Draw, Erase, Transform, Edit, Select, Search};
 
@@ -46,10 +44,12 @@ namespace CDI
 
         bool mouse_mode_enabled;
 
-    protected:
         QList<SearchGraphicsItem*> searchResults;
 
         QList<GraphicsPathItem*> freeStrokes;
+
+    protected:
+
 
         MODE current_mode;
 
