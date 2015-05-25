@@ -2,140 +2,80 @@
 
 namespace CDI
 {
-    // Our assumption is that there is no transformation during the creation process?
-    Stroke::Stroke(QObject *parent) : Shape(parent)
-    {
-		thickness = 3;
-        p_parent = parent;
-        p_type = STROKE;
-        closed = false;
-        points = vector<Point2DPT*>();
-    }
-
-    Stroke::Stroke(QObject *parent, vector<Point2DPT *> &pointList) : Shape(parent)
-    {
-		thickness = 3;
-        transform = QTransform();
-        p_parent = parent;
-        p_type = STROKE;
-        closed = false;
-        points = vector<Point2DPT*>();
-        for (int i=0; i< pointList.size(); i++)
-        {
-            points.push_back(
-                        new Point2DPT(pointList[i]->x, pointList[i]->y,
-                                      pointList[i]->pressure, pointList[i]->time));
-        }
-    }
-
-    Stroke::Stroke(QObject *parent, int len, Point2DPT *pointList) : Shape(parent)
-    {
-		thickness = 3;
-        p_parent = parent;
-        p_type = STROKE;
-        closed = false;
-        points = vector<Point2DPT*>();
-        for (int i=0; i< len; i++)
-        {
-            points.push_back(new Point2DPT(
-                                 pointList[i].x, pointList[i].y,
-                                 pointList[i].pressure, pointList[i].time));
-        }
-    }
-
-    Stroke::~Stroke()
-    {
-        // Delete the points stored in the stroke.
-        for(vector<Point2DPT*>::iterator it = points.begin();
-            it < points.end();
-            it++)
-            delete *it;
-        points.clear();
-    }
-
-    Shape* Stroke::Clone()
-    {
-        Stroke* newStroke = new Stroke(p_parent, points);
-        return newStroke;
-    }
-
-	void Stroke::ApplyRamerDouglasSmoothing()
+	void Stroke::translate(const Point2D &offset)
 	{
-		// TODO
-	}
+		if (offset.isNull())
+			return;
 
-    void Stroke::ApplySmoothing(int order)
-    {
-        size_t n_points = points.size() -1;
-        for (int i =0;i<order;i++)
-        {
-            for (int index=1; index < n_points; index++)
-            {
-                points[index]->x = 0.5* (points[index-1]->x +points[index+1]->x);
-                points[index]->y = 0.5* (points[index-1]->y +points[index+1]->y);
-                points[index]->pressure = 0.5 *(points[index-1]->pressure +
-                                           points[index+1]->pressure);
-            }
-        }
-        update();
-    }
+		mask |= isTransformed;
 
-    void Stroke::update()
-    {
-        emit ItemChanged(this);
-    }
-
-	bool Stroke::Selected(Point2D* p, float extraWidth)
-	{
-		float width = thickness + extraWidth;
-		float sqrWidth = width*width;
-        size_t n_points = points.size()-1;
-		// TODO - We can check for this as well
-		if (n_points < 1) return false;
-
-		bool result = false;
-		for (int i=0; i< n_points; i++)
-		{
-			Point2D* p1 = points[i];
-			Point2D* p2 = points[i+1];
-
-			Point2D V1 = Point2D(p->x-p1->x, p->y-p1->y);
-			Point2D V2 = Point2D(p2->x-p1->x,p2->y-p1->y);
-			float sqrMag = (V2.x*V2.x + V2.y*V2.y);
-
-			// dot product
-			float t = (V1.x*V2.x + V1.y*V2.y) / sqrMag;
-			if (t < 0.0 || t > 1.0) continue;
-
-			// check normal distance
-			V2.x = V2.x*t; V2.y = V2.y*t;	// set to coord of projection point
-			float dist = (V1.x-V2.x)*(V1.x-V2.x) + (V1.y-V2.y)*(V1.y-V2.y);
-            if (dist < sqrWidth) result = true;
+		Point2DPT *p = data();
+		int i = size();
+		while (i--) {
+			*p += offset;
+			++p;
 		}
-        return result;
 	}
 
-    /* ---------------------------------------------------------------------------------
-     * Pont2DPT class contains extra informaion which might be utilized by some gesture
-     * recognizers as well as can be used as rendering aid.
-     * ------------------------------------------------------------------------------ */
-    Point2DPT::Point2DPT() :
-        Point2D(0,0), pressure(1), time(0)
-    {
+	bool Stroke::containsPoint(const Point2D &pt, SelectionType rule, float margin)
+	{
+		Q_UNUSED(margin); Q_UNUSED(rule);
+		qDebug() << "Feature not implemented" << pt;
+		return false;
+	}
 
-    }
+	ItemType Stroke::type() const
+	{
+		return ItemType::STROKE;
+	}
 
-    Point2DPT::Point2DPT(float X, float Y, float _pressure, long _time) :
-        Point2D(X,Y), pressure(_pressure), time(_time)
-    {
+	QDataStream& Stroke::serialize(QDataStream &stream) const
+	{
+		int len = this->size();
+		int i;
+		stream << color();
+		stream << float(thickness());
+		stream << transform();
+		stream << qint32(len);
+		for (i=0; i< len; i++)
+			stream << this->at(i);
+		return stream;
+	}
 
-    }
+	QDataStream& Stroke::deserialize(QDataStream &stream)
+	{		
+		qint32 len =0;
+		QTransform t;
 
+		stream >> _color;
+		stream >> _thickness;
+		stream >> t;
+		stream >> len;
 
-    Point2DPT::Point2DPT(Point2D p, float _pressure, long _time) :
-        Point2D(p.x,p.y), pressure(_pressure), time(_time)
-    {
+		Point2DPT p;
+		for (int i=0; i< len; i++)
+		{
+			stream >> p;
+			push_back(p);
+		}
+		setTransform(t);
 
-    }
+		mask |= isModified;
 
+		return stream;
+	}
+
+	QDebug operator <<(QDebug d, const Stroke &stroke)
+	{
+		d.nospace() << "Stroke id: " << stroke.id().toString();
+		d.nospace() << "\n";
+		d.nospace() << "[Color:"<<stroke.color()<<"Thickness:"
+					<< stroke.thickness() << "Size:"<<stroke.size() << "]";
+		d.nospace() << "\n";
+		d.nospace() << stroke.transform();
+		d << "\n";
+		QVector<Point2DPT> v = stroke;
+		d.nospace() << v;
+		return d.space();
+	}
 }

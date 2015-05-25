@@ -1,70 +1,108 @@
 #pragma once
-#include "cdicommon.h"
-#include <vector>
-#include <QObject>
-#include <QTransform>
-
-using namespace std;
+#include <commonfunctions.h>
+#include <abstractmodelitem.h>
+#include <QDataStream>
+#include <point2dpt.h>
+#include <QVector>
+#include <QColor>
 
 namespace CDI
 {
-    class Point2DPT;
+	/**
+	 * @brief The Stroke class
+	 * Stroke the points, color and thickness information for stroke
+	 */
+	class Stroke : public QVector<Point2DPT>, public AbstractModelItem
+	{
+	protected:
+		QColor _color;				/**< Stroke color */
+		float _thickness;			/**< Maximum thickness of stroke */
+		QTransform _transform;		/**< Current stroke transform w.r.t. its parent */
 
-    class Stroke : public Shape
-    {
-        Q_OBJECT
-    protected:
-        Type p_type;
+	public:
+		inline Stroke();
+		inline Stroke(QColor color, float thickness);
+		inline Stroke(const Stroke& s);
+		inline Stroke(const QVector<Point2DPT>& points, QColor color, float thickness);
 
-        QObject* p_parent;
-    public:
-		int thickness;
+		/**
+		 * @brief Get Color of stroke
+		 * @return Stroke color
+		 */
+		inline QColor color() const;
+		inline float thickness() const;
+		inline QTransform transform() const;
 
-        QTransform transform;
+		inline void setColor(QColor color);
+		inline void setThickness(float thickness);
+		inline void setTransform(QTransform& transform);
 
-        vector<Point2DPT*> points;
+		inline void translate(float x, float y);
+		void translate(const Point2D& offset);
 
-        bool closed;
+		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
 
-        Stroke(QObject* parent);
+		// Virtual functions
+		virtual ItemType type() const;
+		QDataStream& serialize(QDataStream& stream) const;
+		QDataStream& deserialize(QDataStream& stream);
 
-        Stroke(QObject* parent, vector<Point2DPT*> &pointList);
+		friend QDebug operator <<(QDebug d, const Stroke &stroke);
+	};
 
-        Stroke(QObject* parent, int len, Point2DPT* pointList);
+	/******************************************************
+	 * Stroke inline functions
+	 *****************************************************/
+	inline Stroke::Stroke()
+		: _color(Qt::black), _thickness(3.0f)
+	{}
 
-        ~Stroke();
+	inline Stroke::Stroke(QColor color, float thickness)
+		: _color(color), _thickness(thickness)
+	{}
 
-        virtual Type GetType() { return p_type;}
+	inline Stroke::Stroke(const Stroke &s)
+		: QVector<Point2DPT>(s) , _color(s.color()), _thickness(s.thickness())
+	{}
 
-        virtual Shape* Clone();
+	inline Stroke::Stroke(const QVector<Point2DPT>& points, QColor color, float thickness)
+		: QVector<Point2DPT> (points), _color(color), _thickness(thickness)
+	{}
 
-		void ApplyRamerDouglasSmoothing();
+	inline QColor Stroke::color() const
+	{
+		return _color;
+	}
 
-        void ApplySmoothing(int order);
+	inline float Stroke::thickness() const
+	{
+		return _thickness;
+	}
 
-        void update();
+	inline QTransform Stroke::transform() const
+	{
+		return _transform;
+	}
 
-		bool Selected(Point2D* p, float extraWidth);
+	inline void Stroke::setColor(QColor color)
+	{
+		_color = color;
+	}
 
-    signals:
-        void ItemChanged(Stroke*);
-    };
+	inline void Stroke::setThickness(float thickness)
+	{
+		mask |= isModified;
+		_thickness = thickness;
+	}
 
-    // Point2DPV add extra information about pressure and time information
-    // Can we use it to create an undo chain??
-    class Point2DPT : public Point2D
-    {
-    public:
-        float pressure;
-        long time;
+	inline void Stroke::setTransform(QTransform& transform)
+	{
+		mask |= isTransformed;
+		_transform = transform;
+	}
 
-        Point2DPT();
-
-        Point2DPT(float X, float Y, float _pressure = 1, long _time = 0);
-
-        Point2DPT(Point2D p, float _pressure = 1, long _time = 0);
-
-        //Point2DPT(Point2DPT &orig);
-    };
-
+	inline void Stroke::translate(float x, float y)
+	{
+		translate(QPointF(x,y));
+	}
 }

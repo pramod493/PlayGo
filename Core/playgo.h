@@ -1,39 +1,27 @@
 #pragma once
+#include "commonfunctions.h"
+#include "assembly.h"
 
-#include <QObject>
-#include <QVector>
-#include "page.h"
-
-using namespace std;
-
+/**
+ \mainpage PlayGo core component documentation
+ \section Introducion to datastructure
+ All objetcs are derived from AbstractModelItem object
+ \section Conact Info
+Author: Pramod Kumar
+email: pramod@purdue.edu
+email: pramod493@gmail.com
+ */
 namespace CDI
 {
-    class PlayGo : public QObject
-    {
-        Q_OBJECT
-    public:
-
-        QVector<Page*> pageList;
-        //map<Page*, string> pages;
-
-    protected:
-        Page* currentPage;
-    public:
-        explicit PlayGo(QObject *parent = 0);
-
-        ~PlayGo();
-
-        void SetCurrent(Page* page);
-    protected:
-        void Init();
-
-    signals:
-        void OnExit();
-
-    private slots:
-        void OnPageClose(Page* page);
-
-        void OnPageOpen(Page* page);
-
-    };
+	/**
+	 * @brief
+	 * The root object which contains all the components.
+	 * Mostly used for loading/saving files and maintaining ID unique
+	 */
+	class PlayGo
+	{
+	public:
+		PlayGo();
+		~PlayGo();
+	};
 }
