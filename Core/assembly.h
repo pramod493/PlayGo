@@ -1,12 +1,21 @@
-#ifndef ASSEMBLY_H
-#define ASSEMBLY_H
+#pragma once
+#include "commonfunctions.h"
+#include "abstractmodelitem.h"
+#include "component.h"
 
-
-class Assembly
+namespace CDI
 {
-public:
-	Assembly();
-	~Assembly();
-};
+	class Assembly : public AbstractModelItem
+	{
+	protected:
+		QVector<Component*> components;
+	public:
+		Assembly();
+		~Assembly();
 
-#endif // ASSEMBLY_H
+		ItemType type() const;
+
+		QDataStream& serialize(QDataStream& stream) const ;
+		QDataStream& deserialize(QDataStream& stream);
+	};
+}
