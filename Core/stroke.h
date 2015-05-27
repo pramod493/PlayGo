@@ -18,6 +18,7 @@ namespace CDI
 		QColor _color;				/**< Stroke color */
 		float _thickness;			/**< Maximum thickness of stroke */
 		QTransform _transform;		/**< Current stroke transform w.r.t. its parent */
+		QTransform _inverseTransform;
 
 	public:
 		inline Stroke();
@@ -32,6 +33,7 @@ namespace CDI
 		inline QColor color() const;
 		inline float thickness() const;
 		inline QTransform transform() const;
+		inline QTransform inverseTransform() const;
 
 		inline void setColor(QColor color);
 		inline void setThickness(float thickness);
@@ -41,6 +43,7 @@ namespace CDI
 		void translate(const Point2D& offset);
 
 		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
+		void applySmoothing(int order);// TODO - Implement
 
 		// Virtual functions
 		virtual ItemType type() const;
@@ -84,6 +87,11 @@ namespace CDI
 		return _transform;
 	}
 
+	inline QTransform Stroke::inverseTransform() const
+	{
+		return _inverseTransform;
+	}
+
 	inline void Stroke::setColor(QColor color)
 	{
 		_color = color;
@@ -99,6 +107,7 @@ namespace CDI
 	{
 		mask |= isTransformed;
 		_transform = transform;
+		_inverseTransform = transform.inverted();
 	}
 
 	inline void Stroke::translate(float x, float y)

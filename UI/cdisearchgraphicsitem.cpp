@@ -2,13 +2,12 @@
 #include <QGraphicsScene>
 #include <QDebug>
 #include "sketchscene.h"
-#include "pixmapitem.h"
+//#include "pixmapitem.h"
 
 namespace CDI {
 	SearchGraphicsItem::SearchGraphicsItem(QGraphicsItem *parent)
 		: QGraphicsPixmapItem(parent)
 	{
-		_type = IMAGE;
 		setAcceptDrops(true);
 		setAcceptTouchEvents(true);
 
@@ -34,11 +33,6 @@ namespace CDI {
         t = QTime();
 	}
 
-	Item::Type SearchGraphicsItem::GetType()
-	{
-		return _type;
-	}
-
 	bool SearchGraphicsItem::sceneEvent(QEvent* event)
 	{
         //// Tap to select item
@@ -62,11 +56,12 @@ namespace CDI {
             case QEvent::TouchEnd :
                 if (touchOn && (t.elapsed() < waitInMiliseconds))
                 {
+					// TODO Load item on selection of search results
                     touchOn = false;
                     SketchScene* parentScene = static_cast<SketchScene*>(scene());  // NOTE - Do we really need the SketchScene?
-                    PixmapItem* pixItem =new PixmapItem(QPixmap(sourceFilePath), sourceFilePath, NULL, NULL);
-                    pixItem->setFlag(QGraphicsItem::ItemIsMovable, true);
-                    parentScene->addItem(pixItem);
+//                    PixmapItem* pixItem =new PixmapItem(QPixmap(sourceFilePath), sourceFilePath, NULL, NULL);
+//                    pixItem->setFlag(QGraphicsItem::ItemIsMovable, true);
+//                    parentScene->addItem(pixItem);
                 }
                 break;
         }

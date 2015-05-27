@@ -1,6 +1,6 @@
 #pragma once
-
-#include "point2d.h"
+#include "commonfunctions.h"
+#include "point2dpt.h"
 #include<vector>
 
 using namespace std;

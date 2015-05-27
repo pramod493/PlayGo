@@ -2,12 +2,12 @@
 
 #include <QGraphicsItemGroup>
 #include <QGraphicsPixmapItem>
-#include "cdicommon.h"
+#include "commonfunctions.h"
 #include <QDebug>
 
 namespace CDI
 {
-    class GraphicsItemGroup : public QGraphicsItemGroup, public Item
+	class GraphicsItemGroup : public QGraphicsItemGroup
     {
     public:
         GraphicsItemGroup(QGraphicsItem* graphicsParent, QObject* objectParent);
@@ -19,6 +19,5 @@ namespace CDI
             return QGraphicsItemGroup::sceneEvent(event);
         }
 
-        Item::Type GetType() { return Type::COMPOUND_SHAPE; }
     };
 }

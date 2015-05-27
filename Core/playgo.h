@@ -1,5 +1,8 @@
 #pragma once
+#include <QHash>
 #include "commonfunctions.h"
+#include "abstractmodelitem.h"
+#include "component.h"
 #include "assembly.h"
 
 /**
@@ -20,8 +23,36 @@ namespace CDI
 	 */
 	class PlayGo
 	{
+	protected:
+		QHash<QUuid, Assembly*> assemblies;
+		QHash<QUuid, Component*> freeComponents;
 	public:
 		PlayGo();
+
+		/**
+		 * @brief Delete all the components in the scene and destroys the object
+		 */
 		~PlayGo();
+
+		/**
+		 * @brief deleteAllItems: Clear all items in the database
+		 */
+		void deleteAllItems();
+
+		virtual Component* addComponent(Assembly* parent);
+		virtual Assembly* addAssembly();
+
+		virtual bool contains(Assembly* assembly);
+		virtual bool contains(QUuid id, bool searchRecursive);
+		virtual bool contains(QString id, bool searchRecursive);
+
+		virtual Assembly* getAssemblyById(QUuid id);
+		virtual Assembly* getAssemblyById(QString id);
+
+		QDataStream& serialize(QDataStream& stream) const;
+		QDataStream& deserialize(QDataStream& stream);
+
+		friend QDataStream& operator<<(QDataStream& stream, const PlayGo& item);
+		friend QDataStream& operator>>(QDataStream& stream, PlayGo& item);
 	};
 }

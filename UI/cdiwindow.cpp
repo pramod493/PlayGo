@@ -203,31 +203,32 @@ namespace CDI
 
     void CDIWindow::Save()
     {
-        if (sketchScene!= NULL)
-        {
-            QTime time = QTime::currentTime();
+		// Not needed as we are QDataStream
+//        if (sketchScene!= NULL)
+//        {
+//            QTime time = QTime::currentTime();
 
-            QString filePath = QDir::currentPath() + "/" + time.toString("hh:mm:ss.zzz").replace(QRegExp(":"), "_");
-            qDebug() << "File" << filePath;
-            QFile file(filePath);
-            file.open(QIODevice::WriteOnly);
-            QTextStream out(&file);
-            out << "#Saving to file at "<< filePath;
-            {
-//                sketchScene
-//                sketchView
-                foreach (GraphicsPathItem* item, sketchScene->freeStrokes)
-                {
-                    out << "@POINT2DPT" << "\n";
-                    foreach (Point2DPT* point, item->parentStroke->points)
-                    {
-                        out << point->x << " " << point->y << " "
-                            << point->pressure << " " << point->time << "\n";
-                    }
-                }
-            }
-            file.close();
+//            QString filePath = QDir::currentPath() + "/" + time.toString("hh:mm:ss.zzz").replace(QRegExp(":"), "_");
+//            qDebug() << "File" << filePath;
+//            QFile file(filePath);
+//            file.open(QIODevice::WriteOnly);
+//            QTextStream out(&file);
+//            out << "#Saving to file at "<< filePath;
+//            {
+////                sketchScene
+////                sketchView
+//                foreach (GraphicsPathItem* item, sketchScene->freeStrokes)
+//                {
+//                    out << "@POINT2DPT" << "\n";
+//					foreach (Point2DPT* point, item->parentStroke)
+//                    {
+//                        out << point->x << " " << point->y << " "
+//                            << point->pressure << " " << point->time << "\n";
+//                    }
+//                }
+//            }
+//            file.close();
 
-        }
+//        }
     }
 }

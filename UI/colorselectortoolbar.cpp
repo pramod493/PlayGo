@@ -1,7 +1,7 @@
 #include "colorselectortoolbar.h"
 #include <QDebug>
 #include <QPixmap>
-#include "cdicommon.h"
+#include "commonfunctions.h"
 
 namespace CDI
 {
@@ -47,7 +47,7 @@ namespace CDI
 
     void ColorSelectorToolbar::slotColorChange(QString name, QColor color)
     {
-       if (!ColorCompare(color,current_color))
+       if (!colorCompare(color,current_color))
        {
            current_color = color;
            emit signalColorChange(name, color);

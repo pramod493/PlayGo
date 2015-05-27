@@ -53,12 +53,12 @@ namespace CDI
 
 	////////////////////////////////////////
 
-    float DotProduct(Point2D* p1, Point2D* p2)
+	float dotProduct(Point2D* p1, Point2D* p2)
     {
         return (p1->x() * (p2->x()) + p1->y() * (p2->y()));
     }
 
-    float CrossProduct(Point2D* p1, Point2D* p2)
+	float crossProduct(Point2D* p1, Point2D* p2)
     {
 		return (p1->x() * (p2->y()) - p2->x() * (p1->y()) );
     }
@@ -68,25 +68,30 @@ namespace CDI
         return atan ((p2->y()-p1->y())/(p2->x()-p1->x()));
     }
 
-    float Magnitude(Point2D* p)
+	float magnitude(Point2D* p)
     {
         return sqrt(p->x() * (p->x()) + p->y() * (p->y()) );
     }
 
-    bool PointFuzzyCompare(Point2D* p1, Point2D* p2)
+	float sqrMagnitude(Point2D* p)
+	{
+		return (p->x() * (p->x()) + p->y() * (p->y()) );
+	}
+
+	bool pointFuzzyCompare(Point2D* p1, Point2D* p2)
     {
 		return qFuzzyCompare(p1->x(), p2->x()) && qFuzzyCompare(p1->y(), p2->y());
     }
 
-    float SqrEuclideanDistance(Point2D* a, Point2D* b)
+	float sqrEuclideanDistance(Point2D* a, Point2D* b)
     {
         return (a->x() - b->x())*(a->x() - b->x()) +
                 (a->y() - b->y())*(a->y() - b->y());
     }
 
-    float EuclideanDistance(Point2D* a, Point2D* b)
+	float euclideanDistance(Point2D* a, Point2D* b)
     {
-        return sqrt(SqrEuclideanDistance(a,b));
+		return sqrt(sqrEuclideanDistance(a,b));
     }
 
     float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd)
@@ -119,19 +124,19 @@ namespace CDI
 
         if (t < 0.0)
         {
-            *distance = EuclideanDistance(p, lineStart);
+			*distance = euclideanDistance(p, lineStart);
         } else if (t > 1.0)
         {
-            *distance = EuclideanDistance(p, lineEnd);
+			*distance = euclideanDistance(p, lineEnd);
         } else {
             // check normal distance
             V2 *= t;    // set to coord of projection point
-            *distance = EuclideanDistance(&V1, &V2);
+			*distance = euclideanDistance(&V1, &V2);
         }
         return OnSegment;
     }
 
-    bool ColorCompare(QColor c1, QColor c2)
+    bool colorCompare(QColor c1, QColor c2)
     {
          return (c1.red()== c2.red()) && (c1.green() == c2.green()) && (c1.blue() == c2.blue());
     }

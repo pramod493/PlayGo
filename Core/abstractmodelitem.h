@@ -19,6 +19,13 @@ namespace CDI {
 
 		virtual ItemType type() const = 0;
 		virtual QTransform transform() const { return QTransform(); }
+		/**
+		 * @brief inverseTransform returns the inverse of transform returned by transform()
+		 * Inverse is calculated for every step. Avoid unless necessary
+		 * Derived classes might re-implement this function for faster processing
+		 * @return Inverse Transformation of object
+		 */
+		virtual QTransform inverseTransform() const {return transform().inverted();}
 
 		virtual QDataStream& serialize(QDataStream& stream) const = 0;
 		virtual QDataStream& deserialize(QDataStream& stream) = 0;
@@ -32,8 +39,10 @@ namespace CDI {
 
 	};
 
-	QUuid AbstractModelItem::id() const
+	inline QUuid AbstractModelItem::id() const
 	{
 		return itemId;
 	}
+
+	AbstractModelItem* getItemPtrByType(ItemType t);
 }

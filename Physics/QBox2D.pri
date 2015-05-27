@@ -40,7 +40,7 @@ SOURCES += \
     $$PWD/Box2D/Dynamics/Joints/b2GearJoint.cpp \
     $$PWD/Box2D/Dynamics/Joints/b2FrictionJoint.cpp \
     $$PWD/Box2D/Dynamics/Joints/b2DistanceJoint.cpp \
-	$$PWD/Box2D/Dynamics/Joints/b2MotorJoint.cpp \
+    $$PWD/Box2D/Dynamics/Joints/b2MotorJoint.cpp \
     $$PWD/Box2D/Dynamics/b2WorldCallbacks.cpp \
     $$PWD/Box2D/Dynamics/b2World.cpp \
     $$PWD/Box2D/Dynamics/b2Island.cpp \
@@ -89,7 +89,7 @@ HEADERS += \
     $$PWD/Box2D/Dynamics/Joints/b2GearJoint.h \
     $$PWD/Box2D/Dynamics/Joints/b2FrictionJoint.h \
     $$PWD/Box2D/Dynamics/Joints/b2DistanceJoint.h \
-	$$PWD/Box2D/Dynamics/Joints/b2MotorJoint.h \
+    $$PWD/Box2D/Dynamics/Joints/b2MotorJoint.h \
     $$PWD/Box2D/Dynamics/b2WorldCallbacks.h \
     $$PWD/Box2D/Dynamics/b2World.h \
     $$PWD/Box2D/Dynamics/b2TimeStep.h \

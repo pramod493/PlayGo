@@ -4,7 +4,7 @@
 #include "string"
 #include "gesturepoint2d.h"
 #include "gesturestroke.h"
-#include "cdicommon.h"
+#include "commonfunctions.h"
 
 
 using namespace std;

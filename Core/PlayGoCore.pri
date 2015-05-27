@@ -9,7 +9,8 @@ HEADERS += \
     $$PWD/component.h \
     $$PWD/assembly.h \
     $$PWD/playgo.h \
-    $$PWD/fileio.h
+    $$PWD/fileio.h \
+    $$PWD/ramerdouglaspeucker.h
 
 SOURCES += \
     $$PWD/commonfunctions.cpp \
@@ -20,4 +21,5 @@ SOURCES += \
     $$PWD/component.cpp \
     $$PWD/assembly.cpp \
     $$PWD/playgo.cpp \
-    $$PWD/fileio.cpp
+    $$PWD/fileio.cpp \
+    $$PWD/ramerdouglaspeucker.cpp

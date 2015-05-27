@@ -14,7 +14,7 @@
 #include "cdisearchgraphicsitem.h"
 #include "cdigraphicspathitem.h"
 #include "searchmanager.h"
-#include "pixmapitem.h"
+//#include "pixmapitem.h"
 #include "graphicsitemgroup.h"
 
 #include <Box2D/Box2D.h>

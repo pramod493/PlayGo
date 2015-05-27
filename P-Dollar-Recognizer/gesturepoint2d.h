@@ -1,6 +1,6 @@
 #pragma once
-
-#include "point2d.h"
+#include "commonfunctions.h"
+#include "point2dpt.h"
 namespace CDI
 {
     class GesturePoint2D : public Point2D

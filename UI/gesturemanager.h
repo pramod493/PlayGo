@@ -1,8 +1,8 @@
 #pragma once
 #include <QObject>
-#include "pointcloudrecognizer.h"
-#include "pdollargesture.h"
-#include "gesturestroke.h"
+//#include "pointcloudrecognizer.h"
+//#include "pdollargesture.h"
+//#include "gesturestroke.h"
 #include "sketchscene.h"
 
 namespace CDI

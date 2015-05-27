@@ -6,5 +6,5 @@ namespace CDI
         : Point2D(X,Y), strokeID(ID) {}
 
     GesturePoint2D::GesturePoint2D(Point2D* point, int ID)
-        :Point2D(point->x,point->y), strokeID(ID) {}
+		:Point2D(point->x(),point->y()), strokeID(ID) {}
 }

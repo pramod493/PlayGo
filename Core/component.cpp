@@ -8,17 +8,85 @@ namespace CDI
 
 	}
 
+	QTransform Component::transform() const
+	{
+		return _transform;
+	}
+
 	QTransform Component::itemTransform(AbstractModelItem* item) const
 	{
 		return transform() * (item->transform());
 	}
 
-	QTransform Component::itemTransform(QString itemId) const
+	QTransform Component::itemTransform(QUuid itemId) const
 	{
+		QTransform t = transform();
 		QList<AbstractModelItem*> list_of_items = values(itemId);
 		if (list_of_items.size())
-			return transform() * (list_of_items[0]->transform());
-		return transform();
+			t = t * (list_of_items[0]->transform());
+		return t;
+	}
+
+	void Component::setTransform(QTransform& transform)
+		{
+			mask |= isTransformed;
+			_transform = transform;
+		}
+
+	Stroke* Component::addStroke(QColor color, float thickness)
+	{
+		Stroke* stroke = new Stroke(color, thickness);
+		addItem(stroke);
+		return stroke;
+	}
+
+	Image* Component::addImage(const QString filename)
+	{
+		Image* image = new Image(filename);
+		addItem(image);
+		return image;
+	}
+
+	void Component::addItem(AbstractModelItem* item)
+	{
+		insert(item->id().toString(), item);
+	}
+
+	bool Component::removeItem(AbstractModelItem* item)
+	{
+		return ((remove(item->id())!=0) ? true : false);
+	}
+
+	bool Component::containsItem(AbstractModelItem *key, bool searchRecursive)
+	{
+		return containsItem(key->id(), searchRecursive);
+	}
+
+	bool Component::containsItem(QUuid key, bool searchRecurive)
+	{
+		if (contains(key)) return true;
+		if (searchRecurive)
+		{
+			// Search into member components if they are of relevant type
+			QHash<QUuid, AbstractModelItem*>::const_iterator iter;
+			for (iter = constBegin(); iter != constEnd(); ++iter)
+			{
+				AbstractModelItem* item = iter.value();
+				if (item->type()== ItemType::COMPONENT)
+				{
+					Component* component = static_cast<Component*>(item);
+					if (component->containsItem(key)) return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	bool Component::containsItem(QString key, bool searchRecursive)
+	{
+		QUuid id = QUuid(key);
+		if (id.isNull()) return false;	// INVALID ID
+		return containsItem(id, searchRecursive);
 	}
 
 	ItemType Component::type() const
@@ -32,7 +100,7 @@ namespace CDI
 		if (!isEmpty())
 		{
 			// Just serialize the items for now
-			QHash<QString, AbstractModelItem*>::const_iterator iter;
+			QHash<QUuid, AbstractModelItem*>::const_iterator iter;
 			for (iter = constBegin(); iter != constEnd(); ++iter)
 			{
 				AbstractModelItem* item = iter.value();

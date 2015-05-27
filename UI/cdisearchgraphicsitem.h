@@ -4,18 +4,16 @@
 #include <QEvent>
 #include <QTouchEvent>
 #include <QTime>
-
-#include "cdicommon.h"
+#include "commonfunctions.h"
 
 namespace CDI
 {
-    class SearchGraphicsItem : public QGraphicsPixmapItem, public Item
+	class SearchGraphicsItem : public QGraphicsPixmapItem
     {
     public:
         QString sourceFilePath;
 
     protected:
-        Item::Type _type;
 
         bool touchOn;
 
@@ -26,8 +24,6 @@ namespace CDI
         SearchGraphicsItem(QGraphicsItem* parent = 0);
 
         SearchGraphicsItem(const QPixmap &pixmap, QString filePath, QGraphicsItem* parent = 0);
-
-        Item::Type GetType();
 
 		bool sceneEvent(QEvent *event);
     };

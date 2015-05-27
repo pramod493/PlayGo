@@ -2,17 +2,26 @@
 #include <QMainWindow>
 #include "tabletapplication.h"
 #include "cdiwindow.h"
-
-#include "wbbice.h"
-#include "wbsearchengine.h"
-#include <iostream>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-
+#include <QTransform>
+#include <QDebug>
+#include "commonfunctions.h"
 
 int main(int argc, char *argv[])
 {
     CDI::TabletApplication app(argc, argv);
+
+//	{
+//		unsigned int mask =0;
+//		qDebug() << mask;
+//		mask |= MASK_BIT2;
+//		mask |= MASK_BIT0;
+//		mask |= MASK_BIT1;
+//		qDebug() << mask;
+
+//		qDebug() << (mask &= ~MASK_BIT1);	// use this
+
+//		return 1;
+//	}
 
     CDI::CDIWindow *window =  new CDI::CDIWindow();
 
@@ -22,17 +31,5 @@ int main(int argc, char *argv[])
 	window->InitWidgets();
     window->show();
 
-    /*{
-        namespace po = boost::program_options;
-        // Uncomment to test if the search is working or not.
-        std::string file = "C:/Database/Input.png";
-        path data("C:/Database/");
-        wbBICE *bicedescriptor = new wbBICE();
-        wbSearchEngine *engine = new wbSearchEngine(data, bicedescriptor);
-
-        engine->Index();
-        engine->Load();
-        engine->Query(file, 40);
-    }*/
     return app.exec();
 }

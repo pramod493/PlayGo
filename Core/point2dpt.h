@@ -26,6 +26,8 @@ namespace CDI
 
 		friend inline const Point2DPT operator*(float, const Point2DPT&);
 		friend inline const Point2DPT operator*(const Point2DPT&, float);
+		friend inline const Point2DPT operator+(const Point2DPT&, const Point2DPT&);
+		friend inline const Point2DPT operator-(const Point2DPT&, const Point2DPT&);
 
 		friend QDataStream &operator <<(QDataStream &stream, const Point2DPT &point);
 		friend QDataStream &operator >>(QDataStream &stream, Point2DPT &point);
@@ -68,8 +70,8 @@ namespace CDI
 	}
 
 	/********************************************************
- * Point2DPT operator overload function
- *******************************************************/
+	* Point2DPT operator overload function
+	*******************************************************/
 	inline const Point2DPT operator* (float f, const Point2DPT& p)
 	{
 		return Point2DPT(p.x()*f,p.y()*f,p.pressure(),p.time());
@@ -79,4 +81,15 @@ namespace CDI
 	{
 		return Point2DPT(p.x()*f,p.y()*f,p.pressure(),p.time());
 	}
+
+	inline const Point2DPT operator+(const Point2DPT& p1, const Point2DPT& p2)
+	{
+		return Point2DPT(p1.x()+p2.x(), p1.y()+p2.y(),0.5f*(p1.pressure()+p2.pressure()), p1.time());
+	}
+
+	inline const Point2DPT operator-(const Point2DPT& p1, const Point2DPT& p2)
+	{
+		return Point2DPT(p1.x()-p2.x(), p1.y()-p2.y(),0.5f*(p1.pressure()+p2.pressure()), p1.time());
+	}
+
 }

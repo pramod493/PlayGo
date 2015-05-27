@@ -10,7 +10,8 @@
 namespace CDI
 {
 	// This class can contain Component objects as well
-	class Component : public QHash<QString, AbstractModelItem*>, public AbstractModelItem
+	// TODO - Destructor should delete all the items as well
+	class Component : public QHash<QUuid, AbstractModelItem*>, public AbstractModelItem
 	{
 	protected:
 		QTransform _transform;
@@ -19,20 +20,40 @@ namespace CDI
 		Component();
 
 		QTransform transform() const;
-		QTransform itemTransform(AbstractModelItem*) const;
-		QTransform itemTransform(QString itemId) const;
 
-		inline void setTransform(QTransform& transform);
+		/**
+		 * @brief Get transformation w.r.t. to given component
+		 * @param itemId
+		 * @return Absolute transform of given item.
+		 */
+		virtual QTransform itemTransform(AbstractModelItem*) const;
 
-		// These are overload functions and items can be added/removed directly as well
-		inline void addItem(AbstractModelItem* item);
-		inline bool removeItem(AbstractModelItem* item);
+		/**
+		 * @brief Get transformation w.r.t. to given component
+		 * @param itemId:QUuid of the item
+		 * @return Absolute transform of given item. Returns transform of
+		 * first item in case of multiple matches
+		 */
+		virtual QTransform itemTransform(QUuid itemId) const;
 
-		// These operations should be preferred over directly adding components
-		inline Stroke* addStroke(QColor color, float thickness);
-		inline Image* addImage(const QString filename);
+		virtual void setTransform(QTransform& transform);
 
-		// virtual functions
+		// Extra create functions for convenience. Automatically adds the item
+		// given component.
+		virtual Stroke* addStroke(QColor color, float thickness);
+		virtual Image* addImage(const QString filename);
+
+		virtual void addItem(AbstractModelItem* item);
+		virtual bool removeItem(AbstractModelItem* item);
+
+		// Query functions.
+		// Use these instead of default query functions of QHash fo extra features
+		// NOTE: Avoid searchRecursive option unless required. Affect on performance
+		// not measured.
+		virtual bool containsItem(AbstractModelItem* key, bool searchRecursive = false);
+		virtual bool containsItem(QUuid key, bool searchRecursive = false);
+		virtual bool containsItem(QString key, bool searchRecursive = false);
+
 		ItemType type() const;
 
 		QDataStream& serialize(QDataStream& stream) const;
@@ -42,40 +63,4 @@ namespace CDI
 		// If new item types are added, extend this class to accomodate those
 		virtual AbstractModelItem* createEmptyItem(ItemType itemtype);
 	};
-
-	inline QTransform Component::transform() const
-	{
-		return _transform;
-	}
-
-	inline void Component::setTransform(QTransform& transform)
-	{
-		mask |= isTransformed;
-		_transform = transform;
-	}
-
-
-	inline void Component::addItem(AbstractModelItem* item)
-	{
-		insert(item->id().toString(), item);
-	}
-
-	inline bool Component::removeItem(AbstractModelItem* item)
-	{
-		return ((remove(item->id().toString())!=0) ? true : false);
-	}
-
-	inline Stroke* Component::addStroke(QColor color, float thickness)
-	{
-		Stroke* stroke = new Stroke(color, thickness);
-		addItem(stroke);
-		return stroke;
-	}
-
-	inline Image* Component::addImage(const QString filename)
-	{
-		Image* image = new Image(filename);
-		addItem(image);
-		return image;
-	}
 }

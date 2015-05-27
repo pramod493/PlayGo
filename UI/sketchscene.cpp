@@ -110,51 +110,54 @@ void SketchScene::clear()
 void SketchScene::BrushPress(QPointF scenePos, float pressure)
 {
     current_stroke = new GraphicsPathItem(parent_item, scenePos, pressure, 0);
-    current_stroke->parentStroke->thickness = defaultPen.width();
+	current_stroke->parentStroke->setThickness(defaultPen.width());
+	current_stroke->parentStroke->setColor(defaultPen.color());
     addItem(current_stroke);
     current_stroke->setPen(defaultPen);
     current_stroke->setBrush(defaultBrush);
     freeStrokes.push_back(current_stroke);
+
 }
 
 void SketchScene::BrushMove(QPointF scenePos, float pressure)
 {
     if (!(current_stroke == NULL))
         current_stroke->push_back(scenePos, pressure);
-    qDebug() << scenePos;
+	update();
 }
 
 void SketchScene::BrushRelease(QPointF scenePos, float pressure)
 {
     if (!(current_stroke == NULL))
         current_stroke->push_back(scenePos, pressure);
-    current_stroke->ApplySmoothing(2);
+	current_stroke->ApplySmoothing(2);
+	update();
+	// Physics engine test code
+//	{
+//		b2BodyDef bodyDef;
+//		bodyDef.type = b2_dynamicBody;
+//		bodyDef.position.Set(0.0,0.0);
+//		bodyDef.angle = 25;
+//		current_stroke->physicsBody = physicsWorld->CreateBody(&bodyDef);
+//		b2ChainShape polygon;
+//		b2Vec2* vec = new b2Vec2[current_stroke->parentStroke->points.size()];
+//		int vertexCount =0;
+//		for (int i=0; i < current_stroke->parentStroke->points.size();)
+//		{
+//			Point2D* pt = current_stroke->parentStroke->points[i];
+//			vec[i] = b2Vec2(pt->x*current_stroke->physicsDivider,pt->y*current_stroke->physicsDivider);
+//			vertexCount++;
+//			i++;
+//		}
+//		polygon.CreateChain(vec, vertexCount);
+//		b2FixtureDef fixtureDef;
+//		fixtureDef.shape = &polygon;
+//		fixtureDef.density = 0.4f;
+//		fixtureDef.friction = 0.25f;
+//		fixtureDef.restitution = 0.75f;
+//		current_stroke->physicsBody->CreateFixture(&fixtureDef);
 
-    qDebug() << "Stroke point count is " << current_stroke->parentStroke->points.size();
-
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.position.Set(0.0,0.0);
-    bodyDef.angle = 25;
-    current_stroke->physicsBody = physicsWorld->CreateBody(&bodyDef);
-    b2ChainShape polygon;
-    b2Vec2* vec = new b2Vec2[current_stroke->parentStroke->points.size()];
-    int vertexCount =0;
-    for (int i=0; i < current_stroke->parentStroke->points.size();)
-    {
-        Point2D* pt = current_stroke->parentStroke->points[i];
-        vec[i] = b2Vec2(pt->x*current_stroke->physicsDivider,pt->y*current_stroke->physicsDivider);
-        vertexCount++;
-        i++;
-    }
-    polygon.CreateChain(vec, vertexCount);
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &polygon;
-    fixtureDef.density = 0.4f;
-    fixtureDef.friction = 0.25f;
-    fixtureDef.restitution = 0.75f;
-    current_stroke->physicsBody->CreateFixture(&fixtureDef);
-
+//	}
     // Trigger signal in order to update related/connected components
     current_stroke = NULL;
 
@@ -163,27 +166,30 @@ void SketchScene::BrushRelease(QPointF scenePos, float pressure)
 }
 
 void SketchScene::SelectSearchResult(SearchGraphicsItem *searchItem)
-{   // TODO - Get the results file. Load the image and replace it
+{
+	Q_UNUSED(searchItem)
+	// IMPORTANT - Implement loading of search results
+	// TODO - Get the results file. Load the image and replace it
     // with all strokes with search results in a way that it fits
     // neatly in the same area
-    QString imageSourceFile = searchItem->sourceFilePath;
-    QPixmap pix = QPixmap(imageSourceFile); // Skip sanity checks since its coming from search image
+//    QString imageSourceFile = searchItem->sourceFilePath;
+//    QPixmap pix = QPixmap(imageSourceFile); // Skip sanity checks since its coming from search image
 
-    GraphicsItemGroup *itemGroup = new GraphicsItemGroup(NULL, NULL);
-    addItem(itemGroup);
-    // NOTES - In here we want to allow create all items as ItemGroup of give type.. would that be better?
-    // Is it better to keep parent object = NULL if we are planning to reparent object during the workflow?
-    PixmapItem* sceneItem = new PixmapItem(pix, imageSourceFile, NULL, NULL);
-    itemGroup->addToGroup(sceneItem);
-    // Add all the strokes but set the invisible
-    for (QList<GraphicsPathItem*>::iterator it = freeStrokes.begin();
-         it != freeStrokes.end();
-         ++it)
-    {
-        itemGroup->addToGroup(*it);
-        (*it)->setVisible(false);
-    }
-    freeStrokes.clear();
+//    GraphicsItemGroup *itemGroup = new GraphicsItemGroup(NULL, NULL);
+//    addItem(itemGroup);
+//    // NOTES - In here we want to allow create all items as ItemGroup of give type.. would that be better?
+//    // Is it better to keep parent object = NULL if we are planning to reparent object during the workflow?
+//    PixmapItem* sceneItem = new PixmapItem(pix, imageSourceFile, NULL, NULL);
+//    itemGroup->addToGroup(sceneItem);
+//    // Add all the strokes but set the invisible
+//    for (QList<GraphicsPathItem*>::iterator it = freeStrokes.begin();
+//         it != freeStrokes.end();
+//         ++it)
+//    {
+//        itemGroup->addToGroup(*it);
+//        (*it)->setVisible(false);
+//    }
+//    freeStrokes.clear();
 }
 
 void SketchScene::SaveScene(QString file)
@@ -198,32 +204,33 @@ SketchScene* SketchScene::Clone()
 
 void SketchScene::PhysicsStep()
 {
-    // Set up simulation settings
-    float timeStep = 1.0/60.0;
-    int velocityIterations = 6;
-    int positionIterations = 4;
+//// Disable the whole physics engine runtime for now
+//    // Set up simulation settings
+//    float timeStep = 1.0/60.0;
+//    int velocityIterations = 6;
+//    int positionIterations = 4;
 
-    physicsWorld->Step(timeStep, velocityIterations, positionIterations);
-    GraphicsPathItem* item = NULL;
+//    physicsWorld->Step(timeStep, velocityIterations, positionIterations);
+//    GraphicsPathItem* item = NULL;
 
-    foreach(item, freeStrokes)
-    {
-        if (item->physicsBody!= NULL)
-        {
-            b2Body* body = item->physicsBody;
-            b2Vec2 position = body->GetPosition();
-            float angle = body->GetAngle();
-            item->setPos(position.x*item->physicsMultiplier,position.y*item->physicsMultiplier);
-            item->setRotation(angle);
-            update(item->boundingRect());
-//            qDebug() << angle << position.x << position.y;
-        }
-    }
-    if (item != NULL)
-    if (item->physicsBody!= NULL)
-    {
-        qDebug() << item->physicsBody->GetAngle();
-    }
+//    foreach(item, freeStrokes)
+//    {
+//        if (item->physicsBody!= NULL)
+//        {
+//            b2Body* body = item->physicsBody;
+//            b2Vec2 position = body->GetPosition();
+//            float angle = body->GetAngle();
+//            item->setPos(position.x*item->physicsMultiplier,position.y*item->physicsMultiplier);
+//            item->setRotation(angle);
+//            update(item->boundingRect());
+////            qDebug() << angle << position.x << position.y;
+//        }
+//    }
+//    if (item != NULL)
+//    if (item->physicsBody!= NULL)
+//    {
+//        qDebug() << item->physicsBody->GetAngle();
+//    }
 }
 
 // Protected function
@@ -319,6 +326,7 @@ void SketchScene::EraseAction(QTabletEvent *event, QPointF scenePos)
                     removeItem(freeStrokes[i]);
                     // Remove from the free strokes list
                     ids.push_back(i);
+					update();
                 }
         }
         // Remove item from the freeStrokes list

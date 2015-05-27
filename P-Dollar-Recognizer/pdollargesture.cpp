@@ -39,17 +39,17 @@ namespace CDI
 
         for (int i=0; i < n; i++)
         {
-            if (minx > gesturePoints[i]->x) minx = gesturePoints[i]->x;
-            if (miny > gesturePoints[i]->y) miny = gesturePoints[i]->y;
-            if (maxx < gesturePoints[i]->x) maxx = gesturePoints[i]->x;
-            if (maxy < gesturePoints[i]->y) maxy = gesturePoints[i]->y;
+			if (minx > gesturePoints[i]->x()) minx = gesturePoints[i]->x();
+			if (miny > gesturePoints[i]->y()) miny = gesturePoints[i]->y();
+			if (maxx < gesturePoints[i]->x()) maxx = gesturePoints[i]->x();
+			if (maxy < gesturePoints[i]->y()) maxy = gesturePoints[i]->y();
         }
 
         float scale = max(maxx-minx, maxy-miny);
         for (int i=0; i < n; i++)
         {
-            gesturePoints[i]->x = (gesturePoints[i]->x - minx)/scale;
-            gesturePoints[i]->y = (gesturePoints[i]->y - miny)/scale;
+			gesturePoints[i]->setX((gesturePoints[i]->x() - minx)/scale);
+			gesturePoints[i]->setY((gesturePoints[i]->y() - miny)/scale);
         }
     }
 
@@ -58,8 +58,8 @@ namespace CDI
         size_t n = gesturePoints.size();
         for (int i=0; i < n; i++)
         {
-            gesturePoints[i]->x -= point.x;
-            gesturePoints[i]->y -= point.y;
+			gesturePoints[i]->rx() -= point.x();
+			gesturePoints[i]->ry() -= point.y();
         }
     }
 
@@ -67,7 +67,7 @@ namespace CDI
     {
         vector<GesturePoint2D*> resampledPoints = vector<GesturePoint2D*>();
         resampledPoints.push_back(new GesturePoint2D
-                                  (gesturePoints[0]->x,gesturePoints[0]->y,
+								  (gesturePoints[0]->x(),gesturePoints[0]->y(),
                                     gesturePoints[0]->strokeID ));
         int numPoints = 1;
         size_t n = gesturePoints.size();
@@ -82,8 +82,8 @@ namespace CDI
                 float d = EuclideanDistance(gesturePoints[i-1], gesturePoints[i]);
                 if (D+d >= I)
                 {
-                    GesturePoint2D firstPoint = GesturePoint2D(gesturePoints[i-1]->x,
-                            gesturePoints[i-1]->y,
+					GesturePoint2D firstPoint = GesturePoint2D(gesturePoints[i-1]->x(),
+							gesturePoints[i-1]->y(),
                             gesturePoints[i-1]->strokeID);
                     while (D+d >= I)
                     {
@@ -92,15 +92,15 @@ namespace CDI
                         if (abs(d) < 0.0001) t = 0.5f;
                         GesturePoint2D* newPoint =
                                 new GesturePoint2D(
-                                    (1.0f-t)*firstPoint.x + t*gesturePoints[i]->x,
-                                    (1.0f-t)*firstPoint.y + t*gesturePoints[i]->y,
+									(1.0f-t)*firstPoint.x() + t*gesturePoints[i]->x(),
+									(1.0f-t)*firstPoint.y() + t*gesturePoints[i]->y(),
                                     firstPoint.strokeID);
                         resampledPoints.push_back(newPoint); numPoints++;
 
                         // update partial length
                         d = D+d-I;
                         D = 0;
-                        firstPoint = GesturePoint2D(newPoint->x,newPoint->y,newPoint->strokeID);
+						firstPoint = GesturePoint2D(newPoint->x(),newPoint->y(),newPoint->strokeID);
                     }
                     D = d;
                 }
@@ -109,7 +109,7 @@ namespace CDI
         }
         if (numPoints == SAMPLING_RESOLUTION-1)
             resampledPoints.push_back(
-                        new GesturePoint2D(gesturePoints[n-1]->x, gesturePoints[n-1]->y,
+						new GesturePoint2D(gesturePoints[n-1]->x(), gesturePoints[n-1]->y(),
                     gesturePoints[n-1]->strokeID));
 
         // Clear the current stroke and populate with the resampled value
@@ -131,8 +131,8 @@ namespace CDI
         size_t n = gesturePoints.size();
         for (int i=0; i < n; i++)
         {
-            cx+= gesturePoints[i]->x;
-            cy += gesturePoints[i]->y;
+			cx+= gesturePoints[i]->x();
+			cy += gesturePoints[i]->y();
         }
 
         return Point2D(cx/n,cy/n);
