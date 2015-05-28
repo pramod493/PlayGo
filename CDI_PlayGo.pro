@@ -12,6 +12,8 @@ TEMPLATE = app
 
 RESOURCES += images.qrc
 
+include (poly2tri/poly2tri.pri)
+
 include (Core/PlayGoCore.pri)
 
 include (Indexer-Minimal/Indexer.pri)
