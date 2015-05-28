@@ -41,13 +41,15 @@ namespace CDI
 		Point2DPT* data = parentStroke->data();		// gives out the data. Careful not to overwrite that information
 		int num_points = parentStroke->size();
 		painter->setTransform(parentStroke->transform());
-
+		QPainterPath painterPath = QPainterPath(data[0]);
 		for (int i=1; i< num_points; i++)
 		{
 			Point2DPT p1 = data[i-1]; Point2DPT p2 = data[i];
 			pen.setWidthF(width * p1.pressure()); painter->setPen(pen);
 			painter->drawLine(p1,p2);
+			painterPath.lineTo(data[i].x(),data[i].y());
 		}
+		setPath(painterPath);
     }
 
 	void GraphicsPathItem::push_back(QPointF point, float pressure, int time)

@@ -6,6 +6,8 @@
 #include <QDebug>
 #include "commonfunctions.h"
 
+void testPoly2Tri();
+
 int main(int argc, char *argv[])
 {
     CDI::TabletApplication app(argc, argv);
@@ -27,6 +29,7 @@ int main(int argc, char *argv[])
 
 	QObject::connect(&app, SIGNAL(OnStylusProximity(QEvent*)),
 					 window, SLOT(slotOnSignalProximity(QEvent*)));
+
 
 	window->InitWidgets();
     window->show();

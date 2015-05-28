@@ -17,6 +17,10 @@
 //#include "pixmapitem.h"
 #include "graphicsitemgroup.h"
 
+#include <QGraphicsPolygonItem>
+#include <QPolygonF>
+#include <QPen>
+
 #include <Box2D/Box2D.h>
 
 namespace CDI
@@ -47,6 +51,9 @@ namespace CDI
         QList<SearchGraphicsItem*> searchResults;
 
         QList<GraphicsPathItem*> freeStrokes;
+
+		QGraphicsPolygonItem* selectionMarquee;
+		QPolygonF selectionPolygon;
 
     protected:
 
@@ -107,33 +114,96 @@ namespace CDI
 	public slots:        
         void slotTabletEvent(QTabletEvent *event, QPointF scenePos);
 
-        void OnSearchTrigger();
+		void OnSearchTrigger();
 
         void OnSearchComplete();
 
-        void setBrushWidth(int size);
+		inline void setBrushWidth(int size);
 
-        void setBrushColor(QString name, QColor color);
+		inline void setBrushColor(QString name, QColor color);
 
-        void slotSetSceneMode(MODE newMode);
+		inline void slotSetSceneMode(MODE newMode);
 
-        void setToNone();
+		inline void setToNone();
 
-        void setToDraw();
+		inline void setToDraw();
 
-        void setToErase();
+		inline void setToErase();
 
-        void setToTransform();
+		inline void setToTransform();
 
-        void setToEdit();
+		inline void setToEdit();
 
-        void setToSelect();
+		inline void setToSelect();
 
         // NOTE - THis one makes no sense since this is an one time event
         // Similar to play/pause/reset event which occur only once.
-        void setToSearch();
+		inline void setToSearch();
 
-        void PhysicsStep();
+		void PhysicsStep();
 
 	};
+
+	/*******************************************
+	 * inline functions
+	 * ***************************************/
+
+	inline void SketchScene::setBrushWidth(int size)
+	{
+		defaultPen.setWidth(size);
+		highlightPen.setWidth(size+3);
+	}
+
+	inline void SketchScene::setBrushColor(QString name, QColor color)
+	{
+		defaultPen.setColor(color);
+	}
+
+	inline void SketchScene::slotSetSceneMode(MODE newMode)
+	{
+		if (current_mode == newMode) return;
+		current_mode = newMode;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToNone()
+	{
+		current_mode = None;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToDraw()
+	{
+		current_mode = Draw;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToErase()
+	{
+		current_mode = Erase;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToTransform()
+	{
+		current_mode = Transform;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToEdit()
+	{
+		current_mode = Edit;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToSelect()
+	{
+		current_mode = Select;
+		emit signalModeChanged(current_mode);
+	}
+
+	inline void SketchScene::setToSearch()
+	{
+		current_mode = Search;
+	}
 }

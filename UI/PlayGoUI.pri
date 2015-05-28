@@ -10,7 +10,8 @@ SOURCES += \
     $$PWD/sketchscene.cpp \
     $$PWD/searchmanager.cpp \
     $$PWD/colorselectortoolbar.cpp \
-    $$PWD/graphicsitemgroup.cpp
+    $$PWD/graphicsitemgroup.cpp \
+    $$PWD/graphicspolygon2d.cpp
 
 HEADERS += \
     $$PWD/cdi2qtwrapper.h \
@@ -23,7 +24,8 @@ HEADERS += \
     $$PWD/sketchscene.h \
     $$PWD/searchmanager.h \
     $$PWD/colorselectortoolbar.h \
-    $$PWD/graphicsitemgroup.h
+    $$PWD/graphicsitemgroup.h \
+    $$PWD/graphicspolygon2d.h
 
 #SOURCES += $$PWD/gesturemanager.cpp
 #HEADERS += $$PWD/gesturemanager.h
