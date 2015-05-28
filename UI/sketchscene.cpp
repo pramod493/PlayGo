@@ -492,13 +492,24 @@ namespace CDI
 
 	void SketchScene::slotTabletEvent(QTabletEvent* event, QPointF scenePos)
 	{
-		// Temporarily disable mouse event because we don't know how to prevent trigger of mouse events
-		if (event->pointerType() == QTabletEvent::Pen && current_mode == MODE::Draw)
-			DrawAction(event, scenePos);
-		if (event->pointerType() == QTabletEvent::Eraser)
+		if (event->pointerType() == QTabletEvent::Pen)
+		{
+			switch (current_mode)
+			{
+			case MODE::Draw :
+				DrawAction(event, scenePos);
+				break;
+			case MODE::Erase :
+				EraseAction(event, scenePos);
+				break;
+			case MODE::Select :
+				SelectAction(event, scenePos);
+				break;
+			}
+		} else if (event->pointerType() == QTabletEvent::Eraser)
+		{
 			EraseAction(event, scenePos);
-		if (event->pointerType() == QTabletEvent::Pen && current_mode == MODE::Select)
-			SelectAction(event, scenePos);
+		}
 	}
 
 	void SketchScene::OnSearchTrigger()

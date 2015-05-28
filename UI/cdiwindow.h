@@ -38,6 +38,7 @@ namespace CDI
 		// actions
 
 		// File operations
+		QAction* newAction;
 		QAction* openPageAction;
 		QAction* closePageAction;
 		QAction* saveImageAction;

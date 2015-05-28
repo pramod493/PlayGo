@@ -95,7 +95,7 @@ namespace CDI
         // Brush width
         connect(this, SIGNAL(signalBrushSizeChanged(int)),
                 sketchScene, SLOT(setBrushWidth(int)));
-        brushWidthSlider->setValue(3);
+		brushWidthSlider->setValue(6);
         connect(colorToolbar, SIGNAL(signalColorChange(QString,QColor)),
                 sketchScene, SLOT(setBrushColor(QString,QColor)));
 
@@ -138,6 +138,7 @@ namespace CDI
         searchAction = new QAction(QIcon(":/images/search.png"), tr("Search selection"), this);
 
         //// File opertaions
+		newAction = new QAction(QIcon(":/images/new.png"), tr("New"), this);
         openPageAction = new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
         saveImageAction = new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
     }
@@ -147,6 +148,7 @@ namespace CDI
         //		mainToolbar = new QToolBar(this);
         mainToolbar = addToolBar(tr("Main operations"));
 
+		mainToolbar->addAction(newAction);
         mainToolbar->addAction(openPageAction);
         mainToolbar->addAction(saveImageAction);
 
@@ -203,32 +205,5 @@ namespace CDI
 
     void CDIWindow::Save()
     {
-		// Not needed as we are QDataStream
-//        if (sketchScene!= NULL)
-//        {
-//            QTime time = QTime::currentTime();
-
-//            QString filePath = QDir::currentPath() + "/" + time.toString("hh:mm:ss.zzz").replace(QRegExp(":"), "_");
-//            qDebug() << "File" << filePath;
-//            QFile file(filePath);
-//            file.open(QIODevice::WriteOnly);
-//            QTextStream out(&file);
-//            out << "#Saving to file at "<< filePath;
-//            {
-////                sketchScene
-////                sketchView
-//                foreach (GraphicsPathItem* item, sketchScene->freeStrokes)
-//                {
-//                    out << "@POINT2DPT" << "\n";
-//					foreach (Point2DPT* point, item->parentStroke)
-//                    {
-//                        out << point->x << " " << point->y << " "
-//                            << point->pressure << " " << point->time << "\n";
-//                    }
-//                }
-//            }
-//            file.close();
-
-//        }
     }
 }
