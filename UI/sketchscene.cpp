@@ -386,7 +386,6 @@ namespace CDI
 
 	void SketchScene::SelectAction(QTabletEvent *event, QPointF scenePos)
 	{
-		qDebug() << "adding to selection " << scenePos;
 		switch (event->type())
 		{
 		case QEvent::TabletPress :
@@ -413,7 +412,6 @@ namespace CDI
 				setSceneRect(itemsBoundingRect());
 
 				QRect selectionRect = selectionMarquee->boundingRect().toRect();
-
 
 				QRectF rect = sceneRect();
 				x_min = selectionRect.x(); x_max = selectionRect.x() + selectionRect.width();
@@ -450,16 +448,36 @@ namespace CDI
 			}
 			if (1)
 			{
+				qDebug() << "Saving images";
+				//// Render scene into image
 				clearSelection();	// Clear current scene selection
 				QRectF boundingBox = selectionMarquee->boundingRect();
-				setSceneRect(boundingBox);
-				QImage image(boundingBox.size().toSize(), QImage::Format_ARGB32_Premultiplied);
+				qDebug() << "Bounding bos of selection" << boundingBox;
+//				setSceneRect(boundingBox);
+				setSceneRect(itemsBoundingRect());
+				QImage image(boundingBox.x() + boundingBox.width(),
+							 boundingBox.y() + boundingBox.height(),
+							 QImage::Format_ARGB32_Premultiplied);
 				image.fill(Qt::transparent);
 
+				QRegion region = QRegion(selectionPolygon.toPolygon());
+
 				QPainter painter(&image);
-				render(&painter);
-				image.save("bounding-box-scene-save.png");
+				painter.setClipping(true);
+				painter.setClipRegion(region);
+				painter.setRenderHint(QPainter::Antialiasing, true);
+				// TODO - Rendering this creates a top left area filled with black
+				// Therefore render each graphics item individually instead
+				//render(&painter);	// render scene items into painter
+				for (int i=0; i < freeStrokes.size(); i++)
+					freeStrokes[i]->paint(&painter, NULL);
+
+				QImage croppedSelection = image.copy(boundingBox.toRect());
+				croppedSelection.save("cropped-selection-image.png");
 			}
+
+			selectionPolygon = QPolygonF();
+			selectionMarquee->setPolygon(selectionPolygon);
 			break;
 		}
 	}
