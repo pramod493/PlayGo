@@ -2,6 +2,7 @@
 #include "abstractmodelitem.h"
 #include "stroke.h"
 #include "image.h"
+#include "polygon2d.h"
 #include "component.h"
 #include "assembly.h"
 
@@ -43,6 +44,8 @@ namespace CDI
 		case ItemType::IMAGE :
 			ptr = new Image();
 			break;
+		case ItemType::POLYGON2D :
+			ptr = new Polygon2D();
 		case ItemType::COMPONENT :
 			ptr = new Component();
 		case ItemType::ASSEMBLY :

@@ -29,15 +29,16 @@ namespace CDI
 	// IMPORTANT - Do not change from CAPS. It creates conflict with class name
 	// Also, MUST update the getItemType() and getSelectionType() function to reflect the changes
 	enum ItemType : int {
-		STROKE = 10,
-		IMAGE,		// Image with file path
-		SEARCHRESULT,
-		PHYSICSBODY,
+		STROKE = 10,	// geometry
+		IMAGE,
+		POLYGON2D,
+		SEARCHRESULT,	// display items
+		PHYSICSBODY,	// physics items
 		PHYSICSJOINT,
-		COMPONENT,
+		COMPONENT,		// core components
 		ASSEMBLY,
-		PAGE,		// Ignore
-		ROOT,
+		PAGE,			// Ignore
+		ROOT,			// roots
 		NONE
 	};
 
@@ -76,6 +77,8 @@ namespace CDI
     bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance);
 
 	bool colorCompare(QColor c1, QColor c2);
+
+	bool isConvexPolygon(Point2D* points, int numPoints);
 
 	QUuid uniqueHash();
 }

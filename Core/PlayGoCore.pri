@@ -10,7 +10,8 @@ HEADERS += \
     $$PWD/assembly.h \
     $$PWD/playgo.h \
     $$PWD/fileio.h \
-    $$PWD/ramerdouglaspeucker.h
+    $$PWD/ramerdouglaspeucker.h \
+    $$PWD/polygon2d.h
 
 SOURCES += \
     $$PWD/commonfunctions.cpp \
@@ -22,4 +23,5 @@ SOURCES += \
     $$PWD/assembly.cpp \
     $$PWD/playgo.cpp \
     $$PWD/fileio.cpp \
-    $$PWD/ramerdouglaspeucker.cpp
+    $$PWD/ramerdouglaspeucker.cpp \
+    $$PWD/polygon2d.cpp

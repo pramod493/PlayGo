@@ -18,6 +18,8 @@ namespace CDI
 			return ItemType::STROKE;
 		case ItemType::IMAGE :
 			return ItemType::IMAGE;
+		case ItemType::POLYGON2D:
+			return ItemType::POLYGON2D;
 		case ItemType::SEARCHRESULT :
 			return ItemType::SEARCHRESULT;
 		case ItemType::PHYSICSBODY :
@@ -141,6 +143,41 @@ namespace CDI
          return (c1.red()== c2.red()) && (c1.green() == c2.green()) && (c1.blue() == c2.blue());
     }
 
+	bool isConvexPolygon(Point2D *points, int numPoints)
+	{
+		if (numPoints <= 3) return true;	// triangle are always convex
+		// Assuming all the points form a polygon
+		// reference
+		// https://github.com/pramod493/box2d-editor/blob/eb5aec8cfb26ceeda811398200d680d9baeceb86/editor/src/aurelienribon/bodyeditor/maths/earclipping/ewjordan/Polygon.java
+		bool isPositive = false;
+		for (int i =0; i < numPoints; i++)
+		{
+			int lower = (i==0) ? (numPoints-1) : (i-1);
+			int middle = i;
+			int upper = (i== numPoints-1) ? (0) : (i+1);
+
+			float dx0 = points[middle].x() - points[lower].x();
+			float dy0 = points[middle].y() - points[lower].y();
+
+			float dx1 = points[upper].x() - points[middle].y();
+			float dy1 = points[upper].y() - points[middle].y();
+
+			float cross = dx0*dy1 - dx1*dy0;
+
+			// Cross product of all adjacent sides should have same value
+			bool newIsP = (cross > 0) ? true : false;
+			if (i==0)
+				isPositive = newIsP;	// set first one as initial value
+			else if (isPositive != newIsP)
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * @brief uniqueHash returns a QUuid for identification. Assumed to be unique
+	 * @return Unique QUuid identifier
+	 */
 	QUuid uniqueHash()
 	{
 		return QUuid::createUuid();
