@@ -1,21 +1,23 @@
 #include "assembly.h"
+#include "page.h"
 
 namespace CDI
 {
-	Assembly::Assembly()
+	Assembly::Assembly(Page *parent)
 	{
-		_rootPtr = NULL;
+		_pagePtr = parent;
 		_assemblyFilepath = id().toString();
 	}
 
+	// TODO - Implement Joint-Object mapping
 	Assembly::~Assembly()
 	{
-		QHash<QUuid, Component*>::const_iterator iter;
-		for(iter = constBegin(); iter != constEnd(); ++iter)
-		{
-			Component* component = iter.value();
-			delete component;
-		}
+//		QHash<QUuid, Component*>::const_iterator iter;
+//		for(iter = constBegin(); iter != constEnd(); ++iter)
+//		{
+//			Component* component = iter.value();
+//			delete component;
+//		}
 	}
 
 	QTransform Assembly::transform() const
@@ -23,6 +25,11 @@ namespace CDI
 		return _transform;
 	}
 
+	void Assembly::setTransform(QTransform &transform)
+	{
+		mask |= isTransformed;
+		_transform = transform;
+	}
 	/*************************************************************
 	 * Query functions
 	 ************************************************************/
@@ -48,12 +55,7 @@ namespace CDI
 		{
 			remove(uid);
 		}
-	}
-
-	void Assembly::deleteitem(Component *component)
-	{
-		removeItem(component);
-		delete component;
+		// TODO - also remove all the connection references as well
 	}
 
 	bool Assembly::containsItem(AbstractModelItem* key, bool searchRecursive)
@@ -70,7 +72,7 @@ namespace CDI
 			for (iter = constBegin(); iter != constEnd(); ++iter)
 			{
 				Component* component = iter.value();
-				if (component->containsItem(key))
+				if (component->containsItem(key, searchRecursive))
 					return true;
 			}
 		}
@@ -122,7 +124,7 @@ namespace CDI
 			reserve(num_items);
 			for (int i =0; i< num_items; i++)
 			{
-				Component* component = new Component();
+				Component* component = _pagePtr->createComponent();
 				stream >> *component;
 				insert(component->id(), component);
 			}

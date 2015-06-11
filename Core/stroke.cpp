@@ -1,16 +1,66 @@
 #include "stroke.h"
 #include "commonfunctions.h"
 #include "ramerdouglaspeucker.h"
-#include "vector"
+#include <QVectorIterator>
 
 namespace CDI
 {
+	Stroke::Stroke()
+		: _color(Qt::black), _thickness(3.0f)
+	{
+		recalculateAABB();
+	}
+
+	Stroke::Stroke(QColor color, float thickness)
+		: _color(color), _thickness(thickness)
+	{
+		recalculateAABB();
+	}
+
+	Stroke::Stroke(const Stroke &s)
+		: QVector<Point2DPT>(s) , _color(s.color()),
+		  _thickness(s.thickness()), _transform(s.transform())
+	{
+		recalculateAABB();
+	}
+
+	Stroke::Stroke(const QVector<Point2DPT>& points, QColor color, float thickness)
+		: QVector<Point2DPT> (points), _color(color),
+		  _thickness(thickness)
+	{
+		recalculateAABB();
+	}
+
+	void Stroke::push_point(Point2DPT &pt)
+	{
+		push_back(pt);
+		float px = pt.x();
+		float py = pt.y();
+		// if either if _x_min or _y_min is true, we do have to check the other one
+		// A faster method can be thought of
+		_x_min = (_x_min < px ? _x_min : px);
+		_x_max = (_x_max > px ? _x_max : px);
+		_y_min = (_y_min < py ? _y_min : py);
+		_y_max = (_y_max > py ? _y_max : py);
+
+		aabb = QRectF(_x_min, _y_min, _x_max - _x_min, _y_max - _y_min);
+		aabb.setWidth(aabb.width()+2*_thickness);
+		aabb.setHeight(aabb.height()+2*_thickness);
+	}
+
+	QRectF Stroke::boundingRect()
+	{
+		if (size() == 0) return QRectF();
+		if (mask & isModified) updateWhenModified();
+		return aabb;
+		// Do not return the transformed AABB rectangle
+	}
+
 	void Stroke::translate(const Point2D &offset)
 	{
-		if (offset.isNull())
-			return;
+		if (offset.isNull()) return;
 
-		mask |= isTransformed;
+		mask |= isModified;
 
 		Point2DPT *p = data();
 		int i = size();
@@ -25,8 +75,6 @@ namespace CDI
 		Q_UNUSED(rule)
 
 		Point2D relPos = inverseTransform().map(pt);
-
-		qDebug() << "Before" << pt << "After" << relPos;
 		float width = _thickness + margin;
 		float sqrWidth = width*width;
 		int num_points = size() - 1;
@@ -51,39 +99,36 @@ namespace CDI
 
 	void Stroke::applySmoothing(int order)
 	{
-		if (0) {
-			std::vector<Point2D> ptvec;
-			Point2DPT* points = data();
-			int num_points = size();
-			for (int i=0; i<num_points; i++)
+		int num_points = size()-1;
+		Point2DPT* points = data();
+		for (int j =0; j< order; j++)
+			for (int index = 1;index < num_points; index++)
 			{
-				ptvec.push_back(Point2D(points[i].x(),points[i].y()));
-
+				points[index] = 0.5f * (points[index-1] + points[index+1]);
 			}
-			RamerDouglas rdp;
+	}
 
-			qDebug() << "Initial size" << ptvec.size();
-			ptvec = rdp.simplifyWithRDP(ptvec, 3);
-			qDebug() << "Final size" << ptvec.size();
-
-			clear();
-			for (int i=0; i<ptvec.size(); i++)
-			{
-				Point2D p = ptvec[i];
-				push_back(Point2DPT(p.x(),p.y(),1.0f,0));
-			}
-
+	bool Stroke::mergeWith(Stroke *stroke, bool joinAtEnd)
+	{
+		// Check thickness match
+		if (!qFuzzyCompare(stroke->thickness(), _thickness))
+			return false;
+		if (!colorCompare(stroke->color(), _color))
+			return false;
+		if (!_transform.isIdentity() || !(stroke->transform().isIdentity()))
+		{
+			qDebug() << "Add transformation support later";
+			return false;
 		}
 
-		if (1) {
-			int num_points = size()-1;
-			Point2DPT* points = data();
-			for (int j =0; j< order; j++)
-				for (int index = 1;index < num_points; index++)
-				{
-					points[index] = 0.5f * (points[index-1] + points[index+1]);
-				}
+		if (joinAtEnd)
+		{
+
+		} else
+		{
+
 		}
+		return false;
 	}
 
 	ItemType Stroke::type() const
@@ -105,7 +150,7 @@ namespace CDI
 	}
 
 	QDataStream& Stroke::deserialize(QDataStream &stream)
-	{		
+	{
 		qint32 len =0;
 		QTransform t;
 
@@ -127,17 +172,78 @@ namespace CDI
 		return stream;
 	}
 
+	void Stroke::updateWhenModified()
+	{
+		recalculateAABB();
+		mask &= ~isModified;
+	}
+
+	void Stroke::recalculateAABB()
+	{
+		if (size() == 0)
+		{
+			_x_max = _y_max = _x_min = _y_min = 0;
+			aabb = QRectF();
+			return;
+		}
+		int num_points = size();
+		Point2DPT* points = data();
+
+		_x_min=points[0].x(); _y_min=points[0].y();
+		_x_max=points[0].x(); _y_max=points[0].y();
+
+		for (int i=0; i< num_points; i++)
+		{
+			float px = points[i].x();
+			float py = points[i].y();
+			// if either if _x_min or _y_min is true, we do have to check the other one
+			// A faster method can be thought of
+			_x_min = (_x_min < px ? _x_min : px);
+			_x_max = (_x_max > px ? _x_max : px);
+			_y_min = (_y_min < py ? _y_min : py);
+			_y_max = (_y_max > py ? _y_max : py);
+		}
+		aabb =  QRectF(_x_min, _y_min, _x_max - _x_min, _y_max - _y_min);
+		aabb.setWidth(aabb.width()+2*_thickness);
+		aabb.setHeight(aabb.height()+2*_thickness);
+	}
+
 	QDebug operator <<(QDebug d, const Stroke &stroke)
 	{
-		d.nospace() << "Stroke id: " << stroke.id().toString();
+		d.nospace() << "\nStroke id: " << stroke.id().toString();
 		d.nospace() << "\n";
 		d.nospace() << "[Color:"<<stroke.color()<<"Thickness:"
 					<< stroke.thickness() << "Size:"<<stroke.size() << "]";
-		d.nospace() << "\n";
+		d.nospace() << "\n\n";
 		d.nospace() << stroke.transform();
 		d << "\n";
 		QVector<Point2DPT> v = stroke;
 		d.nospace() << v;
 		return d.space();
+	}
+
+	Stroke* merge(Stroke *s1, Stroke *s2, bool addS1Forward, bool addS2Forward)
+	{
+		Stroke* s12 = new Stroke();
+		s12->setThickness(s1->thickness());
+		s12->setColor(s1->color());
+		{
+			Point2DPT* data = s1->data();
+			int num_points = s1->size();
+			QTransform sTransform = s1->transform();
+
+			for (int i=0; i< num_points; i++)
+				s12->push_back(sTransform * data[i]);
+		}
+
+		{
+			Point2DPT* data = s2->data();
+			int num_points = s2->size();
+			QTransform sTransform = s2->transform();
+
+			for (int i=0; i< num_points; i++)
+				s12->push_back(sTransform * data[i]);
+		}
+		return s12;
 	}
 }

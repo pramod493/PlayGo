@@ -4,8 +4,7 @@ namespace CDI
 {
 	PlayGo::PlayGo()
 	{
-		assemblies = QHash<QUuid, Assembly*>();
-		freeComponents = QHash<QUuid, Component*>();
+		_pages = QHash<QUuid, Page*>();
 	}
 
 	PlayGo::~PlayGo()
@@ -16,59 +15,54 @@ namespace CDI
 	void PlayGo::deleteAllItems()
 	{
 		// delete all components as well as free items
-		if (!assemblies.isEmpty())
+		if (!_pages.isEmpty())
 		{
-			QHash<QUuid, Assembly*>::const_iterator iter;
-			for (iter = assemblies.constBegin();
-				 iter != assemblies.constEnd(); ++iter)
+			QHash<QUuid, Page*>::const_iterator iter;
+			for (iter = _pages.constBegin();
+				 iter != _pages.constEnd(); ++iter)
 			{
-				Assembly* assembly = iter.value();
-				if (assembly != NULL) delete assembly;
-			}
-		}
-
-		if (!freeComponents.isEmpty())
-		{
-			QHash<QUuid, Component*>::const_iterator iter;
-			for (iter = freeComponents.constBegin();
-				 iter != freeComponents.constEnd(); ++iter)
-			{
-				Component* item = iter.value();
-				if (item != NULL) delete item;
+				Page* page= iter.value();
+				if (page != NULL) delete page;
 			}
 		}
 	}
 
-	Component* PlayGo::addComponent(Assembly *parent)
+	Page* PlayGo::currentPage()
 	{
-		Component* component = new Component();
-		parent->addItem(component);
-		return component;
+		return _currentPage;
 	}
 
-	Assembly* PlayGo::addAssembly()
+	void PlayGo::setCurrentPage(Page *page)
 	{
-		Assembly* assembly = new Assembly();
-		assemblies.insert(assembly->id(), assembly);
-		return assembly;
+		// Do not check if _currentPage is null or not.
+		_currentPage = page;
 	}
 
-	bool PlayGo::contains(Assembly *assembly)
+	Page* PlayGo::addNewPage()
 	{
-		// Lookup using QUuid
-		return contains(assembly->id(), false);
+		Page* page = new Page(this);
+		_pages.insert(page->id(), page);
+		return page;
+	}
+
+	void PlayGo::addPage(Page* page)
+	{
+		if (!_pages.contains(page->id()))
+			_pages.insert(page->id(), page);
 	}
 
 	bool PlayGo::contains(QUuid id, bool searchRecursive)
 	{
-		if (assemblies.contains(id)) return true;
+		if (_pages.contains(id)) return true;
 		if (searchRecursive)
 		{
-			QHash<QUuid, Component*>::const_iterator iter;
-			for (iter = freeComponents.constBegin();
-				 iter != freeComponents.constEnd(); ++iter)
+			QHash<QUuid, Page*>::const_iterator iter;
+			for (iter = _pages.constBegin();
+				 iter != _pages.constEnd(); ++iter)
 			{
-
+				Page* page = iter.value();
+				if (page->contains(id, searchRecursive))
+					return true;
 			}
 		}
 		return false;
@@ -81,62 +75,88 @@ namespace CDI
 		return contains(uid, searchRecursive);
 	}
 
-	Assembly* PlayGo::getAssemblyById(QUuid id)
+	Page* PlayGo::mergePages(QVector<Page *> pagesToAdd)
 	{
-		// TODO - Feeling too lazy to implement now
+		Page *newpage = new Page(this);
+		for (QVector<Page*>::iterator iter = pagesToAdd.begin();
+			 iter != pagesToAdd.end(); ++iter)
+			newpage->add(*iter);
+		_pages.insert(newpage->id(), newpage);
+		return newpage;
+	}
+
+	Page* PlayGo::getItemPage(QUuid id, bool searchRecursive)
+	{
+		if (_pages.contains(id)) return _pages.value(id);	// Item is Page
+
+		QHash<QUuid, Page*>::const_iterator iter;
+		for (iter = _pages.constBegin();
+			 iter != _pages.constEnd(); ++iter)
+		{
+			Page* page = iter.value();
+			if (page->contains(id, searchRecursive))
+				return page;
+		}
 		return NULL;
 	}
 
-	Assembly* PlayGo::getAssemblyById(QString id)
+	Page* PlayGo::getPageById(QUuid id)
+	{
+		if (_pages.contains(id))
+		{
+			return _pages.value(id);
+		}
+		return NULL;
+	}
+
+	Page* PlayGo::getPageById(QString id)
 	{
 		QUuid uid = QUuid(id);
 		if (uid.isNull()) return false;
-		return getAssemblyById(uid);
+		return getPageById(uid);
 	}
 
 	QDataStream& PlayGo::serialize(QDataStream& stream) const
 	{
+		stream << _pages.size();
+		QHash<QUuid, Page*>::const_iterator iter;
+		for (iter = _pages.constBegin(); iter != _pages.constEnd(); ++iter)
 		{
-			stream << assemblies.size();
-			QHash<QUuid, Assembly*>::const_iterator iter;
-			for (iter = assemblies.constBegin();
-				 iter != assemblies.constEnd(); ++iter)
-			{
-				Assembly *assembly = iter.value();
-				stream << *assembly;
-			}
+			Page*  page= iter.value();
+			stream << *page;
 		}
+		// Mark for setting current page
+		if (_currentPage== NULL)
 		{
-			stream << freeComponents.size();
-			QHash<QUuid, Component*>::const_iterator iter;
-			for (iter = freeComponents.constBegin();
-				 iter != freeComponents.constEnd(); ++iter)
-			{
-				Component *item = iter.value();
-				stream << *item;
-			}
+			stream << 0;
+		} else
+		{
+			stream << 1;
+			stream << _currentPage->id();
 		}
 		return stream;
 	}
 
 	QDataStream& PlayGo::deserialize(QDataStream& stream)
 	{
-		int num_assemblies;
-		stream >> num_assemblies;
-		for (int i=0; i< num_assemblies; i++)
+		int num_pages;
+		stream >> num_pages;
+		for (int i=0; i< num_pages; i++)
 		{
-			Assembly *assembly = new Assembly();
-			stream >> *assembly;
-			assemblies.insert(assembly->id(), assembly);
+			Page *page = new Page(this);
+			stream >> *page;
+			_pages.insert(page->id(), page);
 		}
-
-		int num_components;
-		stream >> num_components;
-		for (int i=0; i< num_components; i++)
+		int i;	stream >> i;
+		if (i == 1)
 		{
-			Component *component = new Component;
-			stream >> *component;
-			freeComponents.insert(component->id(), component);
+			QUuid currentPageId;
+			stream >> currentPageId;
+			if (_pages.contains(currentPageId))
+				_currentPage = _pages.value(currentPageId);
+		} else if (i==0)
+		{
+			_currentPage = NULL;
 		}
 		return stream;
 	}

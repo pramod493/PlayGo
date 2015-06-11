@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cstdlib>
-#include "poly2tri/poly2tri.h"
+#include "poly2tri.h"
 #include <QDebug>
 
 using namespace p2t;

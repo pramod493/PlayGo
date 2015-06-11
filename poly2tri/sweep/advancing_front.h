@@ -46,7 +46,7 @@ struct Node {
   Node* next;
   Node* prev;
 
-  double value;
+  float value;
 
   Node(Point& p) : point(&p), triangle(NULL), next(NULL), prev(NULL), value(p.x)
   {

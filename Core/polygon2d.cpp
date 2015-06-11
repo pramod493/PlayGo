@@ -5,6 +5,11 @@
 
 namespace CDI
 {
+	QRectF Polygon2D::boundingRect() const
+	{
+		return _transform.mapRect(Polygon2D::boundingRect());
+	}
+
 	void Polygon2D::setAsConvex(bool enableInternalCheck)
 	{
 		if (enableInternalCheck)
@@ -28,11 +33,10 @@ namespace CDI
 		}
 	}
 
-	bool Polygon2D::containsPoint(const Point2D &pt, SelectionType rule, float margin)
+	bool Polygon2D::containsPoint(const Point2D &pt, Qt::FillRule rule)
 	{
-		Q_UNUSED(rule)
-		Q_UNUSED(pt)
-		Q_UNUSED(margin)
+		Point2D relPos = _inverseTransform.map(pt);
+		return QPolygonF::containsPoint(relPos, rule);
 
 //		Point2D relPos = inverseTransform().map(pt);
 
@@ -56,7 +60,7 @@ namespace CDI
 //			float dist = sqrEuclideanDistance(&v1, &v2);
 //			if (dist < sqrWidth) return true;
 //		}
-		return false;
+//		return false;
 	}
 
 	void Polygon2D::applyRDPSmoothing(float margin)

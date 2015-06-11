@@ -1,16 +1,15 @@
 #include "graphicsitemgroup.h"
 namespace CDI
 {
-    GraphicsItemGroup::GraphicsItemGroup(QGraphicsItem *graphicsParent, QObject* objectParent)
+	GraphicsItemGroup::GraphicsItemGroup(QGraphicsItem *graphicsParent)
 		: QGraphicsItemGroup(graphicsParent)
     {
         // Make sure that each object added to this is also of type CDI::Item
-        setAcceptDrops(true);
-        setAcceptTouchEvents(true);
+//        setAcceptDrops(true);
+//        setAcceptTouchEvents(true);
     }
 
     GraphicsItemGroup::~GraphicsItemGroup()
     {
-
     }
 }

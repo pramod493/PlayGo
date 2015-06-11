@@ -1,24 +1,30 @@
 #pragma once
 #include <QGraphicsView>
-#include <QTabletEvent>
-#include <QBrush>
-#include <QString>
 #include <QGraphicsScene>
+#include <QTabletEvent>
+#include <QTouchEvent>
+#include <QWheelEvent>
+#include "sketchscene.h"
+
+#include "page.h"
 
 namespace CDI
 {
 	class SketchView : public QGraphicsView
 	{
 		Q_OBJECT
-//	protected:
-//		QGraphicsScene* scene;
+	protected:
+		Page* _page;
 
+		SketchScene* _scene;
 	public:
-		SketchView(QWidget* parent = 0);
+		SketchView(Page* page, QWidget* parent = 0);
 
-		~SketchView();
+		virtual ~SketchView();
 
-		void SaveScene();
+		void drawBackground(QPainter * painter, const QRectF & rect);
+
+		SketchScene* getSketchScene();
 
 	protected:
 		void resizeEvent(QResizeEvent *event);
@@ -27,10 +33,11 @@ namespace CDI
 
 		void tabletEvent(QTabletEvent *event);
 
+		void wheelEvent(QWheelEvent* event);
+
 	signals:
-		void signalViewTabletEvent(QTabletEvent *tabletEvent, QPointF scenePos);
+		void viewTabletEvent(QTabletEvent *tabletEvent, QGraphicsView *view);
 
+		void viewTouchEvent(QTouchEvent *touchEvent, QGraphicsView *view);
 	};
-
-
 }

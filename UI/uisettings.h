@@ -1,5 +1,6 @@
 #pragmna once
 #include <QString>
+#include <QDataStream>
 
 //// Use this file to store the values which can be accessed from anywhere
 namespace CDI
@@ -15,5 +16,31 @@ namespace CDI
 	QString DatabaseDirectory("../../Database/Images/");
 	QString LogFilePath("./Debug/LogFile.txt");
 
+	// Save settings using this file
+	QDataStream& writeSettingsData(QDataStream& stream)
+	{
+		QString title("Settings data");
+		stream << title;
+		stream << MainWindowFullscreen;
+		stream << MainWindowTransparent;
+		stream << MainWindowAlpha;
+		stream << SketchSaveFile;
+		stream << DatabaseDirectory;
+		stream << LogFilePath;
+		return stream;
+	}
 
+	// Read setting back here
+	QDataStream& readSettingsData(QDataStream& stream)
+	{
+		QString title;
+		stream >> title;
+		stream >> MainWindowFullscreen;
+		stream >> MainWindowTransparent;
+		stream >> MainWindowAlpha;
+		stream >> SketchSaveFile;
+		stream >> DatabaseDirectory;
+		stream >> LogFilePath;
+		return stream;
+	}
 }

@@ -2,6 +2,8 @@
 #include <QDir>
 #include <QDebug>
 #include <vector>
+#include "page.h"
+#include "searchresult.h"
 
 using namespace std;
 namespace CDI
@@ -9,9 +11,11 @@ namespace CDI
     SearchManager::SearchManager(QObject *parent)
         : QObject(parent)
     {
-        inputFilePath   = QString("C:/Database/Input.png");
-        resultFilePath  = QString("C:/Database/results/results.yml");
-        databaseDir     = QString("C:/Database/");
+		databaseDir     = QString("C:/Database/");
+		inputFilePath   = databaseDir + QString("Input.png");
+		resultFilePath  = databaseDir + QString("results/results.yml");
+		origImagePath   = databaseDir + QString("trans");
+
         localFileList = QList<QString>();
 
         namespace po = boost::program_options;
@@ -23,28 +27,54 @@ namespace CDI
         searchEngine->Load();
     }
 
+	SearchManager* SearchManager::_instance = NULL;
+
+	SearchManager* SearchManager::instance()
+	{
+		if (_instance == NULL) _instance = new SearchManager();
+		return _instance;
+	}
+
     SearchManager::~SearchManager()
     {
         if (searchEngine!= NULL) delete searchEngine;
         localFileList.clear();
     }
 
+	void SearchManager::refresh()
+	{
+		if (searchEngine!= NULL) delete searchEngine;
+		namespace po = boost::program_options;
+		path datapasePath = path(databaseDir.toStdString());
+		wbBICE *biceDescriptor = new wbBICE();
+		searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
+		// TODO - Enable indexing for test
+		searchEngine->Index();
+		searchEngine->Load();
+	}
+
     bool SearchManager::search(QImage &image, int numResults)
     {
         if (image.isNull()) return false;
-        image.save(inputFilePath);
-        vector<string> results = searchEngine->Query(inputFilePath.toStdString(), numResults);
-
-        localFileList.clear();
-        for (vector<string>::iterator it = results.begin();
-             it != results.begin()+numResults; ++it)
-        {
-            string name = *it;
-            localFileList.push_back(QString::fromStdString(name));
-        }
+		image.save(inputFilePath);
         //ConvertResultsToLocalPath(numResults);
-        return true;
+		return search(inputFilePath, numResults);
     }
+
+	bool SearchManager::search(QString filePath, int numResults)
+	{
+		vector<string> results = searchEngine->Query(filePath.toStdString(), numResults);
+
+		localFileList.clear();
+		for (vector<string>::iterator it = results.begin();
+			 it != results.begin()+numResults; ++it)
+		{
+			string name = *it;
+			localFileList.push_back(QString::fromStdString(name));
+		}
+		//ConvertResultsToLocalPath(numResults);
+		return true;
+	}
 
     void SearchManager::ConvertResultsToLocalPath(int numResults)
     {   // Populates the file list vector

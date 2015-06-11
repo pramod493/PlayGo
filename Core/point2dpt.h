@@ -2,7 +2,9 @@
 #include "commonfunctions.h"
 #include <QDataStream>
 #include <QDebug>
+#include <QTransform>
 
+class QTransform;
 namespace CDI
 {
 	class Point2DPT : public Point2D
@@ -28,6 +30,7 @@ namespace CDI
 		friend inline const Point2DPT operator*(const Point2DPT&, float);
 		friend inline const Point2DPT operator+(const Point2DPT&, const Point2DPT&);
 		friend inline const Point2DPT operator-(const Point2DPT&, const Point2DPT&);
+		friend inline const Point2DPT operator*(const QTransform&, const Point2DPT&);
 
 		friend QDataStream &operator <<(QDataStream &stream, const Point2DPT &point);
 		friend QDataStream &operator >>(QDataStream &stream, Point2DPT &point);
@@ -90,6 +93,13 @@ namespace CDI
 	inline const Point2DPT operator-(const Point2DPT& p1, const Point2DPT& p2)
 	{
 		return Point2DPT(p1.x()-p2.x(), p1.y()-p2.y(),0.5f*(p1.pressure()+p2.pressure()), p1.time());
+	}
+
+	inline const Point2DPT operator*(const QTransform& t, const Point2DPT& p)
+	{
+		qreal *xt, *yt;
+		t.map(p.x(),p.y(),xt,yt);
+		return Point2DPT(*xt,*yt, p.pressure(),p.time());
 	}
 
 }

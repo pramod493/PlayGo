@@ -6,6 +6,13 @@
 #include <math.h>
 #include <algorithm>
 #include "commonfunctions.h"
+#include "polygon2d.h"
+#include "ramerdouglaspeucker.h"
+#include "poly2tri.h"
+#include <vector>
+#include "FindContours.h"
+
+using namespace std;
 
 namespace CDI
 {
@@ -28,10 +35,6 @@ namespace CDI
 			return ItemType::PHYSICSJOINT;
 		case ItemType::COMPONENT :
 			return ItemType::COMPONENT;
-		case ItemType::PAGE :
-			return ItemType::PAGE;
-		case ItemType::ROOT :
-			return ItemType::ROOT;
 		}
 		return ItemType::NONE;
 	}
@@ -181,5 +184,119 @@ namespace CDI
 	QUuid uniqueHash()
 	{
 		return QUuid::createUuid();
+	}
+
+	vector<p2t::Triangle*> triangularizeImage(QString imagePath, float deltaOutside, float deltaInside)
+	{
+		vector<p2t::Triangle*> triangles;
+		vector<vector<cv::Point> > outerContours;
+		vector<vector<vector<cv::Point> > > allInnerContours;
+
+		gbFindContours(imagePath.toStdString(), outerContours, allInnerContours, false/*NO DEBUG*/);
+
+		// Sanity check
+		if (outerContours.size()!= allInnerContours.size())
+		{
+			qDebug() << "Mismatch in the number of loops @generatePolygonFromImage";
+			return triangles;
+		}
+
+		// Initialize RDP object
+		CDI::RamerDouglas rdp = CDI::RamerDouglas();
+
+		// Iterate for each outer contour
+		for (int i=0; i< outerContours.size(); i++)
+		{
+			// 1. Get outer loop and corresponding inner loop
+			vector<cv::Point> outerContour = outerContours[i];
+			vector<vector<cv::Point>> innerContours = allInnerContours[i];
+
+			// 2. Convert into format accepted by RDP algo
+			vector<p2t::Point> tmp_contour;
+			tmp_contour.reserve(outerContour.size());
+			size_t max_points = outerContour.size();
+			for (size_t j=0; j< max_points ; j++)
+			{
+				cv::Point pt = outerContour[i];
+				tmp_contour.push_back(p2t::Point(pt.x, pt.y));
+			}
+
+			// 3. Simplify outer loop with RDp
+			vector<p2t::Point> simplied_outerContour = rdp.simplifyWithRDP(tmp_contour, deltaOutside);
+
+			// prepare the smoothed polyline for poly2tri
+			vector<p2t::Point*> p2t_polyline;
+			p2t_polyline.reserve(simplied_outerContour.size());
+			max_points = simplied_outerContour.size();
+			for (size_t j = 0; j < max_points; j++)
+			{
+				p2t::Point pt = simplied_outerContour[j];
+				p2t_polyline.push_back(new p2t::Point(pt.x,pt.y));
+			}
+
+			// Initialize CDT with simplified contour
+			p2t::CDT cdt = p2t::CDT(p2t_polyline);
+
+			// Create a hole for each of the inner loop
+			size_t max_inner_loops = allInnerContours.size();
+			for (size_t j=0; j < max_inner_loops; j++)
+			{
+				vector<cv::Point> innerContour = innerContours[j];
+				// Apply RDG
+				vector<p2t::Point> tmp_contour;
+				tmp_contour.reserve(innerContour.size());
+				size_t max_points = innerContour.size();
+				for (size_t j=0; j< max_points ; j++)
+				{
+					cv::Point pt = innerContour[i];
+					tmp_contour.push_back(p2t::Point(pt.x, pt.y));
+				}
+
+				// Apply RDP on inner loop
+				vector<p2t::Point> simplified_innerContour = rdp.simplifyWithRDP(tmp_contour, deltaInside);
+
+				vector<p2t::Point*> p2t_hole;
+				p2t_hole.reserve(simplied_outerContour.size());
+				size_t max_points_in_hole = simplied_outerContour.size();
+				for (size_t k = 0; k < max_points_in_hole; k++)
+				{
+					p2t::Point pt = simplified_innerContour[k];
+					p2t_hole.push_back(new p2t::Point(pt.x,pt.y));
+				}
+				cdt.AddHole(p2t_hole);
+			}
+
+			// Triangulate
+			cdt.Triangulate();
+
+			// Append the traingulated results to the vector
+			vector<p2t::Triangle*> tmp_trias = cdt.GetTriangles();
+			for(int m =0; m < tmp_trias.size(); m++)
+			{
+				triangles.push_back(tmp_trias[m]);
+			}
+		}
+
+		return triangles;
+	}
+
+	QList<Polygon2D*> generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside)
+	{
+		// Initialize the list
+		QList<Polygon2D*> polygons;
+		vector<p2t::Triangle*> triangles = triangularizeImage(imagePath, deltaOutside, deltaInside);
+		for (int i=0; i <triangles.size(); i++)
+		{
+			p2t::Triangle* tria = triangles[i];
+
+			Polygon2D* polygon = new Polygon2D();
+			p2t::Point *pt = 0;
+			pt = tria->GetPoint(0);	polygon->push_back(Point2D(pt->x,pt->y));
+			pt = tria->GetPoint(1);	polygon->push_back(Point2D(pt->x,pt->y));
+			pt = tria->GetPoint(2);	polygon->push_back(Point2D(pt->x,pt->y));
+
+			polygons.push_back(polygon);
+		}
+		return polygons;
 	}
 }

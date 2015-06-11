@@ -243,7 +243,7 @@ void Sweep::FillAdvancingFront(SweepContext& tcx, Node& n)
 
   // Fill right basins
   if (n.next && n.next->next) {
-    double angle = BasinAngle(n);
+    float angle = BasinAngle(n);
     if (angle < PI_3div4) {
       FillBasin(tcx, n);
     }
@@ -273,18 +273,18 @@ bool Sweep::LargeHole_DontFill(Node* node) {
 }
 
 bool Sweep::AngleExceeds90Degrees(Point* origin, Point* pa, Point* pb) {
-  double angle = Angle(*origin, *pa, *pb);
+  float angle = Angle(*origin, *pa, *pb);
   bool exceeds90Degrees = ((angle > PI_div2) || (angle < -PI_div2));
   return exceeds90Degrees;
 }
 
 bool Sweep::AngleExceedsPlus90DegreesOrIsNegative(Point* origin, Point* pa, Point* pb) {
-  double angle = Angle(*origin, *pa, *pb);
+  float angle = Angle(*origin, *pa, *pb);
   bool exceedsPlus90DegreesOrIsNegative = (angle > PI_div2) || (angle < 0);
   return exceedsPlus90DegreesOrIsNegative;
 }
 
-double Sweep::Angle(Point& origin, Point& pa, Point& pb) {
+float Sweep::Angle(Point& origin, Point& pa, Point& pb) {
   /* Complex plane
    * ab = cosA +i*sinA
    * ab = (ax + ay*i)(bx + by*i) = (ax*bx + ay*by) + i(ax*by-ay*bx)
@@ -293,26 +293,26 @@ double Sweep::Angle(Point& origin, Point& pa, Point& pb) {
    * Where x = ax*bx + ay*by
    *       y = ax*by - ay*bx
    */
-  double px = origin.x;
-  double py = origin.y;
-  double ax = pa.x- px;
-  double ay = pa.y - py;
-  double bx = pb.x - px;
-  double by = pb.y - py;
-  double x = ax * by - ay * bx;
-  double y = ax * bx + ay * by;
-  double angle = atan2(x, y);
+  float px = origin.x;
+  float py = origin.y;
+  float ax = pa.x- px;
+  float ay = pa.y - py;
+  float bx = pb.x - px;
+  float by = pb.y - py;
+  float x = ax * by - ay * bx;
+  float y = ax * bx + ay * by;
+  float angle = atan2(x, y);
   return angle;
 }
 
-double Sweep::BasinAngle(Node& node)
+float Sweep::BasinAngle(Node& node)
 {
-  double ax = node.point->x - node.next->next->point->x;
-  double ay = node.point->y - node.next->next->point->y;
+  float ax = node.point->x - node.next->next->point->x;
+  float ay = node.point->y - node.next->next->point->y;
   return atan2(ay, ax);
 }
 
-double Sweep::HoleAngle(Node& node)
+float Sweep::HoleAngle(Node& node)
 {
   /* Complex plane
    * ab = cosA +i*sinA
@@ -322,10 +322,10 @@ double Sweep::HoleAngle(Node& node)
    * Where x = ax*bx + ay*by
    *       y = ax*by - ay*bx
    */
-  double ax = node.next->point->x - node.point->x;
-  double ay = node.next->point->y - node.point->y;
-  double bx = node.prev->point->x - node.point->x;
-  double by = node.prev->point->y - node.point->y;
+  float ax = node.next->point->x - node.point->x;
+  float ay = node.next->point->y - node.point->y;
+  float bx = node.prev->point->x - node.point->x;
+  float by = node.prev->point->y - node.point->y;
   return atan2(ax * by - ay * bx, ax * bx + ay * by);
 }
 
@@ -392,36 +392,36 @@ bool Sweep::Legalize(SweepContext& tcx, Triangle& t)
 
 bool Sweep::Incircle(Point& pa, Point& pb, Point& pc, Point& pd)
 {
-  double adx = pa.x - pd.x;
-  double ady = pa.y - pd.y;
-  double bdx = pb.x - pd.x;
-  double bdy = pb.y - pd.y;
+  float adx = pa.x - pd.x;
+  float ady = pa.y - pd.y;
+  float bdx = pb.x - pd.x;
+  float bdy = pb.y - pd.y;
 
-  double adxbdy = adx * bdy;
-  double bdxady = bdx * ady;
-  double oabd = adxbdy - bdxady;
+  float adxbdy = adx * bdy;
+  float bdxady = bdx * ady;
+  float oabd = adxbdy - bdxady;
 
   if (oabd <= 0)
     return false;
 
-  double cdx = pc.x - pd.x;
-  double cdy = pc.y - pd.y;
+  float cdx = pc.x - pd.x;
+  float cdy = pc.y - pd.y;
 
-  double cdxady = cdx * ady;
-  double adxcdy = adx * cdy;
-  double ocad = cdxady - adxcdy;
+  float cdxady = cdx * ady;
+  float adxcdy = adx * cdy;
+  float ocad = cdxady - adxcdy;
 
   if (ocad <= 0)
     return false;
 
-  double bdxcdy = bdx * cdy;
-  double cdxbdy = cdx * bdy;
+  float bdxcdy = bdx * cdy;
+  float cdxbdy = cdx * bdy;
 
-  double alift = adx * adx + ady * ady;
-  double blift = bdx * bdx + bdy * bdy;
-  double clift = cdx * cdx + cdy * cdy;
+  float alift = adx * adx + ady * ady;
+  float blift = bdx * bdx + bdy * bdy;
+  float clift = cdx * cdx + cdy * cdy;
 
-  double det = alift * (bdxcdy - cdxbdy) + blift * ocad + clift * oabd;
+  float det = alift * (bdxcdy - cdxbdy) + blift * ocad + clift * oabd;
 
   return det > 0;
 }
@@ -547,7 +547,7 @@ void Sweep::FillBasinReq(SweepContext& tcx, Node* node)
 
 bool Sweep::IsShallow(SweepContext& tcx, Node& node)
 {
-  double height;
+  float height;
 
   if (tcx.basin.left_highest) {
     height = tcx.basin.left_node->point->y - node.point->y;

@@ -1,11 +1,12 @@
 #include "component.h"
+#include "page.h"
 
 namespace CDI
 {
-	Component::Component()
+	Component::Component(Page *parent)
 		: AbstractModelItem()
 	{
-
+		_pagePtr = parent;
 	}
 
 	QTransform Component::transform() const
@@ -27,11 +28,11 @@ namespace CDI
 		return t;
 	}
 
-	void Component::setTransform(QTransform& transform)
-		{
-			mask |= isTransformed;
-			_transform = transform;
-		}
+	void Component::setTransform(QTransform& transform, bool combine)
+	{
+		mask |= isTransformed;
+		_transform = (combine ? _transform * transform : transform);
+	}
 
 	Stroke* Component::addStroke(QColor color, float thickness)
 	{
@@ -89,6 +90,30 @@ namespace CDI
 		return containsItem(id, searchRecursive);
 	}
 
+	AbstractModelItem* Component::getItemPtrById(QUuid id, bool searchRecursive)
+	{
+		if (!searchRecursive)
+		{
+			if (contains(id)) return value(id);
+			return NULL;
+		}
+		// Iterate over all the items in hash and check if any of them is component
+		QHash<QUuid, AbstractModelItem*>::const_iterator iter;
+		for (iter = constBegin(); iter != constEnd(); ++iter)
+		{
+			AbstractModelItem* item = iter.value();
+			if (item->type()== ItemType::COMPONENT)
+			{
+				Component* component = static_cast<Component*>(item);
+				if (component->containsItem(id, searchRecursive))
+				{
+					return component->getItemPtrById(id);
+				}
+			}
+		}
+		return NULL;
+	}
+
 	ItemType Component::type() const
 	{
 		return ItemType::COMPONENT;
@@ -144,7 +169,9 @@ namespace CDI
 			ptr = new Image();
 			break;
 		case ItemType::COMPONENT :
-			ptr = new Component();
+			qDebug() << "Components are not supposed to contain components"
+					 << "@Component::createEmptyItem(ItemType): AbstractModelItem*";
+			ptr = _pagePtr->createComponent();
 		default :
 			qDebug() << "Default constructor for given itemtype is not available. Returning NULL";
 		}

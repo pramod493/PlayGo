@@ -1,38 +1,22 @@
-#include <QApplication>
-#include <QMainWindow>
+#include <iostream>
+#include <QDebug>
 #include "tabletapplication.h"
 #include "cdiwindow.h"
-#include <QTransform>
-#include <QDebug>
 #include "commonfunctions.h"
-
-void testPoly2Tri();
 
 int main(int argc, char *argv[])
 {
-    CDI::TabletApplication app(argc, argv);
-
-//	{
-//		unsigned int mask =0;
-//		qDebug() << mask;
-//		mask |= MASK_BIT2;
-//		mask |= MASK_BIT0;
-//		mask |= MASK_BIT1;
-//		qDebug() << mask;
-
-//		qDebug() << (mask &= ~MASK_BIT1);	// use this
-
-//		return 1;
-//	}
-
+	std::cout << "Testing if it works...";
+	CDI::TabletApplication app(argc, argv);
+	qDebug() << "Init";
     CDI::CDIWindow *window =  new CDI::CDIWindow();
-
+	// Triggered when stylus enters/leaves the device proximity
 	QObject::connect(&app, SIGNAL(OnStylusProximity(QEvent*)),
-					 window, SLOT(slotOnSignalProximity(QEvent*)));
+					 window, SLOT(onStylusProximity(QEvent*)));
 
-
-	window->InitWidgets();
+	window->initWidgets();
     window->show();
+	qDebug() << "Window displayed.";
 
     return app.exec();
 }

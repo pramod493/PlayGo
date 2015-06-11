@@ -5,10 +5,12 @@
 #include <point2dpt.h>
 #include <QVector>
 #include <QColor>
+#include <QPolygonF>	// Use these APIs
+#include <QRectF>
 
 namespace CDI
 {
-	class Polygon2D : public QVector<Point2D>, public AbstractModelItem
+	class Polygon2D : public QPolygonF, public AbstractModelItem
 	{
 	protected:
 		QColor _color;				/**< Polygon2D color */
@@ -30,6 +32,7 @@ namespace CDI
 		inline float thickness() const;
 		inline QTransform transform() const;
 		inline QTransform inverseTransform() const;
+		virtual QRectF boundingRect() const;
 		inline bool convex();
 
 		inline void setColor(QColor color);
@@ -46,7 +49,7 @@ namespace CDI
 		inline void translate(float x, float y);
 		void translate(const Point2D& offset);
 
-		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
+		bool containsPoint(const Point2D &pt, Qt::FillRule rule);
 		void applyRDPSmoothing(float margin);// TODO - Implement
 
 		// Virtual functions
@@ -72,12 +75,12 @@ namespace CDI
 	{}
 
 	inline Polygon2D::Polygon2D(const Polygon2D &s)
-		: QVector<Point2D>(s) , _color(s.color()), _thickness(s.thickness()),
+		: QPolygonF(s) , _color(s.color()), _thickness(s.thickness()),
 		  _isConvex(false)
 	{}
 
 	inline Polygon2D::Polygon2D(const QVector<Point2D>& points, QColor color, float thickness)
-		: QVector<Point2D> (points), _color(color), _thickness(thickness), _isConvex(false)
+		: QPolygonF (points), _color(color), _thickness(thickness), _isConvex(false)
 	{}
 
 	inline QColor Polygon2D::color() const

@@ -26,8 +26,6 @@ void testRandomNumberGenerator()
 
 bool testPointOperations()
 {
-	qDebug() << "Creating new point";
-
 	Point2DPT point = Point2DPT(3.0f,9.0f,0.75f,200);
 	point = point*2.5f;
 	qDebug() << "Point created " << point;
@@ -47,10 +45,19 @@ bool testPointOperations()
 
 	in >> p2;
 	file.close();
-
-	qDebug() <<"Printing read data";
-	qDebug() << p2;
-
+	if (qFuzzyCompare(point->x(), p2.x())
+			&& qFuzzyCompare(point->y(), p2.y())
+			&& qFuzzyCompare(point->pressure(), p2.pressure())
+			&& qFuzzyCompare(point->time(), p2.time()))
+	{
+		qDebug() << "Point2DPT read write complete";
+		return true;
+	} else
+	{
+		qDebug() << "Read value does not match with the input value"
+				 << "@testPointOperations";
+		return false;
+	}
 	return true;
 }
 

@@ -1,3 +1,8 @@
+include ($$PWD/../Indexer-Minimal/Indexer.pri)
+include ($$PWD/../poly2tri/poly2tri.pri)
+include ($$PWD/../Physics/QBox2D.pri)
+include ($$PWD/../EdgeDetect/Edge Detect.pri)
+
 INCLUDEPATH += $$PWD
 
 HEADERS += \
@@ -11,7 +16,15 @@ HEADERS += \
     $$PWD/playgo.h \
     $$PWD/fileio.h \
     $$PWD/ramerdouglaspeucker.h \
-    $$PWD/polygon2d.h
+    $$PWD/polygon2d.h \
+    $$PWD/asmopencv.h \
+    $$PWD/physicsmanager.h \
+    $$PWD/searchmanager.h \
+    $$PWD/page.h \
+    $$PWD/physicsbody.h \
+    $$PWD/physicsjoint.h \
+    $$PWD/playgocore.h \
+    $$PWD/searchresult.h
 
 SOURCES += \
     $$PWD/commonfunctions.cpp \
@@ -24,4 +37,14 @@ SOURCES += \
     $$PWD/playgo.cpp \
     $$PWD/fileio.cpp \
     $$PWD/ramerdouglaspeucker.cpp \
-    $$PWD/polygon2d.cpp
+    $$PWD/polygon2d.cpp \
+    $$PWD/physicsmanager.cpp \
+    $$PWD/searchmanager.cpp \
+    $$PWD/page.cpp \
+    $$PWD/physicsbody.cpp \
+    $$PWD/physicsjoint.cpp \
+    $$PWD/searchresult.cpp
+
+INCLUDEPATH += $$PWD/Clipper
+HEADERS += $$PWD/Clipper/clipper.hpp
+SOURCES += $$PWD/Clipper/clipper.cpp

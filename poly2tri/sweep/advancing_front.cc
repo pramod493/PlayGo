@@ -70,9 +70,9 @@ Node* AdvancingFront::FindSearchNode(const double& x)
 
 Node* AdvancingFront::LocatePoint(const Point* point)
 {
-  const double px = point->x;
+  const float px = point->x;
   Node* node = FindSearchNode(px);
-  const double nx = node->point->x;
+  const float nx = node->point->x;
 
   if (px == nx) {
     if (point != node->point) {

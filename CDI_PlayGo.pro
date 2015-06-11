@@ -12,16 +12,13 @@ TEMPLATE = app
 
 RESOURCES += images.qrc
 
-include (poly2tri/poly2tri.pri)
-
 include (Core/PlayGoCore.pri)
-
-include (Indexer-Minimal/Indexer.pri)
 
 #include (P-Dollar-Recognizer/P_Dollar.pri)
 
-include (Physics/QBox2D.pri)
-
 include (UI/PlayGoUI.pri)
 
-SOURCES += $$PWD/main.cpp
+include (Controller/Controller.pri)
+
+SOURCES += $$PWD/main.cpp \
+        $$PWD/miscfunctions.cpp

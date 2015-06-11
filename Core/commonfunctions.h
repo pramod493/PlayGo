@@ -3,6 +3,9 @@
 #include <QPointF>
 #include <QTransform>
 #include <QUuid>
+#include <QList>
+#include <QVector>
+#include "FindContours.h"
 
 #define MASK_BIT0	1
 #define MASK_BIT1	2
@@ -15,6 +18,8 @@
 
 namespace CDI
 {
+	class Polygon2D;
+
 	// Program constant
 	#define CDI_MAX_FLOAT FLT_MAX;
 	#define CDI_MIN_FLOAT FLT_MIN;
@@ -31,14 +36,12 @@ namespace CDI
 	enum ItemType : int {
 		STROKE = 10,	// geometry
 		IMAGE,
-		POLYGON2D,
+		POLYGON2D,		// Nothing but objects with holes. Maybe triangulated
 		SEARCHRESULT,	// display items
 		PHYSICSBODY,	// physics items
 		PHYSICSJOINT,
 		COMPONENT,		// core components
 		ASSEMBLY,
-		PAGE,			// Ignore
-		ROOT,			// roots
 		NONE
 	};
 
@@ -81,4 +84,18 @@ namespace CDI
 	bool isConvexPolygon(Point2D* points, int numPoints);
 
 	QUuid uniqueHash();
+
+	/**
+	 * @brief generatePolygonFromImage creates contour from given image, simplies using RDG
+	 * algorith and triangulates the resultant polygon
+	 * @param imagePath Full path to image
+	 * @param deltaOutside epsilon value for outer polygons (RDG algo)
+	 * @param deltaInside epsilon value for internal polygons (RDG algo)
+	 * @return List of convex polygons
+	 * @see http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+	 * @see http://karthaus.nl/rdp/
+	 * @remarks - In the current implementation, all polygons are simply triangles.
+	 * @todo - Implement decomposition to generate convex polygons with num of vertices > 3
+	 */
+	QList<Polygon2D*> generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside);
 }

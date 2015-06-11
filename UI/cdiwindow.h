@@ -3,22 +3,18 @@
 #include <QObject>
 #include <QAction>
 #include <QActionGroup>
-#include <QMainWindow>
-#include <QMenuBar>
-#include <QMenu>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QToolBar>
 #include <QIcon>
 #include <QStatusBar>
 #include <QSlider>
 #include <QVBoxLayout>
 #include <QTabletEvent>
-
+#include "colorselectortoolbar.h"
 #include "playgo.h"
 
 #include "sketchview.h"
 #include "sketchscene.h"
+#include "PlayGoController.h"
 
 namespace CDI
 {
@@ -38,30 +34,24 @@ namespace CDI
 		// actions
 
 		// File operations
-		QAction* newAction;
-		QAction* openPageAction;
-		QAction* closePageAction;
-		QAction* saveImageAction;
+		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction;
 
 		// Sketching related operations
-		QAction* brushSelectAction;
-		QAction* eraseSelectAction;
-		QAction* marqueeAction;
+		QAction *brushSelectAction, *eraseSelectAction, *marqueeAction, *searchAction;
+
         //QAction* selectorAction;        // Enable selection of components.
-		QAction* searchAction;          // Search the marqueed region
         //QAction* marqueeEnableAction;   // Enable the marquee widget
 
 		// Simulation managed actions
 		QAction *playAction, *pauseAction, *resetAction;
 
 		// Toolbars
-		QToolBar* mainToolbar;
+		QToolBar *mainToolbar;
+		ColorSelectorToolbar* colorToolbar;
 
-		// menus
+		// MENUS
 		// TODO - Menus are not needed even though they are good to have
-		QMenuBar* menubar;
-		QMenu* editMenu;
-		QMenu* helpmenu;
+		QMenuBar *menubar, *editMenu, *helpmenu;
 
 		QSlider* brushWidthSlider;
 
@@ -78,6 +68,8 @@ namespace CDI
 		// Status bar displaye hints and user actions
 		QStatusBar* statusBar;
 
+		PlayGoController* controller;
+
 	protected:
 		QTabletEvent::TabletDevice tabletDevice;
 
@@ -86,27 +78,51 @@ namespace CDI
 
 		~CDIWindow();
 
-		void InitWidgets();
+		void initWidgets();
 
 	protected:
-		void CreateActions();
+		void createActions();
 
-		void SetupToolbar();
+		void setupToolbar();
 
-		void CreateStatusbar();
+		void createStatusbar();
+
+		void connectActions();
 
 		void closeEvent(QCloseEvent *event);
 
 	signals:
-
-		void signalBrushSizeChanged(int size);
+		void onBrushSizeChanged(int size);
 
 	public slots:
-		void setBrushValue(int size);
+		/**
+		 * @brief Clear removes all the items from the scene.
+		 * \todo Also prompt user to save the current scene
+		 */
+		void clear();
 
-		void slotOnSignalProximity(QEvent* event);
+		/**
+		 * @brief save triggers saving of the current scene
+		 * \todo Implement this feature
+		 */
+		void save();
 
-        void Save();
+		void setToDraw();
 
+		void setToErase();
+
+		void setToSelect();
+
+		void setBrushWidth(int size);
+
+		void setBrushColor(QString, QColor);
+
+		void onSearchTrigger();
+		/**
+		 * @brief onStylusProximity is called when a tablet device is near
+		 * Use this to disable mouse input as well as other tasks
+		 * @param event Proximity event
+		 */
+		void onStylusProximity(QEvent* event);
 	};
 }

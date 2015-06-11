@@ -69,10 +69,15 @@ namespace CDI
 		parentPolygon->applyRDPSmoothing(margin);
 	}
 
+	bool GraphicsPolygon2D::containsPoint(const Point2D &pt, SelectionType rule, float margin)
+	{
+		return parentPolygon->containsPoint(pt, Qt::WindingFill);
+	}
+
 	bool GraphicsPolygon2D::Selected(QPointF point, float extraWidth)
 	{
 		Point2D p = Point2D(point.x(),point.y());
-		bool val = parentPolygon->containsPoint(p, SelectionType::OnItem, extraWidth);
+		bool val = parentPolygon->containsPoint(p, Qt::WindingFill);
 		return val;
 	}
 }

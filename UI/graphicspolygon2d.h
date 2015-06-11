@@ -7,15 +7,14 @@
 #include "point2dpt.h"
 #include "commonfunctions.h"
 
+#include "cdi2qtwrapper.h"
+
 namespace CDI
 {
 	class GraphicsPolygon2D : public QGraphicsPathItem
 	{
 	public:
-
 		Polygon2D* parentPolygon;
-
-//		bool isOrphan;		// If there is  no parent. True as default
 
 	public:
 		GraphicsPolygon2D(QGraphicsItem* parent, Point2D startPoint, float pressure=1.0f, int time = 0);
@@ -23,6 +22,8 @@ namespace CDI
 		GraphicsPolygon2D(QGraphicsItem* parent, Polygon2D* polygon);
 
 		~GraphicsPolygon2D();
+
+		int type() const { return QGraphicsItem::UserType+ GraphicsItemType::POLYGONVIEW; }
 
 		void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
 
@@ -32,7 +33,7 @@ namespace CDI
 
 		void ApplySmoothing(float margin);
 
-		bool containsPoint(const Point2D &pt, SelectionType rule, float margin=0) {return false;}
+		bool containsPoint(const Point2D &pt, SelectionType rule, float margin=0);
 
 		bool Selected(QPointF point, float extraWidth);
 	};

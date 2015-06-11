@@ -1,4 +1,4 @@
-#include "cdigraphicspathitem.h"
+#include "graphicspathitem.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <QVectorIterator>
@@ -13,7 +13,10 @@ namespace CDI
 		: QGraphicsPathItem (parent)
 	{
 		parentStroke = new Stroke();
-		parentStroke->push_back(Point2DPT(startPoint.x(), startPoint.y(),pressure,time));
+		parentStroke->setTransform
+				(parentStroke->transform().translate(startPoint.x(), startPoint.y()));
+		setTransform(parentStroke->transform());
+		push_back(startPoint,pressure,time);
     }
 
     GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, Stroke *stroke)
@@ -32,6 +35,8 @@ namespace CDI
     {
 		Q_UNUSED(widget)
 		Q_UNUSED(option)
+		// Hide when hidden
+		if (parentStroke->isVisible() == false) return;
 		if (parentStroke->size() < 3) return;
 
 		QPen pen = this->pen();
@@ -40,29 +45,26 @@ namespace CDI
 
 		Point2DPT* data = parentStroke->data();		// gives out the data. Careful not to overwrite that information
 		int num_points = parentStroke->size();
-		painter->setTransform(parentStroke->transform());
-		QPainterPath painterPath = QPainterPath(data[0]);
+
 		for (int i=1; i< num_points; i++)
 		{
 			Point2DPT p1 = data[i-1]; Point2DPT p2 = data[i];
 			pen.setWidthF(width * p1.pressure()); painter->setPen(pen);
 			painter->drawLine(p1,p2);
-			painterPath.lineTo(data[i].x(),data[i].y());
 		}
-		setPath(painterPath);
     }
 
 	void GraphicsPathItem::push_back(QPointF point, float pressure, int time)
     {
 		Point2D pt = parentStroke->inverseTransform().map(point);
-		parentStroke->push_back(Point2DPT(pt.x(),pt.y(), pressure, time));
+		parentStroke->push_point(Point2DPT(pt.x(),pt.y(), pressure, time));
     }
 
     void GraphicsPathItem::push_back(Point2DPT point)
     {
 		Point2D pt = parentStroke->inverseTransform().map(point);
 		point.setX(pt.x()); point.setY(pt.y());
-		parentStroke->push_back(point);
+		parentStroke->push_point(point);
     }
 
     void GraphicsPathItem::ApplySmoothing(int order)
@@ -76,6 +78,12 @@ namespace CDI
 		bool val = parentStroke->containsPoint(p, SelectionType::OnItem, extraWidth);
         return val;
     }
+
+	QRectF GraphicsPathItem::boundingRect() const
+	{
+		if (parentStroke== NULL) return QRectF();
+		return parentStroke->boundingRect();
+	}
 
     void GraphicsPathItem::OnStrokeUpdate(Stroke* stroke)
     {
