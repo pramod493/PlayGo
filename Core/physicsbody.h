@@ -3,6 +3,9 @@
 #include <vector>
 #include <QVector>
 #include <Box2D/Dynamics/b2Body.h>
+#include "poly2tri.h"
+#include <QDebug>
+
 namespace CDI
 {
 	class PhysicsManager;
@@ -11,8 +14,9 @@ namespace CDI
 	class PhysicsBody : public AbstractModelItem
 	{
 		Q_OBJECT
-	public :
-		b2Body* body;
+
+	protected:
+		b2Body* _b2body;
 
 		float density;	/**< Density of the material. Mass is calculate by Box2D */
 		float friction;
@@ -24,30 +28,52 @@ namespace CDI
 		 */
 		QVector<Polygon2D*> shapes;
 
-	protected:
+		/**
+		 * @brief CCW polygonized triangles
+		 */
+		std::vector<p2t::Triangle*> triangles;
+
 		Component* component;
 
-	protected:
+	public:
+		//-----------------------------------------------
+		// Constructors/Destructors
+		//-----------------------------------------------
 		PhysicsBody(Component* parent, b2Body* boxBody);
 
 		virtual ~PhysicsBody();
+		//-----------------------------------------------
+		// Query/Set functions(same order in derived class)
+		// Non-virtual
+		//-----------------------------------------------
+		b2Body* getBox2DBody();
 
-		b2Body* getBox2DBody() { return body;}
+		b2Vec2& getPosition();
 
-	public:
-		ItemType type() const { return ItemType::PHYSICSBODY; }
-
-		void setTransform(QTransform& transform);
+		float getRotation();
+		//-----------------------------------------------
+		// Virtual functions (same order in derived class)
+		//-----------------------------------------------
+		ItemType type() const;// { return ItemType::PHYSICSBODY; }
 
 		QTransform transform() const;
 
-		QTransform inverseTransform() const;
+		void setTransform(QTransform transform);
 
-		void updateParentTransform();
+		QTransform globalTransform() const;
+
+		QTransform inverseTransform() const;
 
 		QDataStream& serialize(QDataStream& stream) const { return stream; }
 
 		QDataStream& deserialize(QDataStream& stream) { return stream; }
+
+		//-----------------------------------------------
+		// Other functions not related to query/set
+		//-----------------------------------------------
+		void updateParentTransform();
+
+		friend QDebug operator <<(QDebug d, const PhysicsBody& item);
 
 		friend class PhysicsManager;
 	};

@@ -10,7 +10,9 @@ SOURCES += \
     $$PWD/colorselectortoolbar.cpp \
     $$PWD/graphicsitemgroup.cpp \
     $$PWD/graphicspolygon2d.cpp \
-    $$PWD/graphicspathitem.cpp
+    $$PWD/graphicspathitem.cpp \
+    $$PWD/modelviewtreewidget.cpp \
+    $$PWD/graphicspixmap.cpp
 
 HEADERS += \
     $$PWD/cdi2qtwrapper.h \
@@ -23,4 +25,6 @@ HEADERS += \
     $$PWD/colorselectortoolbar.h \
     $$PWD/graphicsitemgroup.h \
     $$PWD/graphicspolygon2d.h \
-    $$PWD/graphicspathitem.h
+    $$PWD/graphicspathitem.h \
+    $$PWD/modelviewtreewidget.h \
+    $$PWD/graphicspixmap.h

@@ -54,6 +54,8 @@ namespace CDI
 
 		void drawBackground(QPainter * painter, const QRectF & rect);
 
+		Page* page() { return _page; }
+
 		/**
 		 * @brief Creates a new component and adds stroke
 		 * @param stroke
@@ -112,5 +114,42 @@ namespace CDI
 		void OnSearchComplete();
 
 		void onItemDisplayStatusChanged(AbstractModelItem* item);
+
+		void onItemTransformChanged(AbstractModelItem* item);
+
+		void onItemDestroy(AbstractModelItem* item);
+
+		void onItemParentChange(AbstractModelItem* item);
+
+		/////////////////////////////////////////////////////////////
+
+		void onDeleteAllItems(Page* page);
+
+		void onReloadPage(Page* page);
+
+		void onItemRemove(QUuid itemId);
+
+		void onItemUpdate(QUuid itemId);
+
+		void onItemRedraw(QUuid itemId);
+
+		void onItemIdUpdate(QUuid oldID, QUuid newID);
+
+		void onItemAdd(AbstractModelItem* item);
+
+		// Called only from within class
+		void onComponentAdd(Component* component);
+		void onAssemblyAdd(Assembly* assembly);
+
+		void onComponentMerge(Component* a, Component* b);
+		void onAssemblyMerge(Assembly* a, Assembly* b);
+
+		void onAssemblyUpdate(Assembly* assembly);
+		void onComponentUpdate(Component* component);
+
+		// Equivalent to deleting object
+		void onAssemblyDelete(Assembly* assembly);
+		void onComponentDelete(Component* component);
+
 	};
 }

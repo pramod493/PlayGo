@@ -1,6 +1,4 @@
-#ifndef __ASM_OPENCV_H__
-#define __ASM_OPENCV_H__
-
+#pragma once
 /*
    Functions to convert between OpenCV's cv::Mat and Qt's QImage and QPixmap.
 
@@ -11,6 +9,7 @@
 
 #include <QImage>
 #include <QPixmap>
+#include <QDebug>
 
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
@@ -117,5 +116,3 @@ namespace ASM {
 	  return QImageToCvMat( inPixmap.toImage(), inCloneImageData );
    }
 }
-
-#endif // __ASM_OPENCV_H__

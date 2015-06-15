@@ -8,20 +8,20 @@
 
 namespace CDI
 {
-	AbstractModelItem::AbstractModelItem()
-		: QObject(NULL)
-	{
-		itemId = uniqueHash();
-		mask = 0;
-		_parent = NULL;	// Do not set to QObject here
-	}
-
 	AbstractModelItem::AbstractModelItem(QObject *parent)
 		: QObject(parent)
 	{
 		itemId = uniqueHash();
 		mask = 0;
-		_parent = NULL;	// Do not set to QObject here
+		_parentComponent = NULL;	// Do not set to QObject here
+	}
+
+	AbstractModelItem::~AbstractModelItem()
+	{
+		if (_parentComponent!= NULL)
+		{
+			// remove from reference
+		}
 	}
 
 	QUuid AbstractModelItem::id() const
@@ -29,37 +29,37 @@ namespace CDI
 		return itemId;
 	}
 
-	QTransform AbstractModelItem::transform() const
-	{
-		return QTransform();
-	}
-
 	QTransform AbstractModelItem::globalTransform() const
 	{
 		if (parentItem()== NULL)
 			return transform();
 		else
-			return parentItem()->transform() * transform();
+			return parentItem()->globalTransform() * transform();
 	}
 
-	AbstractModelItem* AbstractModelItem::parentItem() const
+	Component* AbstractModelItem::parentItem() const
 	{
-		return _parent;
+		return _parentComponent;
 	}
 
-	void AbstractModelItem::setParentItem(AbstractModelItem *item)
+	bool AbstractModelItem::setParentItem(Component *parentComponent)
 	{
-		// TODO - Update transformation
-		_parent = item;
-		setParent(item);
-		emit parentObjectChanged(this);
+		if (_parentComponent!= NULL)
+		{/*Remove from parent reference*/}
+		_parentComponent = parentComponent;
+		{/*Add to reference*/}
+		return true;
+	}
+
+	QTransform AbstractModelItem::inverseTransform() const
+	{
+		return transform().inverted();
 	}
 
 	void AbstractModelItem::setVisible(bool visible)
 	{
 		if (visible) mask &= ~isHidden;
 		else mask |= isHidden;
-		emit displayStatusChanged(this);
 	}
 
 	bool AbstractModelItem::isVisible() const
@@ -100,7 +100,7 @@ namespace CDI
 		return item.deserializeInternal(stream);
 	}
 
-	AbstractModelItem* getItemPtrByType(ItemType t)
+	AbstractModelItem* getItemPtrByType(ItemType t, Component *parentComponent)
 	{
 		// NOTE - In case int is available, use getItemType(int i)
 		// to get the ItemType
@@ -110,13 +110,14 @@ namespace CDI
 		switch (t)
 		{
 		case ItemType::STROKE :
-			ptr = new Stroke();
+			ptr = parentComponent->addStroke();
 			break;
 		case ItemType::IMAGE :
-			ptr = new Image();
+			ptr = parentComponent->addImage();
 			break;
 		case ItemType::POLYGON2D :
-			ptr = new Polygon2D();
+			ptr = new Polygon2D(parentComponent);
+			parentComponent->addItem(ptr);
 //		case ItemType::COMPONENT :
 //			ptr = new Component();
 //		case ItemType::ASSEMBLY :

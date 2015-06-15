@@ -11,6 +11,7 @@
 #include <boost/program_options.hpp>
 #include "wbbice.h"
 #include "wbsearchengine.h"
+#include "asmopencv.h"
 
 namespace CDI
 {
@@ -30,22 +31,15 @@ namespace CDI
 
         wbSearchEngine* searchEngine;
 
-	private:
-		static SearchManager* _instance;
-
 	protected:
+		bool _databaseNotIndexed;
+
+	public:
 		/**
 		 * @brief Private constructor of SearchManager to maintain uniqueness
 		 * @param parent Parent object(defaults to NULL)
 		 */
         SearchManager(QObject *parent=0);
-
-	public:
-		/**
-		 * @brief Returns instance of SearchEngine
-		 * @return SearchEngine pointer
-		 */
-		static SearchManager* instance();
 
 		/** @brief Deletes the wbSearchEngine instance and clears the file list
 		  */

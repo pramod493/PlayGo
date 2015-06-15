@@ -3,6 +3,7 @@
 #include "tabletapplication.h"
 #include "cdiwindow.h"
 #include "commonfunctions.h"
+#include "converttopolygons.h"
 
 int main(int argc, char *argv[])
 {
@@ -18,5 +19,6 @@ int main(int argc, char *argv[])
     window->show();
 	qDebug() << "Window displayed.";
 
+	Polygonize p = Polygonize(window);
     return app.exec();
 }

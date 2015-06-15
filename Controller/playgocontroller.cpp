@@ -8,6 +8,9 @@ namespace CDI
 	PlayGoController::PlayGoController(SketchScene *scene, SketchView *view, CDIWindow *parent)
 		:QObject(parent)
 	{
+		tree = new ModelViewTreeWidget(parent->playgo);
+		tree->show();
+
 		_toplevelWindow = parent;
 		if (scene != NULL && view != NULL)
 		{
@@ -55,6 +58,7 @@ namespace CDI
 
 		_isDrawingNow = false;
 		_currentStroke = NULL;
+		_currentComponent = NULL;
 
 		_lasso = new QGraphicsPolygonItem();
 		_lasso->setPen(_lassoPen);
@@ -71,18 +75,28 @@ namespace CDI
 	void PlayGoController::brushPress(Point2DPT pos)
 	{
 		// Carry out the actual rendering function
-		if (_currentStroke != NULL)
-			delete _currentStroke;
-		_currentStroke = new GraphicsPathItem(NULL, pos, pos.pressure(), pos.time());
-		_currentStroke->setPen(_defaultPen);;
-		_currentStroke->setBrush(_defaultBrush);
+		if (_currentStroke != NULL)	delete _currentStroke;
+		if (_currentComponent == NULL)
+		{
+			_currentComponent = _scene->addComponent();
+			_currentComponent->component->setTransform(QTransform().translate
+									   (pos.x(), pos.y()));
+		}
+		_currentStroke = _scene->addStroke(_currentComponent,
+										   _defaultPen.color(), _defaultPen.widthF());
+
+
+		_currentStroke->push_back(pos);
+//		_currentStroke = new GraphicsPathItem(NULL, pos, pos.pressure(), pos.time());
+//		_currentStroke->setPen(_defaultPen);
+//		_currentStroke->setBrush(_defaultBrush);
 
 		// TODO - Create a Scene::addStroke function
 		// which automatically handles stroke addition
-		_scene->addItem(_currentStroke);
+//		_scene->addItem(_currentStroke);
 
-		_currentStroke->parentStroke->setThickness(_defaultPen.widthF());
-		_currentStroke->parentStroke->setColor(_defaultPen.color());
+//		_currentStroke->parentStroke->setThickness(_defaultPen.widthF());
+//		_currentStroke->parentStroke->setColor(_defaultPen.color());
 
 		_isDrawingNow = true;
 	}
@@ -144,9 +158,11 @@ namespace CDI
 
 		QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
 		qDebug() << "Deleting" << selectedStrokes.size() << " items";
-		qDeleteAll(selectedStrokes);
+		foreach (GraphicsPathItem* stroke, selectedStrokes)
+			delete (stroke->parentStroke);
 		if (selectedStrokes.size()) _scene->update();
 
+		qDebug() << "Looks fine";
 		// \todo - Implement related functions in scene
 		//		QList<GraphicsPolygon2D*> selectedPolygons = _scene->getSelectedPoly(pos);
 		//		QList<QGraphicsPathItem*> selectedItems = _scene->getMiscSelection(pos);
@@ -252,6 +268,7 @@ namespace CDI
 			{
 				// No transformation
 				QImage inputImage = _scene->getSelectionImage(_lassoPolygon);
+				inputImage.save ("Search_lasso_input.png");
 			}
 			_isLassoDisplayed = false;
 			_lassoPolygon = QPolygonF();
@@ -383,5 +400,10 @@ namespace CDI
 	void PlayGoController::enableMouse(bool enable)
 	{
 		_mouseModeEnabled = enable;
+	}
+
+	void PlayGoController::clearCurrentScene()
+	{
+		_scene->page()->deleteAll();
 	}
 }

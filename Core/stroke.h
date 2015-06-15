@@ -9,6 +9,7 @@
 
 namespace CDI
 {
+	class Component;
 	/**
 	 * @brief The Stroke class
 	 * Stroke the points, color and thickness information for stroke
@@ -16,32 +17,31 @@ namespace CDI
 	class Stroke : public AbstractModelItem, public QVector<Point2DPT>
 	{
 		Q_OBJECT
-		Q_PROPERTY(QColor color READ color WRITE setColor)
-		Q_PROPERTY(float thickness READ thickness WRITE setThickness)
-		Q_PROPERTY(QTransform transform READ transform WRITE setTransform)
-		Q_PROPERTY(QTransform inverseTransform READ inverseTransform)
+
 	protected:
-		QColor _color;				/**< Stroke color */
-		float _thickness;			/**< Maximum thickness of stroke */
+		QColor	_color;				/**< Stroke color */
+		float	_thickness;			/**< Maximum thickness of stroke */
 		QTransform _transform;		/**< Current stroke transform w.r.t. its parent */
 		QTransform _inverseTransform;
 
-		// TODO - Implement push_point function so that we can track changes to bounding rect
 		float _x_min, _x_max, _y_min, _y_max;
 		QRectF aabb;
-	public:
 
+	public:
+		//-----------------------------------------------
+		// Constructors/Destructors
+		//-----------------------------------------------
 		/**
 		 * @brief Stroke Creates an empty Stroke object with color black and thickness 3.0
 		 */
-		Stroke();
+		Stroke(Component* component);
 
 		/**
 		 * @brief Stroke Creates an empty strokes with given color and thickness
 		 * @param color Stroke color
 		 * @param thickness Stroke thickness
 		 */
-		Stroke(QColor color, float thickness);
+		Stroke(Component* component, QColor color, float thickness);
 
 		/**
 		 * @brief Stroke Copy constructor of Stroke
@@ -56,13 +56,27 @@ namespace CDI
 		 * @param thickness Stroke thickness
 		 * @remarks list of points is copied, and therefore passed value can be safely discarded
 		 */
-		Stroke(const QVector<Point2DPT>& points, QColor color, float thickness);
+		Stroke(Component* component, const QVector<Point2DPT>& points, QColor color, float thickness);
 
+
+		virtual ~Stroke();
+
+		//-----------------------------------------------
+		// Query/Set functions(same order in derived class)
+		// Non-virtual
+		//-----------------------------------------------
 		/**
 		 * @brief push_points Use this method to add points to stroke
 		 * @param pt
 		 */
 		void push_point(Point2DPT& pt);
+
+//		/**
+//		 * @brief Returns the pointer to parent Component
+//		 * @return
+//		 */
+//		AbstractModelItem* parentItem() const;
+
 		/**
 		 * @brief Get Color of stroke
 		 * @return Stroke color
@@ -74,20 +88,6 @@ namespace CDI
 		 * @return Stroke thickness
 		 */
 		inline float thickness() const;
-
-		/**
-		 * @brief transform Get Stroke transform
-		 * @return Stroke transform
-		 */
-		inline QTransform transform() const;
-
-		/**
-		 * @brief inverseTransform get inverse of Stroke's transformation matrix
-		 * @return Inverse transform
-		 */
-		inline QTransform inverseTransform() const;
-
-		QRectF boundingRect();
 
 		/**
 		 * @brief setColor Set Stroke color
@@ -102,11 +102,60 @@ namespace CDI
 		inline void setThickness(float thickness);
 
 		/**
+		 * @brief containsPoint checks if the given point lies with margin of the stroke path
+		 * @param pt Point coordinates in parent's local coordinate system
+		 * @param rule - Not used
+		 * @param margin Maximum allowed radial offset from the point
+		 * @return True if distance between point and Stroke is less than margin, Else false
+		 * @remarks It transforms the point pt internally to local coordinates
+		 */
+		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
+
+		/**
+		 * @brief Checks if the stroke is fully contained withing a given polygon
+		 * @param polygon Envelope polygon mapped to stroke's local coordinate system
+		 * @param percentmatch Minimum overlap required to mark as true
+		 * @return True, when contianed. False otherwise
+		 */
+		bool isContainedWithin(QPolygonF* polygon, float percentmatch = 1.0f);
+
+		//-----------------------------------------------
+		// Virtual functions (same order in derived class)
+		//-----------------------------------------------
+		/**
+		 * @brief Returns the bounding rectangle of the stroke in terms
+		 * of local transform
+		 * @return AABB
+		 */
+		virtual QRectF boundingRect();
+
+		/**
+		 * @brief type Returns Item type
+		 * @return ItemType::STROKE
+		 */
+		ItemType type() const;
+
+		QTransform transform() const;
+
+		/**
 		 * @brief setTransform Set Stroke local transform
 		 * @param transform New transform
 		 */
-		inline void setTransform(QTransform& transform);
+		void setTransform(QTransform t);
 
+		/**
+		 * @brief inverseTransform get inverse of Stroke's transformation matrix
+		 * @return Inverse transform
+		 */
+		QTransform inverseTransform() const;
+
+		QDataStream& serialize(QDataStream& stream) const;
+
+		QDataStream& deserialize(QDataStream& stream);
+
+		//-----------------------------------------------
+		// Other functions not related to query/set
+		//-----------------------------------------------
 		/**
 		 * @brief translate translates each point in stroke by given value
 		 * @param x X-axis offset in local coords
@@ -122,20 +171,11 @@ namespace CDI
 		void translate(const Point2D& offset);
 
 		/**
-		 * @brief containsPoint checks if the given point lies with margin of the stroke path
-		 * @param pt Point coordinates in parent's local coordinate system
-		 * @param rule - Not used
-		 * @param margin Maximum allowed radial offset from the point
-		 * @return True if distance between point and Stroke is less than margin, Else false
-		 * @remarks It transforms the point pt internally to local coordinates
-		 */
-		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
-
-		/**
 		 * @brief applySmoothing Apply laplacian smoothing to the stroke
 		 * @param order Smoothing order
 		 */
 		void applySmoothing(int order);// TODO - Implement
+
 		/**
 		 * @brief mergeWith always merges the given stroke's start point with end point
 		 * of the given stroke
@@ -144,22 +184,19 @@ namespace CDI
 		 */
 		bool mergeWith(Stroke* stroke, bool joinAtEnd = false);
 
-		/**
-		 * @brief type Returns Item type
-		 * @return ItemType::STROKE
-		 */
-		ItemType type() const;
-
-		QDataStream& serialize(QDataStream& stream) const;
-		QDataStream& deserialize(QDataStream& stream);
-
 	protected:
 		/**
-		 * @brief updateWhenModified updates/recalculates the internal quantities when isModified bit is ON
+		 * @brief Updates/recalculates the internal quantities when isModified bit is ON
 		 */
 		void updateWhenModified();
 
+		/**
+		 * @brief Updates the AABB. It calculate the bounding box of points and expands by thickness
+		 * on all sides
+		 */
 		void recalculateAABB();
+
+		friend class Component;
 
 		friend QDebug operator<<(QDebug d, const Stroke &stroke);
 
@@ -180,16 +217,6 @@ namespace CDI
 		return _thickness;
 	}
 
-	inline QTransform Stroke::transform() const
-	{
-		return _transform;
-	}
-
-	inline QTransform Stroke::inverseTransform() const
-	{
-		return _inverseTransform;
-	}
-
 	inline void Stroke::setColor(QColor color)
 	{
 		_color = color;
@@ -199,14 +226,6 @@ namespace CDI
 	{
 		mask |= isModified;
 		_thickness = thickness;
-	}
-
-	inline void Stroke::setTransform(QTransform& transform)
-	{
-		mask |= isTransformed;
-		_transform = transform;
-		_inverseTransform = transform.inverted();
-		emit transformChanged(this);
 	}
 
 	inline void Stroke::translate(float x, float y)
@@ -228,4 +247,4 @@ namespace CDI
 	Stroke* merge(Stroke *s1, Stroke *s2, bool addS1Forward = true, bool addS2Forward = true);
 }
 
-Q_DECLARE_METATYPE(CDI::Stroke)
+//Q_DECLARE_METATYPE(CDI::Stroke)

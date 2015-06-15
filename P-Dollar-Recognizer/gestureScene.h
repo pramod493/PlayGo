@@ -8,6 +8,9 @@
 #include <QPointF>
 #include <QPainter>
 
+#include <pdollarrecognizer.h>
+
+
 class GraphicsPathItem;
 class GestureScene : public QGraphicsScene
 {
@@ -17,7 +20,16 @@ public:
 
 	GestureScene();
 
-	void addStroke(GraphicsPathItem* item);
+
+
+public:
+    // Adrian's part
+    PDollarRecognizer* pdRecognizer;
+
+    // Some help function
+    void addStroke(GraphicsPathItem* item);
+    void clearStrokes();
+    void SaveCurrentStrokeToPDR();
 
 protected:
 	GraphicsPathItem* currentStroke;

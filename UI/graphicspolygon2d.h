@@ -11,19 +11,25 @@
 
 namespace CDI
 {
+	class GraphicsItemGroup;
+
 	class GraphicsPolygon2D : public QGraphicsPathItem
 	{
 	public:
 		Polygon2D* parentPolygon;
 
+		enum {Type = UserType+ GraphicsItemType::POLYGONVIEW};
+
 	public:
-		GraphicsPolygon2D(QGraphicsItem* parent, Point2D startPoint, float pressure=1.0f, int time = 0);
+//		GraphicsPolygon2D(QGraphicsItem* parent, Point2D startPoint, float pressure=1.0f, int time = 0);
 
-		GraphicsPolygon2D(QGraphicsItem* parent, Polygon2D* polygon);
+		GraphicsPolygon2D(GraphicsItemGroup* parent, Polygon2D* polygon);
 
-		~GraphicsPolygon2D();
+		virtual ~GraphicsPolygon2D();
 
-		int type() const { return QGraphicsItem::UserType+ GraphicsItemType::POLYGONVIEW; }
+		QRectF boundingRect() const;
+
+		int type() const { return Type; }
 
 		void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
 
@@ -36,5 +42,7 @@ namespace CDI
 		bool containsPoint(const Point2D &pt, SelectionType rule, float margin=0);
 
 		bool Selected(QPointF point, float extraWidth);
+
+		void updatePolygon();
 	};
 }

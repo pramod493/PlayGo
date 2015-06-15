@@ -1,17 +1,43 @@
 #include "gestureScene.h"
+#include <qdebug.h>
 
 GestureScene::GestureScene()
 	:QGraphicsScene(NULL)
 {
 	strokes = QVector<GraphicsPathItem*>();
-	currentStroke = NULL;
+    currentStroke = NULL;
+
+    pdRecognizer = new PDollarRecognizer();
+
+    // loadTemplate
+	QString dataDir = "C:/Database/gestures/";
+	pdRecognizer->loadPDRTemplates(dataDir);
+
+}
+
+void GestureScene::addStroke(GraphicsPathItem *item)
+{
+    addItem(item);
+    strokes.push_back(item);
+    update();
+}
+
+void GestureScene::clearStrokes()
+{
+    strokes.clear();
+    QGraphicsScene::clear();
+    update();
+
+    // Also please clear up data in Recognizer
+    pdRecognizer->clean();
+
 }
 
 void GestureScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	currentStroke = new GraphicsPathItem();
-	addItem(currentStroke);
-	strokes.push_back(currentStroke);
+    addItem(currentStroke);
+    strokes.push_back(currentStroke);
 	currentStroke->points.push_back(mouseEvent->scenePos());
 	update();
 }
@@ -26,6 +52,33 @@ void GestureScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	currentStroke->points.push_back(mouseEvent->scenePos());
 	update();
+
+    // Save CurrentStroke Data to PDRRecognizer
+    SaveCurrentStrokeToPDR();
+
+}
+
+void GestureScene::SaveCurrentStrokeToPDR()
+{
+    int numPoints = currentStroke->points.size();
+
+    // Update Total number of stroke
+    int strokeNumber = pdRecognizer->toBeRecognize.n + 1;
+    pdRecognizer->toBeRecognize.n = strokeNumber;
+
+    int x,y;    // coordinate of points
+    pdrPoint tmp;   // Temporary Holder
+    for(int i=0;i<numPoints;i++)
+    {
+        x = currentStroke->points[i].x();
+        y = currentStroke->points[i].y();
+
+        tmp.strokeID = strokeNumber;
+        tmp.x = x;
+        tmp.y = y;
+
+        pdRecognizer->toBeRecognize.points.push_back(tmp);
+    }
 }
 
 GraphicsPathItem::GraphicsPathItem() :QGraphicsPathItem()

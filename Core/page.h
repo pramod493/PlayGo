@@ -3,11 +3,14 @@
 #include <QObject>
 #include <QList>
 #include <QUuid>
+#include <QtAlgorithms>
 
 #include "commonfunctions.h"
 #include "abstractmodelitem.h"
 #include "assembly.h"
 #include "component.h"
+#include "searchmanager.h"
+#include "physicsmanager.h"
 
 namespace CDI
 {
@@ -20,11 +23,16 @@ namespace CDI
 	class Page : public QObject
 	{
 		Q_OBJECT
-		Q_PROPERTY(QUuid id READ id)
 
 	protected:
+		/**
+		 * @brief Pointer to root item of the model
+		 */
 		PlayGo *_playgo;
 
+		/**
+		 * @brief Page object ID
+		 */
 		QUuid _id;
 
 		/**
@@ -32,6 +40,7 @@ namespace CDI
 		 * contained within the page.
 		 */
 		QHash<QUuid, Assembly*> _assemblies;
+
 		/**
 		 * @brief _components contains all the Component objects
 		 * contained within the page including all the components
@@ -39,36 +48,39 @@ namespace CDI
 		 */
 		QHash<QUuid, Component*> _components;
 
+		/**
+		 * @brief Pointer to search manager for this page
+		 */
+		SearchManager* _searchManager;
+
+		/**
+		 * @brief Pointer to physics manager for this page
+		 */
+		PhysicsManager* _physicsManager;
+
 	public:
+		//-----------------------------------------------
+		// Constructors/Destructors
+		//-----------------------------------------------
 		Page(PlayGo* parent);
 
 		virtual ~Page();
 
-		// Deletes all the components and assemblies in the page
-		void deleteAll();
 
-		inline QUuid id() const { return _id; }
 
-		/**
-		 * @brief add copies the given page information into this page
-		 * @param page: Page to add
-		 * @return True on success, false on fail
-		 */
-		bool add(Page* page);
+		//-----------------------------------------------
+		// Query/Set functions(same order in derived class)
+		// Non-virtual
+		//-----------------------------------------------
+		QUuid id() const;
 
-		Assembly* createAssembly();
-		Component* createComponent();
+		SearchManager* getSearchManager() const;
+
+		PhysicsManager* getPhysicsManager() const;
 
 		QList<Assembly*> getAssemblies() const;
+
 		QList<Component*> getComponents() const;
-
-		// Merge a2 into a1
-		bool mergeAssembly(Assembly* a1, Assembly* a2);
-
-		bool destroyAssembly(Assembly* assembly);
-		bool destroyComponent(Component* component);
-
-		void triggerUpdate(AbstractModelItem* item);
 
 		/**
 		 * @brief getParent returns the immediate parent Component or
@@ -78,33 +90,113 @@ namespace CDI
 		 * @param item
 		 * @return parent object of the item
 		 */
-		AbstractModelItem* getParent(QUuid id);
+//		AbstractModelItem* getParent(QUuid id);
 
 		AbstractModelItem* getItemPtrById(QUuid id);
 
-		AbstractModelItem* getParent(AbstractModelItem* item);
+		Component* getComponentPtrById(QUuid id);
 
-		bool contains(QUuid id, bool searchRecursive = false);
+		Assembly* getAssemblyPtrById(QUuid id);
 
-		QDataStream& serialize(QDataStream &stream) const;
-		QDataStream& deserialize(QDataStream &stream);
+//		AbstractModelItem* getParent(AbstractModelItem* item);
+
+		/**
+		 * @brief Returns the item type based on QUuid
+		 * @param id QUuid
+		 * @return ItemType of object which owns the id. Returns ItemType::NONE in case of no match
+		 */
+		ItemType getItemType(QUuid id);
+
+		/**
+		 * @brief Checks if the given item is contained in the Page
+		 * @param id
+		 * @param searchRecursive
+		 * @return
+		 */
+		bool contains(QUuid id);
+
+		//-----------------------------------------------
+		// Virtual functions (same order in derived class)
+		//-----------------------------------------------
+		virtual ItemType type() const;
+
+		virtual Assembly* createAssembly();
+		virtual Component* createComponent();
+
+		virtual void addComponent(Component* component);
+		virtual void addAssembly(Assembly* assembly);
+
+		// Merge a2 into a1
+		virtual bool mergeAssembly(Assembly* a1, Assembly* a2);
+
+		virtual bool destroyAssembly(Assembly* assembly);
+		virtual bool destroyComponent(Component* component);
+
+		/**
+		 * @brief add copies the given page information into this page
+		 * @param page: Page to add
+		 * @return True on success, false on fail
+		 */
+		virtual bool add(Page* page);
+
+		virtual QDataStream& serialize(QDataStream &stream) const;
+
+		virtual QDataStream& deserialize(QDataStream &stream);
+
+		//-----------------------------------------------
+		// Other functions not related to query/set
+		//-----------------------------------------------
+		/**
+		 * @brief Deletes all components and assemblies
+		 */
+		void deleteAll();
 
 		friend QDataStream& operator<<(QDataStream& stream, const Page& page);
 		friend QDataStream& operator>>(QDataStream& stream, Page& page);
-	signals:
-		void afterComponentAddition(Component* component);
-		void afterAssemblyAdditton(Assembly* assembly);
 
-		void beforeComponentDeletion(Component* component);
-		void beforeAssemblyDeletion(Assembly* assembly);
+		// These function are called on item updates
+		// Note that if a component or assembly does not exist in the hash list
+		// it's update signal will be discarded
+	public slots:
+		void onItemRemove(QUuid itemId);
 
-		void onComponentMerge(Component* a, Component* b);
-		void onAssemblyMerge(Assembly* a, Assembly* b);
+		void onItemUpdate(QUuid itemId);
+
+		void onItemRedraw(QUuid itemId);
+
+		void onItemIdUpdate(QUuid oldID, QUuid newID);
 
 		void onAssemblyUpdate(Assembly* assembly);
+
 		void onComponentUpdate(Component* component);
 
-		void onPageUpdate(Page* page);	// triggers reloading of whole page information
-		void onPageLoad(Page* page);
+	signals:
+		void signalDeleteAllItems(Page* page);
+
+		void signalReloadPage(Page* page);
+
+		void signalItemRemove(QUuid itemId);
+
+		void signalItemUpdate(QUuid itemId);
+
+		void signalItemRedraw(QUuid itemId);
+
+		void signalItemIdUpdate(QUuid oldID, QUuid newID);
+
+		void signalItemAdd(AbstractModelItem* item);
+
+		// Called only from within class
+		void signalComponentAdd(Component* component);
+		void signalAssemblyAdd(Assembly* assembly);
+
+		void signalComponentMerge(Component* a, Component* b);
+		void signalAssemblyMerge(Assembly* a, Assembly* b);
+
+		void signalAssemblyUpdate(Assembly* assembly);
+		void signalComponentUpdate(Component* component);
+
+		// Equivalent to deleting object
+		void signalAssemblyDelete(Assembly* assembly);
+		void signalComponentDelete(Component* component);
 	};
 }

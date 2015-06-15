@@ -10,119 +10,133 @@
 
 namespace CDI
 {
-	class Polygon2D : public QPolygonF, public AbstractModelItem
+	class Component;
+	class Polygon2D : public AbstractModelItem, public QPolygonF
 	{
 	protected:
-		QColor _color;				/**< Polygon2D color */
-		float _thickness;			/**< Maximum thickness of Polygon2D */
+		QColor	_color;				/**< Polygon2D color */
+		float	_thickness;			/**< Maximum thickness of Polygon2D */
 		QTransform _transform;		/**< Current Polygon2D transform w.r.t. its parent */
 		QTransform _inverseTransform;
 		bool _isConvex;
-	public:
-		inline Polygon2D();
-		inline Polygon2D(QColor color, float thickness);
-		inline Polygon2D(const Polygon2D& s);
-		inline Polygon2D(const QVector<Point2D>& points, QColor color, float thickness);
 
+	public:
+		//-----------------------------------------------
+		// Constructors/Destructors
+		//-----------------------------------------------
+		Polygon2D(Component *component);
+		Polygon2D(Component* component, QColor color, float thickness);
+		Polygon2D(const Polygon2D& p);
+		Polygon2D(Component* component, const QVector<Point2D>& points, QColor color, float thickness);
+
+		//-----------------------------------------------
+		// Query/Set functions(same order in derived class)
+		// Non-virtual
+		//-----------------------------------------------
 		/**
 		 * @brief Get Color of Polygon2D
 		 * @return Polygon2D color
 		 */
-		inline QColor color() const;
-		inline float thickness() const;
-		inline QTransform transform() const;
-		inline QTransform inverseTransform() const;
-		virtual QRectF boundingRect() const;
-		inline bool convex();
+		QColor color() const;
 
-		inline void setColor(QColor color);
-		inline void setThickness(float thickness);
-		inline void setTransform(QTransform& transform);
+		/**
+		 * @brief Returns the thickness of the polygon edge. Use for rendering purposes
+		 * @return Edge thickness
+		 */
+		float thickness() const;
+
+		/**
+		 * @brief Sets the polygon color
+		 * @param color - New color
+		 */
+		void setColor(QColor color);
+
+		/**
+		 * @brief Sets the thickess of polygon for rendering purposes
+		 * @param thickness Thickness value
+		 */
+		void setThickness(float thickness);
+
+		//-----------------------------------------------
+		// Virtual functions (same order in derived class)
+		//-----------------------------------------------
+
+		/**
+		 * @brief Returns the bounding box of the polygon in local
+		 * coordinate
+		 * @return AABB
+		 */
+		virtual QRectF boundingRect() const;
+
+		/**
+		 * @brief Che3ck for convexity of the polygon
+		 * @return True if the polygon is convex. false if not convex
+		 * \todo This simply uses the _isConvex value. Add checks to update the same whenever a polygon is amrked as changed
+		 */
+		virtual bool convex();
+
+		/**
+		 * @brief Checks if the given point is contained within the polygon or not
+		 * @param pt Point position in Polygon's local co-ordinate system
+		 * @param rule Polygon fill rule to determine inner region
+		 * @return True, if yes. False otherwise
+		 */
+		bool virtual containsPoint(const Point2D &pt, Qt::FillRule rule);
+
 		/**
 		 * @brief setAsConvex sets the polygon type as convex.
 		 * @param enableInternalCheck if true, checks for convexity before setting polygon as convex
 		 * and will set as non-convex in case it fails the check. If false, it sets polygon as convex
 		 * without any checks (MUST BE USED WITH CAUTION)
 		 */
-		inline void setAsConvex(bool enableInternalCheck);
+		inline virtual void setAsConvex(bool enableInternalCheck);
 
-		inline void translate(float x, float y);
-		void translate(const Point2D& offset);
+		ItemType type() const;
 
-		bool containsPoint(const Point2D &pt, Qt::FillRule rule);
-		void applyRDPSmoothing(float margin);// TODO - Implement
+		QTransform transform() const;
 
-		// Virtual functions
-		virtual ItemType type() const;
+		void setTransform(QTransform transform);
+
+		QTransform inverseTransform() const;
+
 		QDataStream& serialize(QDataStream& stream) const;
 		QDataStream& deserialize(QDataStream& stream);
 
-		friend QDebug operator <<(QDebug d, const Polygon2D &Polygon2D);
+
+		//-----------------------------------------------
+		// Other functions not related to query/set
+		//-----------------------------------------------
+
+		/**
+		 * @brief Increments each point in the polygon by given value
+		 * @param x
+		 * @param y
+		 */
+		inline void translate(float x, float y);
+
+		/**
+		 * @brief Increments each point in the polygon by given value
+		 * @param offset
+		 */
+		void translate(const Point2D& offset);
+
+		/**
+		 * @brief Simplify the polygon using Ramer-Douglas approx.
+		 * @param margin margin value as per the smoothing algo
+		 */
+		void applyRDPSmoothing(float margin);// TODO - Implement
+
+		// Virtual functions
+
 	protected:
 		bool checkConvexity() const;
+
+		friend class Component;
+		friend QDebug operator <<(QDebug d, const Polygon2D &Polygon2D);
 	};
 
 
 	/******************************************************
 	 * Polygon2D inline functions
 	 *****************************************************/
-	inline Polygon2D::Polygon2D()
-		: _color(Qt::black), _thickness(3.0f), _isConvex(false)
-	{}
-
-	inline Polygon2D::Polygon2D(QColor color, float thickness)
-		: _color(color), _thickness(thickness), _isConvex(false)
-	{}
-
-	inline Polygon2D::Polygon2D(const Polygon2D &s)
-		: QPolygonF(s) , _color(s.color()), _thickness(s.thickness()),
-		  _isConvex(false)
-	{}
-
-	inline Polygon2D::Polygon2D(const QVector<Point2D>& points, QColor color, float thickness)
-		: QPolygonF (points), _color(color), _thickness(thickness), _isConvex(false)
-	{}
-
-	inline QColor Polygon2D::color() const
-	{
-		return _color;
-	}
-
-	inline float Polygon2D::thickness() const
-	{
-		return _thickness;
-	}
-
-	inline QTransform Polygon2D::transform() const
-	{
-		return _transform;
-	}
-
-	inline QTransform Polygon2D::inverseTransform() const
-	{
-		return _inverseTransform;
-	}
-
-	inline void Polygon2D::setColor(QColor color)
-	{
-		_color = color;
-	}
-
-	inline void Polygon2D::setThickness(float thickness)
-	{
-		mask |= isModified;
-		_thickness = thickness;
-	}
-
-	inline void Polygon2D::setTransform(QTransform& transform)
-	{
-		mask |= isTransformed;
-		_transform = transform;
-		_inverseTransform = transform.inverted();
-	}
-
-	inline void Polygon2D::translate(float x, float y)
-	{
-		translate(QPointF(x,y));
-	}
 }

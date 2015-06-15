@@ -1,4 +1,5 @@
 #pragma once
+#include <QString>
 #include <QColor>
 #include <QPointF>
 #include <QTransform>
@@ -6,6 +7,7 @@
 #include <QList>
 #include <QVector>
 #include "FindContours.h"
+#include "poly2tri.h"
 
 #define MASK_BIT0	1
 #define MASK_BIT1	2
@@ -42,6 +44,7 @@ namespace CDI
 		PHYSICSJOINT,
 		COMPONENT,		// core components
 		ASSEMBLY,
+		PAGE,
 		NONE
 	};
 
@@ -54,6 +57,8 @@ namespace CDI
 
 	ItemType getItemType(int i);
 	SelectionType getSelectionType(int i);
+
+	QString getItemNameByType(ItemType i);
 
     typedef QPointF Point2D;
 
@@ -97,5 +102,5 @@ namespace CDI
 	 * @remarks - In the current implementation, all polygons are simply triangles.
 	 * @todo - Implement decomposition to generate convex polygons with num of vertices > 3
 	 */
-	QList<Polygon2D*> generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside);
+	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside);
 }

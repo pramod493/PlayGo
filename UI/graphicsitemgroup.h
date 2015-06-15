@@ -27,12 +27,16 @@ namespace CDI
     {
 	public:
 		Component* component;
+
+		enum { Type = UserType + GraphicsItemType::COMPONENTVIEW };
     public:
 		GraphicsItemGroup(QGraphicsItem* graphicsParent = NULL);
 
-        ~GraphicsItemGroup();
+		virtual ~GraphicsItemGroup();
 
-		int type () const { return QGraphicsItem::UserType + GraphicsItemType::COMPONENTVIEW; }
+		int type () const { return Type; }
+
+		void updateGroup();
 
 		friend class SketchScene;
     };

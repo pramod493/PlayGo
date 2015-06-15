@@ -37,7 +37,8 @@ namespace CDI
 
 		createActions();
 		setupToolbar();
-		////
+
+		playgo->addNewPage();
 		Page* newPage = playgo->addNewPage();
 		playgo->setCurrentPage(newPage);
 
@@ -203,7 +204,8 @@ namespace CDI
 
 	void CDIWindow::clear()
 	{
-		sketchScene->clear();
+		controller->clearCurrentScene();
+//		sketchScene->clear();
 	}
 
 	void CDIWindow::save()

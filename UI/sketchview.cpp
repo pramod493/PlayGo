@@ -58,6 +58,13 @@ namespace CDI
 			painter->drawLine(QPointF(x_left, y_min), QPointF(x_left, y_max));
 			x_left += 100;
 		}
+
+		emit viewDrawbackground(painter, rect);
+	}
+
+	void SketchView::drawForeground(QPainter *painter, const QRectF &rect)
+	{
+		emit viewDrawforeground(painter, rect);
 	}
 
 	SketchScene* SketchView::getSketchScene()

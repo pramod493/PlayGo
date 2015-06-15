@@ -1,13 +1,70 @@
 #include "polygon2d.h"
+#include "component.h"
 #include "commonfunctions.h"
 #include "ramerdouglaspeucker.h"
 #include "vector"
 
 namespace CDI
 {
+	Polygon2D::Polygon2D(Component *component)
+		: _color(Qt::black), _thickness(3.0f), _isConvex(false)
+	{
+		setParentItem(component);
+	}
+
+	Polygon2D::Polygon2D(Component* component, QColor color, float thickness)
+		: _color(color), _thickness(thickness), _isConvex(false)
+	{
+		setParentItem(component);
+	}
+
+	Polygon2D::Polygon2D(const Polygon2D &s)
+		: QPolygonF(s) , _color(s.color()), _thickness(s.thickness()),
+		  _isConvex(false)
+	{
+		setParentItem(s.parentItem());
+	}
+
+	Polygon2D::Polygon2D(Component* component, const QVector<Point2D>& points, QColor color, float thickness)
+		: QPolygonF (points), _color(color), _thickness(thickness), _isConvex(false)
+	{
+		setParentItem(component);
+	}
+
+	QColor Polygon2D::color() const
+	{
+		return _color;
+	}
+
+	float Polygon2D::thickness() const
+	{
+		return _thickness;
+	}
+
+	void Polygon2D::setColor(QColor color)
+	{
+		_color = color;
+	}
+
+	void Polygon2D::setThickness(float thickness)
+	{
+		mask |= isModified;
+		_thickness = thickness;
+	}
+
 	QRectF Polygon2D::boundingRect() const
 	{
-		return _transform.mapRect(Polygon2D::boundingRect());
+		return Polygon2D::boundingRect();
+	}
+
+	bool Polygon2D::convex()
+	{
+		return _isConvex;
+	}
+
+	bool Polygon2D::containsPoint(const Point2D &pt, Qt::FillRule rule)
+	{
+		return QPolygonF::containsPoint(pt, rule);
 	}
 
 	void Polygon2D::setAsConvex(bool enableInternalCheck)
@@ -18,78 +75,28 @@ namespace CDI
 			_isConvex = true;
 	}
 
-	void Polygon2D::translate(const Point2D &offset)
-	{
-		if (offset.isNull())
-			return;
 
-		mask |= isTransformed;
-
-		Point2D *p = data();
-		int i = size();
-		while (i--) {
-			*p += offset;
-			++p;
-		}
-	}
-
-	bool Polygon2D::containsPoint(const Point2D &pt, Qt::FillRule rule)
-	{
-		Point2D relPos = _inverseTransform.map(pt);
-		return QPolygonF::containsPoint(relPos, rule);
-
-//		Point2D relPos = inverseTransform().map(pt);
-
-//		qDebug() << "Before" << pt << "After" << relPos;
-//		float width = _thickness + margin;
-//		float sqrWidth = width*width;
-//		int num_points = size() - 1;
-//		Point2DPT* points = data();
-//		for (int i=0; i< num_points; i++)
-//		{
-//			Point2DPT p1 = points[i];
-//			Point2DPT p2 = points[i+1];
-
-//			Point2D v1 = Point2D(relPos-p1);
-//			Point2D v2 = Point2D(p2-p1);
-//			float v2SqrMag = sqrMagnitude(&v2);
-
-//			float t = dotProduct(&v1, &v2) / v2SqrMag;
-//			if (t< 0.0f || t > 1.0f) continue;
-//			v2 = v2*t;
-//			float dist = sqrEuclideanDistance(&v1, &v2);
-//			if (dist < sqrWidth) return true;
-//		}
-//		return false;
-	}
-
-	void Polygon2D::applyRDPSmoothing(float margin)
-	{
-		std::vector<Point2D> ptvec;
-		Point2D* points = data();
-		int num_points = size();
-		for (int i=0; i<num_points; i++)
-		{
-			ptvec.push_back(points[i]);
-
-		}
-		RamerDouglas rdp;
-
-		qDebug() << "Initial size" << ptvec.size();
-		ptvec = rdp.simplifyWithRDP(ptvec, margin);
-		qDebug() << "Final size" << ptvec.size();
-
-		clear();
-		for (int i=0; i<ptvec.size(); i++)
-		{
-			Point2D p = ptvec[i];
-			push_back(p);
-		}
-	}
 
 	ItemType Polygon2D::type() const
 	{
 		return ItemType::POLYGON2D;
+	}
+
+	QTransform Polygon2D::transform() const
+	{
+		return _transform;
+	}
+
+	void Polygon2D::setTransform(QTransform transform)
+	{
+		mask |= isTransformed;
+		_transform = transform;
+		_inverseTransform = transform.inverted();
+	}
+
+	QTransform Polygon2D::inverseTransform() const
+	{
+		return _inverseTransform;
 	}
 
 	QDataStream& Polygon2D::serialize(QDataStream &stream) const
@@ -129,6 +136,51 @@ namespace CDI
 		mask |= isModified;
 
 		return stream;
+	}
+
+	void Polygon2D::translate(float x, float y)
+	{
+		translate(QPointF(x,y));
+	}
+
+
+	void Polygon2D::translate(const Point2D &offset)
+	{
+		if (offset.isNull())
+			return;
+
+		mask |= isTransformed;
+
+		Point2D *p = data();
+		int i = size();
+		while (i--) {
+			*p += offset;
+			++p;
+		}
+	}
+
+	void Polygon2D::applyRDPSmoothing(float margin)
+	{
+		std::vector<Point2D> ptvec;
+		Point2D* points = data();
+		int num_points = size();
+		for (int i=0; i<num_points; i++)
+		{
+			ptvec.push_back(points[i]);
+
+		}
+		RamerDouglas rdp;
+
+		qDebug() << "Initial size" << ptvec.size();
+		ptvec = rdp.simplifyWithRDP(ptvec, margin);
+		qDebug() << "Final size" << ptvec.size();
+
+		clear();
+		for (int i=0; i<ptvec.size(); i++)
+		{
+			Point2D p = ptvec[i];
+			push_back(p);
+		}
 	}
 
 	bool Polygon2D::checkConvexity() const

@@ -35,6 +35,10 @@ namespace CDI
 			return ItemType::PHYSICSJOINT;
 		case ItemType::COMPONENT :
 			return ItemType::COMPONENT;
+		case ItemType::ASSEMBLY :
+			return ItemType::ASSEMBLY;
+		case ItemType::PAGE :
+			return ItemType::PAGE;
 		}
 		return ItemType::NONE;
 	}
@@ -54,6 +58,32 @@ namespace CDI
 			return SelectionType::Nearby;
 		}
 		return SelectionType::Nearby;
+	}
+
+	QString getItemNameByType(ItemType i)
+	{
+		switch (i)
+		{
+		case ItemType::STROKE :
+			return "ItemType::STROKE";
+		case ItemType::IMAGE :
+			return "ItemType::IMAGE";
+		case ItemType::POLYGON2D:
+			return "ItemType::POLYGON2D";
+		case ItemType::SEARCHRESULT :
+			return "ItemType::SEARCHRESULT";
+		case ItemType::PHYSICSBODY :
+			return "ItemType::PHYSICSBODY";
+		case ItemType::PHYSICSJOINT :
+			return "ItemType::PHYSICSJOINT";
+		case ItemType::COMPONENT :
+			return "ItemType::COMPONENT";
+		case ItemType::ASSEMBLY :
+			return "ItemType::ASSEMBLY";
+		case ItemType::PAGE :
+			return "ItemType::PAGE";
+		}
+		return "ItemType::NONE";
 	}
 
 	////////////////////////////////////////
@@ -192,7 +222,7 @@ namespace CDI
 		vector<vector<cv::Point> > outerContours;
 		vector<vector<vector<cv::Point> > > allInnerContours;
 
-		gbFindContours(imagePath.toStdString(), outerContours, allInnerContours, false/*NO DEBUG*/);
+		gbFindContours(imagePath.toStdString(), outerContours, allInnerContours, true);
 
 		// Sanity check
 		if (outerContours.size()!= allInnerContours.size())
@@ -215,14 +245,19 @@ namespace CDI
 			vector<p2t::Point> tmp_contour;
 			tmp_contour.reserve(outerContour.size());
 			size_t max_points = outerContour.size();
+
+			qDebug() << "Initial Points" << max_points;
+
 			for (size_t j=0; j< max_points ; j++)
 			{
-				cv::Point pt = outerContour[i];
+				cv::Point pt = outerContour[j];
 				tmp_contour.push_back(p2t::Point(pt.x, pt.y));
 			}
 
 			// 3. Simplify outer loop with RDp
 			vector<p2t::Point> simplied_outerContour = rdp.simplifyWithRDP(tmp_contour, deltaOutside);
+
+			qDebug() << "Simplied version" << simplied_outerContour.size();
 
 			// prepare the smoothed polyline for poly2tri
 			vector<p2t::Point*> p2t_polyline;
@@ -234,43 +269,58 @@ namespace CDI
 				p2t_polyline.push_back(new p2t::Point(pt.x,pt.y));
 			}
 
+//			std::reverse(p2t_polyline.begin(), p2t_polyline.end());
+
+			qDebug() << "Adding simplied outer loop to polyline";
+
 			// Initialize CDT with simplified contour
-			p2t::CDT cdt = p2t::CDT(p2t_polyline);
+			p2t::CDT *cdt = new p2t::CDT(p2t_polyline);
+
+			qDebug() << "Added outer loop to p2t";
 
 			// Create a hole for each of the inner loop
-			size_t max_inner_loops = allInnerContours.size();
-			for (size_t j=0; j < max_inner_loops; j++)
+			size_t max_inner_loops = innerContours.size();
+			if (max_inner_loops > 0) for (size_t j=0; j < max_inner_loops; j++)
 			{
 				vector<cv::Point> innerContour = innerContours[j];
 				// Apply RDG
 				vector<p2t::Point> tmp_contour;
 				tmp_contour.reserve(innerContour.size());
 				size_t max_points = innerContour.size();
-				for (size_t j=0; j< max_points ; j++)
+				for (size_t k=0; k< max_points ; k++)
 				{
-					cv::Point pt = innerContour[i];
+					cv::Point pt = innerContour[k];
 					tmp_contour.push_back(p2t::Point(pt.x, pt.y));
 				}
 
+				qDebug() << "Hole - Before RDP" << tmp_contour.size();
 				// Apply RDP on inner loop
 				vector<p2t::Point> simplified_innerContour = rdp.simplifyWithRDP(tmp_contour, deltaInside);
+				qDebug() << "Hole - After RDP" << simplified_innerContour.size();
 
 				vector<p2t::Point*> p2t_hole;
-				p2t_hole.reserve(simplied_outerContour.size());
-				size_t max_points_in_hole = simplied_outerContour.size();
+				p2t_hole.reserve(simplified_innerContour.size());
+				size_t max_points_in_hole = simplified_innerContour.size();
 				for (size_t k = 0; k < max_points_in_hole; k++)
 				{
 					p2t::Point pt = simplified_innerContour[k];
 					p2t_hole.push_back(new p2t::Point(pt.x,pt.y));
 				}
-				cdt.AddHole(p2t_hole);
+
+				qDebug() << "Adding hole" << p2t_hole.size();
+				cdt->AddHole(p2t_hole);
+
+				qDebug() << "Hole added " << p2t_hole.size();
 			}
 
+			qDebug() << "Triangulation start";
 			// Triangulate
-			cdt.Triangulate();
+			cdt->Triangulate();
+
+			qDebug() << "Triangulation end";
 
 			// Append the traingulated results to the vector
-			vector<p2t::Triangle*> tmp_trias = cdt.GetTriangles();
+			vector<p2t::Triangle*> tmp_trias = cdt->GetTriangles();
 			for(int m =0; m < tmp_trias.size(); m++)
 			{
 				triangles.push_back(tmp_trias[m]);
@@ -280,12 +330,13 @@ namespace CDI
 		return triangles;
 	}
 
-	QList<Polygon2D*> generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside)
+	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside)
 	{
 		// Initialize the list
 		QList<Polygon2D*> polygons;
 		vector<p2t::Triangle*> triangles = triangularizeImage(imagePath, deltaOutside, deltaInside);
-		for (int i=0; i <triangles.size(); i++)
+		return triangles;
+		/*for (int i=0; i <triangles.size(); i++)
 		{
 			p2t::Triangle* tria = triangles[i];
 
@@ -297,6 +348,6 @@ namespace CDI
 
 			polygons.push_back(polygon);
 		}
-		return polygons;
+		return polygons;*/
 	}
 }

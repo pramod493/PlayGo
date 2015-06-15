@@ -1,12 +1,15 @@
 #include "assembly.h"
 #include "page.h"
+#include "commonfunctions.h"
+#include <QDebug>
 
 namespace CDI
 {
 	Assembly::Assembly(Page *parent)
 	{
+		mask = 0;
+		_id = uniqueHash();
 		_pagePtr = parent;
-		_assemblyFilepath = id().toString();
 	}
 
 	// TODO - Implement Joint-Object mapping
@@ -20,22 +23,25 @@ namespace CDI
 //		}
 	}
 
+	QUuid Assembly::id() const
+	{
+		return _id;
+	}
+
+	ItemType Assembly::type() const
+	{
+		return ItemType::ASSEMBLY;
+	}
+
 	QTransform Assembly::transform() const
 	{
 		return _transform;
 	}
 
-	void Assembly::setTransform(QTransform &transform)
+	void Assembly::setTransform(QTransform transform)
 	{
 		mask |= isTransformed;
 		_transform = transform;
-	}
-	/*************************************************************
-	 * Query functions
-	 ************************************************************/
-	ItemType Assembly::type() const
-	{
-		return ItemType::ASSEMBLY;
 	}
 
 	void Assembly::addItem(Component *component)
@@ -86,49 +92,58 @@ namespace CDI
 		return containsItem(uid, searchRecursive);
 	}
 
-	bool Assembly::readFromFile(QFile &file)
-	{
-		Q_UNUSED(file);
-		// TODO - feature not implemented
-		return false;
-	}
+//	bool Assembly::readFromFile(QFile &file)
+//	{
+//		Q_UNUSED(file);
+//		// TODO - feature not implemented
+//		return false;
+//	}
 
-	bool Assembly::writeToFile(QFile& file)
-	{
-		Q_UNUSED(file);
-		// TODO - feature not implemented
-		return false;
-	}
+//	bool Assembly::writeToFile(QFile& file)
+//	{
+//		Q_UNUSED(file);
+//		// TODO - feature not implemented
+//		return false;
+//	}
 
 	QDataStream& Assembly::serialize(QDataStream& stream) const
 	{
-		stream << size();
-		if (!isEmpty())
-		{
-			QHash<QUuid, Component*>::const_iterator iter;
-			for(iter = constBegin(); iter != constEnd(); ++iter)
-			{
-				Component* component = iter.value();
-				stream << *component;
-			}
-		}
+//		stream << size();
+//		if (!isEmpty())
+//		{
+//			QHash<QUuid, Component*>::const_iterator iter;
+//			for(iter = constBegin(); iter != constEnd(); ++iter)
+//			{
+//				Component* component = iter.value();
+//				stream << *component;
+//			}
+//		}
 		return stream;
 	}
 
 	QDataStream& Assembly::deserialize(QDataStream& stream)
 	{
-		int num_items;
-		stream >> num_items;
-		if (num_items != 0)
-		{
-			reserve(num_items);
-			for (int i =0; i< num_items; i++)
-			{
-				Component* component = _pagePtr->createComponent();
-				stream >> *component;
-				insert(component->id(), component);
-			}
-		}
+//		int num_items;
+//		stream >> num_items;
+//		if (num_items != 0)
+//		{
+//			reserve(num_items);
+//			for (int i =0; i< num_items; i++)
+//			{
+//				Component* component = _pagePtr->createComponent();
+//				stream >> *component;
+//				insert(component->id(), component);
+//			}
+//		}
 		return stream;
 	}
+
+	bool Assembly::mergeAssembly(Assembly* assembly)
+	{
+		Q_UNUSED(assembly);
+		qDebug() << "@Assembly::mergeAssembly(assembly: Assembly*)"
+				 << "feature not implemented";
+		return false;
+	}
 }
+

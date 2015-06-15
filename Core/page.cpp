@@ -11,87 +11,34 @@ namespace CDI
 	{
 		_id = uniqueHash();
 		_playgo = parent;
+
 		_assemblies = QHash<QUuid, Assembly*>();
 		_components = QHash<QUuid, Component*>();
+
+		_searchManager = new SearchManager(this);
+
+		PhysicsSettings settings = PhysicsSettings();
+		_physicsManager = new PhysicsManager(&settings, this);
 	}
 
 	Page::~Page()
 	{
-		// Delete all children
-		// 1. Remove all components which are in assembly from the list
-		// NOTE : Let us not worry about deletion of QHash. Also, forget about
-		// updating the transform because we already going to delete them anyways
-		// Simple deletion should take care of it
-		//		for (QHash<QUuid, Assembly*>::const_iterator iter = _assemblies.constBegin();
-		//			 iter != _assemblies.constEnd(); ++iter)
-		//		{
-		//			Assembly* assembly = iter.value();
-		//			QHash<QUuid, Component*>::const_iterator comp_iter;
-		//			for (comp_iter = assembly->constBegin();
-		//				 comp_iter != assembly->constEnd(); ++comp_iter)
-		//			{
-		//				Component* component = comp_iter.value();
-		//				if (_components.contains(component->id()))
-		//					_components.remove(component->id());
-		//			}
-		//		}
-
-		for (QHash<QUuid, Assembly*>::const_iterator
-			 iter = _assemblies.constBegin();
-			 iter != _assemblies.constEnd();
-			 ++iter)
-		{
-			Assembly* assembly = iter.value();
-
-			delete assembly;
-		}
-
-		for (QHash<QUuid, Component*>::const_iterator
-			 comp_iter = _components.constBegin();
-			 comp_iter != _components.constEnd();
-			 ++comp_iter)
-		{
-			Component* component = comp_iter.value();
-			delete component;
-		}
+		deleteAll();
 	}
 
-	void Page::deleteAll()
+	QUuid Page::id() const
 	{
-		QHash<QUuid, Assembly*>::const_iterator iter;
-		for (iter = _assemblies.constBegin();
-			 iter != _assemblies.constEnd(); ++iter)
-		{
-			destroyAssembly(iter.value());
-		}
-
-		QHash<QUuid, Component*>::const_iterator comp_iter;
-		for (comp_iter = _components.constBegin();
-			 comp_iter != _components.constEnd(); ++iter)
-		{
-			destroyComponent(comp_iter.value());
-		}
+		return _id;
 	}
 
-	bool Page::add(Page* page)
+	SearchManager* Page::getSearchManager() const
 	{
-		qDebug() << "Feature not implemented";
-		if (page== NULL) qDebug() <<"Not cool. NULL Page pointer@Page::add()";
-		return false;
+		return _searchManager;
 	}
 
-	Assembly* Page::createAssembly()
+	PhysicsManager* Page::getPhysicsManager() const
 	{
-		Assembly* newAssembly = new Assembly(this);
-		_assemblies.insert(newAssembly->id(), newAssembly);
-		return newAssembly;
-	}
-
-	Component* Page::createComponent()
-	{
-		Component* newComponent = new Component(this);
-		_components.insert(newComponent->id(), newComponent);
-		return newComponent;
+		return _physicsManager;
 	}
 
 	QList<Assembly*> Page::getAssemblies() const
@@ -104,19 +51,150 @@ namespace CDI
 		return _components.values();
 	}
 
+	AbstractModelItem* Page::getItemPtrById(QUuid id)
+	{
+		// NOTE - No check has been to verify if the item is of type
+		// Component or Assembly
+		// Only checking among components right now
+		QHash<QUuid, Component*>::const_iterator componentiter;
+		for (componentiter = _components.constBegin();
+			 componentiter != _components.constEnd(); ++componentiter)
+		{
+			Component* component = componentiter.value();
+			if (component->containsItem(id))
+				return component->getItemPtrById(id);
+		}
+		return NULL;
+	}
+
+	Component* Page::getComponentPtrById(QUuid id)
+	{
+		if (_components.contains(id))
+			return _components.value(id);
+		return NULL;
+	}
+
+	Assembly* Page::getAssemblyPtrById(QUuid id)
+	{
+		if (_assemblies.contains(id))
+			return _assemblies.value(id);
+		return NULL;
+	}
+
+	ItemType Page::getItemType(QUuid id)
+	{
+		if (_assemblies.contains(id)) return ItemType::ASSEMBLY;
+		if (_components.contains(id)) return ItemType::COMPONENT;
+		AbstractModelItem* itemPtr = getItemPtrById(id);
+		if (itemPtr == NULL) return ItemType::NONE;
+		return itemPtr->type();
+	}
+
+	/*AbstractModelItem* Page::getParent(AbstractModelItem *item)
+	{
+
+		if (item->type() == ItemType::ASSEMBLY) return NULL;
+		if (item->type() == ItemType::COMPONENT)
+		{
+			QHash<QUuid, Assembly*>::const_iterator assemiter;
+			for (assemiter = _assemblies.constBegin();
+				 assemiter != _assemblies.constEnd(); ++assemiter)
+			{
+				Assembly* assembly = assemiter.value();
+				if (assembly->contains(item->id()))
+				{
+					return assembly;
+				}
+			}
+		} else {
+			// Look into components
+			QHash<QUuid, Component*>::const_iterator componentiter;
+			for (componentiter = _components.constBegin();
+				 componentiter != _components.constEnd(); ++componentiter)
+			{
+				Component* component = componentiter.value();
+				if (component->containsItem(item, false))
+					return component;
+			}
+		}
+		return NULL;
+	}*/
+
+	bool Page::contains(QUuid id)
+	{
+		// Check immediate objects
+		if (_assemblies.contains(id)) return true;
+		if (_components.contains(id)) return true;
+
+		/*if (searchRecursive)
+		{
+			QHash<QUuid, Assembly*>::const_iterator assemiter;
+			for (assemiter = _assemblies.constBegin();
+				 assemiter != _assemblies.constEnd(); ++assemiter)
+			{
+				Assembly* assembly = assemiter.value();
+				if (assembly->contains(id)) return true;
+			}
+		}*/
+		QHash<QUuid, Component*>::const_iterator componentiter;
+		for (componentiter = _components.constBegin();
+			 componentiter != _components.constEnd(); ++componentiter)
+		{
+			Component* component = componentiter.value();
+			if (component->containsItem(id))
+				return true;
+		}
+		return false;
+	}
+
+	ItemType Page::type() const
+	{
+		return ItemType::PAGE;
+	}
+
+	Assembly* Page::createAssembly()
+	{
+		Assembly* newAssembly = new Assembly(this);
+		_assemblies.insert(newAssembly->id(), newAssembly);
+
+		emit signalAssemblyAdd(newAssembly);
+
+		return newAssembly;
+	}
+
+	Component* Page::createComponent()
+	{
+		Component* newComponent = new Component(this);
+		_components.insert(newComponent->id(), newComponent);
+
+		emit signalComponentAdd(newComponent);
+
+		return newComponent;
+	}
+
+	void Page::addComponent(Component *component)
+	{
+		if (_components.contains(component->id()) == false)
+		{
+			_components.insert(component->id(), component);
+			emit signalComponentAdd(component);
+		}
+
+	}
+
+	void Page::addAssembly(Assembly *assembly)
+	{
+		if (_assemblies.contains(assembly->id()) == false)
+		{
+			_assemblies.insert(assembly->id(), assembly);
+			emit signalAssemblyAdd(assembly);
+		}
+	}
+
 	bool Page::mergeAssembly(Assembly *a1, Assembly *a2)
 	{
-		if (a1 != NULL && a2 != NULL )
-			if (!(a2->isEmpty() || a1->isEmpty()))
-				if (a1->mergeAssembly(a2))
-				{
-					emit onAssemblyMerge(a1,a2);
-					if (_assemblies.contains(a2->id()))
-						_assemblies.remove(a2->id());
-
-					delete a2;
-					return true;
-				}
+		if (_assemblies.contains(a1->id()) && _assemblies.contains(a2->id()))
+			return a1->mergeAssembly(a2);
 		return false;
 	}
 
@@ -126,15 +204,13 @@ namespace CDI
 		if (assembly == NULL) return false;
 		if (_assemblies.contains(assembly->id()))
 		{
-			emit beforeAssemblyDeletion(assembly);	// This should take care of deletion of components as well
-			// remove all component references from hash
+
 			QHash<QUuid, Component*>::const_iterator iter;
 			for(iter = assembly->constBegin(); iter != assembly->constEnd(); ++iter)
 			{
 				Component* component = iter.value();
 				if (component!= NULL)
 				{
-					emit beforeComponentDeletion(component);
 					_components.remove(component->id());
 					delete component;
 				}
@@ -179,11 +255,102 @@ namespace CDI
 		}
 		if (markForDelete)
 		{
-			emit beforeComponentDeletion(component);
+			emit signalComponentDelete(component);
 			delete component;
 		}
 		return markForDelete;
 	}
+
+	bool Page::add(Page* page)
+	{
+		qDebug() << "Feature not implemented";
+		if (page== NULL) qDebug() <<"Not cool. NULL Page pointer@Page::add()";
+		return false;
+	}
+
+
+	QDataStream& Page::serialize(QDataStream& stream) const
+	{
+		stream << _id;
+		// Make sure not to serialize components which have already been serialized by the assembly;
+		// Implement saving of component data only
+		int num_components = _components.size();
+		stream << num_components;
+		if (num_components != 0)
+		{
+			QHash<QUuid, Component*>::const_iterator componentiter;
+			for (componentiter = _components.constBegin();
+				 componentiter != _components.constEnd(); ++componentiter)
+			{
+				Component* component = componentiter.value();
+				component->serialize(stream);
+			}
+		}
+
+		return stream;
+	}
+
+	QDataStream& Page::deserialize(QDataStream& stream)
+	{
+		QUuid newId;
+		stream >> newId;
+		emit signalItemIdUpdate(_id, newId);
+		_id = newId;
+
+		int num_components = 0;
+		stream >> num_components;
+		if (num_components != 0)
+		{
+			for (int i=0; i<num_components; i++)
+			{
+				Component *component = new Component(this);
+				component->deserialize(stream);
+				addComponent(component);
+			}
+		}
+		emit signalReloadPage(this);
+
+		return stream;
+	}
+
+	void Page::deleteAll()
+	{
+		emit signalDeleteAllItems(this);
+		qDeleteAll(_components);
+		qDeleteAll(_assemblies);
+		/*
+		QHash<QUuid, Assembly*>::const_iterator iter;
+		for (iter = _assemblies.constBegin();
+			 iter != _assemblies.constEnd(); ++iter)
+		{
+			destroyAssembly(iter.value());
+		}
+
+		QHash<QUuid, Component*>::const_iterator comp_iter;
+		for (comp_iter = _components.constBegin();
+			 comp_iter != _components.constEnd(); ++iter)
+		{
+			destroyComponent(comp_iter.value());
+		}*/
+	}
+
+
+	/*bool Page::mergeAssembly(Assembly *a1, Assembly *a2)
+	{
+		if (a1 != NULL && a2 != NULL )
+			if (!(a2->isEmpty() || a1->isEmpty()))
+				if (a1->mergeAssembly(a2))
+				{
+					emit onAssemblyMerge(a1,a2);
+					if (_assemblies.contains(a2->id()))
+						_assemblies.remove(a2->id());
+
+					delete a2;
+					return true;
+				}
+		return false;
+	}
+
 
 	void Page::triggerUpdate(AbstractModelItem* item)
 	{
@@ -199,105 +366,39 @@ namespace CDI
 		}
 		AbstractModelItem* parent = getParent(item);
 		if (parent != NULL) triggerUpdate(parent);
+	}*/
+
+	void Page::onItemRemove(QUuid itemId)
+	{
+		emit signalItemRemove(itemId);
 	}
 
-	AbstractModelItem* Page::getParent(QUuid id)
+	void Page::onItemUpdate(QUuid itemId)
 	{
-		AbstractModelItem* parentItem = NULL;
-		// 1. Check if item is an assembly
-		if (_assemblies.contains(id)) return parentItem;
-
-		// 2. Search in immediate children of assemblies
-		QHash<QUuid, Assembly*>::const_iterator assemiter;
-		for (assemiter = _assemblies.constBegin();
-			 assemiter != _assemblies.constEnd(); ++assemiter)
-		{
-			Assembly* assembly = assemiter.value();
-			if (assembly->contains(id))
-			{
-				return assembly;
-				break;
-			}
-		}
-
-		// 3. Search in children of components
-		QHash<QUuid, Component*>::const_iterator componentiter;
-		for (componentiter = _components.constBegin();
-			 componentiter != _components.constEnd(); ++componentiter)
-		{
-			Component* component = componentiter.value();
-			if (component->containsItem(id, false))
-				return component;
-		}
-
-		// 4. If item is not found this way, perform a deep search into all components
-		for (componentiter = _components.constBegin();
-			 componentiter != _components.constEnd(); ++componentiter)
-		{
-			Component* component = componentiter.value();
-			if (component->containsItem(id, true))		// Perform a recursive search
-				return component;
-		}
-
-		return parentItem;
+		emit signalItemUpdate(itemId);
 	}
 
-	AbstractModelItem* Page::getParent(AbstractModelItem *item)
+	void Page::onItemRedraw(QUuid itemId)
 	{
-		if (item->type() == ItemType::ASSEMBLY) return NULL;
-		if (item->type() == ItemType::COMPONENT)
-		{
-			QHash<QUuid, Assembly*>::const_iterator assemiter;
-			for (assemiter = _assemblies.constBegin();
-				 assemiter != _assemblies.constEnd(); ++assemiter)
-			{
-				Assembly* assembly = assemiter.value();
-				if (assembly->contains(item->id()))
-				{
-					return assembly;
-				}
-			}
-		}
-
-		return NULL;
+		emit signalItemRedraw(itemId);
 	}
 
-	bool Page::contains(QUuid id, bool searchRecursive)
+	void Page::onItemIdUpdate(QUuid oldID, QUuid newID)
 	{
-		// Check immediate objects
-		if (_assemblies.contains(id)) return true;
-		if (_components.contains(id)) return true;
-
-		if (searchRecursive)
-		{
-			QHash<QUuid, Assembly*>::const_iterator assemiter;
-			for (assemiter = _assemblies.constBegin();
-				 assemiter != _assemblies.constEnd(); ++assemiter)
-			{
-				Assembly* assembly = assemiter.value();
-				if (assembly->contains(id)) return true;
-			}
-		}
-		QHash<QUuid, Component*>::const_iterator componentiter;
-		for (componentiter = _components.constBegin();
-			 componentiter != _components.constEnd(); ++componentiter)
-		{
-			Component* component = componentiter.value();
-			if (component->containsItem(id, searchRecursive))
-				return true;
-		}
-		return false;
+		emit signalItemIdUpdate(oldID, newID);
 	}
 
-	QDataStream& Page::serialize(QDataStream& stream) const
+	void Page::onAssemblyUpdate(Assembly* assembly)
 	{
-		// Make sure not to serialize components which have already been serialized by the assembly;
-		return stream;
+		if (_assemblies.contains(assembly->id()))
+			emit signalAssemblyUpdate(assembly);
 	}
 
-	QDataStream& Page::deserialize(QDataStream& stream)
+	void Page::onComponentUpdate(Component* component)
 	{
-		return stream;
+		qDebug() << "@Page::onComponentUpdate";
+		if (_components.contains(component->id()))
+			emit signalComponentUpdate(component);
 	}
 
 	QDataStream& operator<<(QDataStream& stream, const Page& page)

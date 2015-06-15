@@ -24,6 +24,8 @@ namespace CDI
 
 		void drawBackground(QPainter * painter, const QRectF & rect);
 
+		void drawForeground(QPainter * painter, const QRectF & rect);
+
 		SketchScene* getSketchScene();
 
 	protected:
@@ -39,5 +41,14 @@ namespace CDI
 		void viewTabletEvent(QTabletEvent *tabletEvent, QGraphicsView *view);
 
 		void viewTouchEvent(QTouchEvent *touchEvent, QGraphicsView *view);
+
+		/**
+		 * @brief Connect with appropriate function in order to draw on background
+		 * @param painter
+		 * @param rect
+		 */
+		void viewDrawbackground(QPainter* painter, const QRectF& rect);
+
+		void viewDrawforeground(QPainter* painter, const QRectF& rect);
 	};
 }

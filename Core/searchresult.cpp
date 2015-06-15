@@ -9,14 +9,6 @@ namespace CDI
 		tags = QStringList();
 	}
 
-	SearchResult::SearchResult(QObject *parent)
-		: AbstractModelItem(parent)
-	{
-		resultFilePath = QString();
-		metadataExists = false;
-		tags = QStringList();
-	}
-
 	SearchResult::SearchResult(const SearchResult &result)
 	{
 		resultFilePath = result.resultFilePath;

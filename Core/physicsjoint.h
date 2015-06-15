@@ -7,32 +7,41 @@ namespace CDI
 {
 	class PhysicsManager;
 
+	class PhysicsBody;
+
 	enum JointType {DISTANCE=10, FRICTION, GEAR,MOTOR,
 					MOUSE, PRISMATIC, PULLEY, REVOLUTE,
 					ROPE, WELD, WHEEL, NO_JOINT};
 	/**
 	 * @brief The PhysicsJoint class contains information
 	 * related to joint objects used in simulation
+	 * @remarks use b2JointType as enum to represent joints
 	 */
-	class PhysicsJoint : public AbstractModelItem
+	class PhysicsJoint //: public AbstractModelItem
 	{
 	protected:
-		JointType _jointType;
-		b2Joint* joint;
+//		JointType _jointType;
+		b2JointType		_box2dJointType;
+		b2Joint*		_joint;
+		b2JointDef*		_jointDef;
+		QUuid			_jointID;
 
-		b2JointDef* jointDef;
-
-	protected:
+	public:
 		PhysicsJoint(b2JointDef* jointDefinition, b2World* world);
+
 		virtual ~PhysicsJoint();
+
 		void createJointByType();
 	public:
-		inline ItemType type() { return ItemType::PHYSICSJOINT; }
-		virtual JointType jointType();
-		virtual b2JointDef* getJointDef();
-//		virtual void setJointDef(b2JointDef* def);	// No setting allowed at present.
-													// Check doc to see how to do so
+		virtual ItemType type() { return ItemType::PHYSICSJOINT; }
 
+		QUuid id() const;
+
+		virtual b2Joint* joint();
+
+		virtual b2JointType jointType();
+
+		virtual b2JointDef* jointDef();
 
 	};
 

@@ -1,10 +1,11 @@
 #include <QList>
 #include "physicsmanager.h"
+#include "page.h"
 #include <QDebug>
 
 namespace CDI
 {
-	PhysicsManager::PhysicsManager(PhysicsSettings *settings, QObject *parent) : QObject(parent)
+	PhysicsManager::PhysicsManager(PhysicsSettings *settings, Page *parentPage) : QObject(parentPage)
 	{
 		_settings.timeStep = settings->timeStep;
 		_settings.velocityIterations = settings->velocityIterations;

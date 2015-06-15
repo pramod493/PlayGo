@@ -22,6 +22,8 @@
 
 #include "sketchscene.h"
 #include "sketchview.h"
+
+#include "modelviewtreewidget.h"
 #include <QDebug>
 
 namespace CDI
@@ -58,6 +60,7 @@ namespace CDI
 
 		bool _isDrawingNow;
 		GraphicsPathItem* _currentStroke;
+		GraphicsItemGroup* _currentComponent;
 
 		/*********************************************************
 		 * Lasso related variables
@@ -65,6 +68,8 @@ namespace CDI
 		bool _isLassoDisplayed;
 		QGraphicsPolygonItem* _lasso;
 		QPolygonF _lassoPolygon;
+
+		ModelViewTreeWidget* tree;
 
 	public:
 		PlayGoController(SketchScene* scene, SketchView* view, CDIWindow *parent = NULL);
@@ -148,5 +153,7 @@ signals:
 		void setMode(MODE newMode);
 
 		void enableMouse(bool enable);
+
+		void clearCurrentScene();
 	};
 }

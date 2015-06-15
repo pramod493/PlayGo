@@ -22,18 +22,21 @@ namespace CDI
         path datapasePath = path(databaseDir.toStdString());
         wbBICE *biceDescriptor = new wbBICE();
         searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
+
+		_databaseNotIndexed = true;
+
         // TODO - Enable indexing for test
-        searchEngine->Index();
-        searchEngine->Load();
+//        searchEngine->Index();
+//        searchEngine->Load();
     }
 
-	SearchManager* SearchManager::_instance = NULL;
+//	SearchManager* SearchManager::_instance = NULL;
 
-	SearchManager* SearchManager::instance()
-	{
-		if (_instance == NULL) _instance = new SearchManager();
-		return _instance;
-	}
+//	SearchManager* SearchManager::instance()
+//	{
+//		if (_instance == NULL) _instance = new SearchManager();
+//		return _instance;
+//	}
 
     SearchManager::~SearchManager()
     {
@@ -55,14 +58,35 @@ namespace CDI
 
     bool SearchManager::search(QImage &image, int numResults)
     {
-        if (image.isNull()) return false;
+		if (image.isNull()) return false;
+		// TODO - Image is saved only for debugging and testing purposes
 		image.save(inputFilePath);
-        //ConvertResultsToLocalPath(numResults);
+
 		return search(inputFilePath, numResults);
+		/*
+		vector<string> results =
+				searchEngine->Query(ASM::QImageToCvMat(image, true), numResults);
+
+		localFileList.clear();
+		for (vector<string>::iterator it = results.begin();
+			 it != results.begin()+numResults; ++it)
+		{
+			string name = *it;
+			localFileList.push_back(QString::fromStdString(name));
+		}
+		//ConvertResultsToLocalPath(numResults);
+		return true;
+		*/
     }
 
 	bool SearchManager::search(QString filePath, int numResults)
 	{
+		if (_databaseNotIndexed == false)
+		{
+			_databaseNotIndexed == true;
+			searchEngine->Index();
+			searchEngine->Load();
+		}
 		vector<string> results = searchEngine->Query(filePath.toStdString(), numResults);
 
 		localFileList.clear();

@@ -3,23 +3,25 @@
 #include <QPainterPath>
 #include <QVectorIterator>
 #include <QDebug>
+#include "graphicsitemgroup.h"
 
 using namespace std;
 
 namespace CDI
 {
-	// TODO - Add stroke and thickness information to the stroke
-	GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, Point2D startPoint, float pressure, int time)
-		: QGraphicsPathItem (parent)
-	{
-		parentStroke = new Stroke();
-		parentStroke->setTransform
-				(parentStroke->transform().translate(startPoint.x(), startPoint.y()));
-		setTransform(parentStroke->transform());
-		push_back(startPoint,pressure,time);
-    }
 
-    GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, Stroke *stroke)
+	// TODO - Add stroke and thickness information to the stroke
+//	GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, Point2D startPoint, float pressure, int time)
+//		: QGraphicsPathItem (parent)
+//	{
+//		parentStroke = new Stroke();
+//		parentStroke->setTransform
+//				(parentStroke->transform().translate(startPoint.x(), startPoint.y()));
+//		setTransform(parentStroke->transform());
+//		push_back(startPoint,pressure,time);
+//    }
+
+	GraphicsPathItem::GraphicsPathItem(GraphicsItemGroup *parent, Stroke *stroke)
 		: QGraphicsPathItem (parent)
     {
 		parentStroke = stroke;
@@ -28,7 +30,7 @@ namespace CDI
 
     GraphicsPathItem::~GraphicsPathItem()
     {
-        if (parentStroke!= NULL) delete parentStroke;
+		// Do not delete the parentStroke object here. This is deleted when parentStroke object is deleted
     }
 
     void GraphicsPathItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -56,24 +58,31 @@ namespace CDI
 
 	void GraphicsPathItem::push_back(QPointF point, float pressure, int time)
     {
-		Point2D pt = parentStroke->inverseTransform().map(point);
-		parentStroke->push_point(Point2DPT(pt.x(),pt.y(), pressure, time));
+		if (parentStroke!= NULL)
+		{
+			Point2D pt = mapFromScene(point);
+			parentStroke->push_point(Point2DPT(pt.x(),pt.y(), pressure, time));
+		}
     }
 
     void GraphicsPathItem::push_back(Point2DPT point)
     {
-		Point2D pt = parentStroke->inverseTransform().map(point);
-		point.setX(pt.x()); point.setY(pt.y());
-		parentStroke->push_point(point);
+		if (parentStroke!= NULL)
+		{
+			Point2D pt = mapFromScene(point);
+			point.setX(pt.x()); point.setY(pt.y());
+			parentStroke->push_point(point);
+		}
     }
 
     void GraphicsPathItem::ApplySmoothing(int order)
     {
-		parentStroke->applySmoothing(order);
+		if (parentStroke!= NULL) parentStroke->applySmoothing(order);
     }
 
     bool GraphicsPathItem::Selected(QPointF point, float extraWidth)
     {
+		if (parentStroke== NULL) return false;
 		Point2D p = Point2D(point.x(),point.y());
 		bool val = parentStroke->containsPoint(p, SelectionType::OnItem, extraWidth);
         return val;
@@ -85,13 +94,9 @@ namespace CDI
 		return parentStroke->boundingRect();
 	}
 
-    void GraphicsPathItem::OnStrokeUpdate(Stroke* stroke)
+	void GraphicsPathItem::updateStroke()
     {
-		Q_UNUSED(stroke);/*
-        painterPath = QPainterPath(QPointF(parentStroke->points[0]->x,parentStroke->points[0]->y));
-        for (int i=1; i<parentStroke->points.size();i++)
-			painterPath.lineTo(parentStroke->points[i]->x(),parentStroke->points[i]->y());
-		setPath(painterPath);*/
-        update();
+		if (parentStroke!= NULL)
+			setTransform(parentStroke->transform());
     }
 }

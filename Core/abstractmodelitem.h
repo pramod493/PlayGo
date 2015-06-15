@@ -5,39 +5,42 @@
 #include <QObject>
 
 namespace CDI {
+
+	class Component;
 	/**
 	 * @brief The AbstractModelItem class is base class for all the items created in model.
 	 *
 	 */
 	class AbstractModelItem : public QObject
 	{
-		Q_OBJECT
-		Q_PROPERTY(bool Visible READ isVisible  WRITE setVisible)
-		Q_PROPERTY(QUuid ID READ id)
-		Q_PROPERTY(int mask MEMBER mask)
-
 	public:
 		unsigned int mask;	/**< Item's mask */
+
 	protected:
 		QUuid itemId;		/**< Unique item ID */
-		AbstractModelItem* _parent;
+		Component* _parentComponent;
 
 	public:
-		AbstractModelItem();
+		//-----------------------------------------------
+		// Constructors/Destructors
+		//-----------------------------------------------
+		AbstractModelItem(QObject *parent = NULL);
 
-		AbstractModelItem(QObject *parent);
+		virtual ~AbstractModelItem();
 
-		virtual ~AbstractModelItem()
-		{
-			emit itemDestroyed(this);
-		}
-
+		//-----------------------------------------------
+		// Query/Set functions(same order in derived class)
+		// Non-virtual
+		//-----------------------------------------------
 		/**
 		 * @brief id returns the item ID
 		 * @return item's QUuid
 		 */
 		QUuid id() const;
 
+		//-----------------------------------------------
+		// Virtual functions (same order in derived class)
+		//-----------------------------------------------
 		/**
 		 * @brief type return the AbstractModelItem type. Must be implemented by
 		 * derived classes
@@ -49,7 +52,14 @@ namespace CDI {
 		 * @brief transform returns the item's transformation w.r.t it's parent
 		 * @return Local transformation
 		 */
-		virtual QTransform transform() const;
+		virtual QTransform transform() const = 0;
+
+		/**
+		 * @brief Sets the Item transform. Override this function to enable
+		 * different behavior such as propagating transformatin to component children
+		 * @param t New item transform
+		 */
+		virtual void setTransform(QTransform t) = 0;
 
 		/**
 		 * @brief globalTransform returns the global transformation of the item
@@ -61,22 +71,24 @@ namespace CDI {
 		 * @brief parentItem returns the parent of an item
 		 * @return Pointer to parent item
 		 */
-		virtual AbstractModelItem* parentItem() const;
+		virtual Component* parentItem() const;
 
 		/**
 		 * @brief setParentItem sets the parent item value
 		 * @param item
+		 * @return True if the given component is correctly set as parent
 		 * \todo Check if the transformation needs to be updated following a change of parent item
 		 * For Item== NULL, the transformation is an identity matrix
 		 */
-		virtual void setParentItem(AbstractModelItem* item);
+		virtual bool setParentItem(Component* parentComponent);
+
 		/**
 		 * @brief inverseTransform returns the inverse of transform returned by transform()
 		 * Inverse is calculated for every step. Avoid unless necessary
 		 * Derived classes might re-implement this function for faster processing
 		 * @return Inverse Transformation of object
 		 */
-		virtual QTransform inverseTransform() const {return transform().inverted();}
+		virtual QTransform inverseTransform() const;
 
 		/**
 		 * @brief setVisible sets visibility of the object
@@ -111,15 +123,6 @@ namespace CDI {
 		 */
 		virtual QDataStream& deserialize(QDataStream& stream) = 0;
 
-		/**
-		 * @brief operator << Overload operator for QDataStream serialization
-		 * @param stream
-		 * @param item
-		 * @return
-		 */
-		friend QDataStream& operator<<(QDataStream& stream, const AbstractModelItem& item);
-		friend QDataStream& operator>>(QDataStream& stream, AbstractModelItem& item);
-
 	private:
 		/**
 		 * @brief serializeInternal internal function which writes the QUuid of the item
@@ -134,12 +137,28 @@ namespace CDI {
 		 */
 		QDataStream& deserializeInternal(QDataStream& stream);
 
-	signals:
-		void itemDestroyed(AbstractModelItem *item);
-		void transformChanged(AbstractModelItem *item);
-		void displayStatusChanged(AbstractModelItem *item);
-		void parentObjectChanged(AbstractModelItem *item);
+//	signals:
+//		void itemDelete(AbstractModelItem *item);
+//		void transformUpdate(AbstractModelItem* item);
+//		void displayUpdate(AbstractModelItem* item);
+
+		//-----------------------------------------------
+		// Friend functions and classes
+		//-----------------------------------------------
+		/**
+		 * @brief operator << Overload operator for QDataStream serialization
+		 * @param stream
+		 * @param item
+		 * @return QDataStream reference after writing
+		 */
+		friend QDataStream& operator<<(QDataStream& stream, const AbstractModelItem& item);
+		friend QDataStream& operator>>(QDataStream& stream, AbstractModelItem& item);
+
+
 	};
 
-	AbstractModelItem* getItemPtrByType(ItemType t);
+	//-----------------------------------------------
+	// Pther functions related to the class
+	//-----------------------------------------------
+	AbstractModelItem* getItemPtrByType(ItemType t, Component* parentComponent);
 }

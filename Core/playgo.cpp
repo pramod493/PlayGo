@@ -61,7 +61,7 @@ namespace CDI
 				 iter != _pages.constEnd(); ++iter)
 			{
 				Page* page = iter.value();
-				if (page->contains(id, searchRecursive))
+				if (page->contains(id))
 					return true;
 			}
 		}
@@ -94,7 +94,7 @@ namespace CDI
 			 iter != _pages.constEnd(); ++iter)
 		{
 			Page* page = iter.value();
-			if (page->contains(id, searchRecursive))
+			if (page->contains(id))
 				return page;
 		}
 		return NULL;

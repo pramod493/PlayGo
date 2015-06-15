@@ -5,15 +5,17 @@
 
 namespace CDI
 {
-	Stroke::Stroke()
+	Stroke::Stroke(Component *component)
 		: _color(Qt::black), _thickness(3.0f)
 	{
+		setParentItem(component);
 		recalculateAABB();
 	}
 
-	Stroke::Stroke(QColor color, float thickness)
+	Stroke::Stroke(Component* component, QColor color, float thickness)
 		: _color(color), _thickness(thickness)
 	{
+		setParentItem(component);
 		recalculateAABB();
 	}
 
@@ -21,14 +23,21 @@ namespace CDI
 		: QVector<Point2DPT>(s) , _color(s.color()),
 		  _thickness(s.thickness()), _transform(s.transform())
 	{
+		setParentItem(s.parentItem());
 		recalculateAABB();
 	}
 
-	Stroke::Stroke(const QVector<Point2DPT>& points, QColor color, float thickness)
+	Stroke::Stroke(Component* component, const QVector<Point2DPT>& points, QColor color, float thickness)
 		: QVector<Point2DPT> (points), _color(color),
 		  _thickness(thickness)
 	{
+		setParentItem(component);
 		recalculateAABB();
+	}
+
+	Stroke::~Stroke()
+	{
+		// Do something here
 	}
 
 	void Stroke::push_point(Point2DPT &pt)
@@ -48,27 +57,6 @@ namespace CDI
 		aabb.setHeight(aabb.height()+2*_thickness);
 	}
 
-	QRectF Stroke::boundingRect()
-	{
-		if (size() == 0) return QRectF();
-		if (mask & isModified) updateWhenModified();
-		return aabb;
-		// Do not return the transformed AABB rectangle
-	}
-
-	void Stroke::translate(const Point2D &offset)
-	{
-		if (offset.isNull()) return;
-
-		mask |= isModified;
-
-		Point2DPT *p = data();
-		int i = size();
-		while (i--) {
-			*p += offset;
-			++p;
-		}
-	}
 
 	bool Stroke::containsPoint(const Point2D &pt, SelectionType rule, float margin)
 	{
@@ -97,43 +85,48 @@ namespace CDI
 		return false;
 	}
 
-	void Stroke::applySmoothing(int order)
+	bool Stroke::isContainedWithin(QPolygonF *polygon, float percentmatch)
 	{
-		int num_points = size()-1;
+		// NOTE This returns when all the points are inside the polygon
+		// Make sure the polygon is mapped to the local coordinate system
+		int num_points = size();
 		Point2DPT* points = data();
-		for (int j =0; j< order; j++)
-			for (int index = 1;index < num_points; index++)
-			{
-				points[index] = 0.5f * (points[index-1] + points[index+1]);
-			}
+
+		for (int i=0; i< num_points; i++)
+		{
+			if (polygon->contains(points[i]) == false) return false;
+		}
+		return true;
 	}
 
-	bool Stroke::mergeWith(Stroke *stroke, bool joinAtEnd)
+	QRectF Stroke::boundingRect()
 	{
-		// Check thickness match
-		if (!qFuzzyCompare(stroke->thickness(), _thickness))
-			return false;
-		if (!colorCompare(stroke->color(), _color))
-			return false;
-		if (!_transform.isIdentity() || !(stroke->transform().isIdentity()))
-		{
-			qDebug() << "Add transformation support later";
-			return false;
-		}
-
-		if (joinAtEnd)
-		{
-
-		} else
-		{
-
-		}
-		return false;
+		if (size() == 0) return QRectF();
+		if (mask & isModified) updateWhenModified();
+		return aabb;
+		// Do not return the transformed AABB rectangle
 	}
 
 	ItemType Stroke::type() const
 	{
 		return ItemType::STROKE;
+	}
+
+	QTransform Stroke::transform() const
+	{
+		return _transform;
+	}
+
+	void Stroke::setTransform(QTransform t)
+	{
+		mask |= isTransformed;
+		_transform = t;
+		_inverseTransform = t.inverted();
+	}
+
+	QTransform Stroke::inverseTransform() const
+	{
+		return _inverseTransform;
 	}
 
 	QDataStream& Stroke::serialize(QDataStream &stream) const
@@ -170,6 +163,54 @@ namespace CDI
 		mask |= isModified;
 
 		return stream;
+	}
+
+	void Stroke::translate(const Point2D &offset)
+	{
+		if (offset.isNull()) return;
+
+		mask |= isModified;
+
+		Point2DPT *p = data();
+		int i = size();
+		while (i--) {
+			*p += offset;
+			++p;
+		}
+	}
+
+	void Stroke::applySmoothing(int order)
+	{
+		int num_points = size()-1;
+		Point2DPT* points = data();
+		for (int j =0; j< order; j++)
+			for (int index = 1;index < num_points; index++)
+			{
+				points[index] = 0.5f * (points[index-1] + points[index+1]);
+			}
+	}
+
+	bool Stroke::mergeWith(Stroke *stroke, bool joinAtEnd)
+	{
+		// Check thickness match
+		if (!qFuzzyCompare(stroke->thickness(), _thickness))
+			return false;
+		if (!colorCompare(stroke->color(), _color))
+			return false;
+		if (!_transform.isIdentity() || !(stroke->transform().isIdentity()))
+		{
+			qDebug() << "Add transformation support later";
+			return false;
+		}
+
+		if (joinAtEnd)
+		{
+
+		} else
+		{
+
+		}
+		return false;
 	}
 
 	void Stroke::updateWhenModified()
@@ -224,7 +265,7 @@ namespace CDI
 
 	Stroke* merge(Stroke *s1, Stroke *s2, bool addS1Forward, bool addS2Forward)
 	{
-		Stroke* s12 = new Stroke();
+		Stroke* s12 = new Stroke(s1->parentItem());
 		s12->setThickness(s1->thickness());
 		s12->setColor(s1->color());
 		{

@@ -38,7 +38,7 @@ namespace CDI
 
 	PhysicsJoint::PhysicsJoint(b2JointDef* jointDefinition, b2World* world)
 	{
-		_jointType = CDI::getTypeByJointDef(jointDefinition);
+//		_jointType = CDI::getTypeByJointDef(jointDefinition);
 	}
 
 	PhysicsJoint::~PhysicsJoint()
@@ -48,46 +48,56 @@ namespace CDI
 
 	void PhysicsJoint::createJointByType()
 	{
-		if (joint != NULL) qDebug() << "NO mechanism exists to delete joint"
+		if (_joint != NULL) qDebug() << "NO mechanism exists to delete joint"
 									<< "@PhysicsJoint::createJointByType()";
 
-		switch (_jointType)
-		{
-		case DISTANCE :
+//		switch (_jointType)
+//		{
+//		case DISTANCE :
 
-			break;
-		case FRICTION :
-			break;
-		case GEAR :
-			break;
-		case MOTOR :
-			break;
-		case MOUSE :
-			break;
-		case PRISMATIC :
-			break;
-		case PULLEY :
-			break;
-		case REVOLUTE :
-			break;
-		case ROPE :
-			break;
-		case WELD :
-			break;
-		case WHEEL :
-			break;
+//			break;
+//		case FRICTION :
+//			break;
+//		case GEAR :
+//			break;
+//		case MOTOR :
+//			break;
+//		case MOUSE :
+//			break;
+//		case PRISMATIC :
+//			break;
+//		case PULLEY :
+//			break;
+//		case REVOLUTE :
+//			break;
+//		case ROPE :
+//			break;
+//		case WELD :
+//			break;
+//		case WHEEL :
+//			break;
 
-		}
+//		}
 	}
 
-	JointType PhysicsJoint::jointType()
+	QUuid PhysicsJoint::id() const
 	{
-		return _jointType;
+		return _jointID;
 	}
 
-	b2JointDef* PhysicsJoint::getJointDef()
+	b2Joint* PhysicsJoint::joint()
 	{
-		return jointDef;
+		return _joint;
+	}
+
+	b2JointType PhysicsJoint::jointType()
+	{
+		return _box2dJointType;
+	}
+
+	b2JointDef* PhysicsJoint::jointDef()
+	{
+		return _jointDef;
 	}
 
 }

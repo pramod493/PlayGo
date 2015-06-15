@@ -10,6 +10,7 @@
 
 namespace CDI
 {
+	class Page;
 	// Use the b2BodyDef for setting the value of physics components
 	/**
 	 * @brief physicsBodyDef stores the definition of property of physics body
@@ -68,7 +69,7 @@ namespace CDI
 
 		QTimer* timer;
 	public:
-		explicit PhysicsManager(PhysicsSettings* settings, QObject *parent = 0);
+		explicit PhysicsManager(PhysicsSettings* settings, Page *parentPage);
 
 		~PhysicsManager();
 

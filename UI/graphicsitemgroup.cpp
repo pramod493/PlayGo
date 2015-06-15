@@ -12,4 +12,13 @@ namespace CDI
     GraphicsItemGroup::~GraphicsItemGroup()
     {
     }
+
+	void GraphicsItemGroup::updateGroup()
+	{
+		if (component!= NULL)
+		{
+			setTransform(component->transform());
+			update();
+		}
+	}
 }
