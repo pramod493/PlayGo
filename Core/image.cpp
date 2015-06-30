@@ -1,6 +1,7 @@
 #include "image.h"
 #include "component.h"
 #include <QDebug>
+#include "QsLog.h"
 namespace CDI
 {
 	Image::Image(Component* component)

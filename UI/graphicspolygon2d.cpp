@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QVectorIterator>
+#include "QsLog.h"
 #include <QDebug>
 #include "graphicsitemgroup.h"
 
@@ -77,7 +78,7 @@ namespace CDI
 	void GraphicsPolygon2D::ApplySmoothing(float margin)
 	{
 		if (parentPolygon == NULL) return;
-		qDebug() << "Applying smoothing to polygon";
+		QLOG_INFO() << "Applying smoothing to polygon";
 		parentPolygon->applyRDPSmoothing(margin);
 	}
 

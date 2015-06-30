@@ -1,5 +1,5 @@
 #include "physicsjoint.h"
-#include <QDebug>
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -48,7 +48,7 @@ namespace CDI
 
 	void PhysicsJoint::createJointByType()
 	{
-		if (_joint != NULL) qDebug() << "NO mechanism exists to delete joint"
+		if (_joint != NULL) QLOG_INFO() << "NO mechanism exists to delete joint"
 									<< "@PhysicsJoint::createJointByType()";
 
 //		switch (_jointType)

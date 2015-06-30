@@ -24,7 +24,7 @@
 
 #include "sketchscene.h"
 #include "sketchview.h"
-
+#include "searchview.h"
 #include "modelviewtreewidget.h"
 #include <QDebug>
 
@@ -86,7 +86,8 @@ namespace CDI
         /*********************************************************
          * Search related variables
          ********************************************************/
-        QGraphicsView* searchView;
+		SearchView* searchView;
+
 	public:
 		PlayGoController(SketchScene* scene, SketchView* view, CDIWindow *parent = NULL);
 

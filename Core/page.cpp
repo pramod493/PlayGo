@@ -1,6 +1,7 @@
 #include "page.h"
 #include "playgo.h"
 #include <QtAlgorithms>
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -234,7 +235,7 @@ namespace CDI
 
 		if (component == NULL)
 		{
-			qDebug() << "Component is NULL";
+			QLOG_INFO() << "Component is NULL";
 			return markForDelete;
 		}
 
@@ -267,8 +268,8 @@ namespace CDI
 
 	bool Page::add(Page* page)
 	{
-		qDebug() << "Feature not implemented";
-		if (page== NULL) qDebug() <<"Not cool. NULL Page pointer@Page::add()";
+		QLOG_INFO() << "Feature not implemented";
+		if (page== NULL) QLOG_INFO() <<"Not cool. NULL Page pointer@Page::add()";
 		return false;
 	}
 

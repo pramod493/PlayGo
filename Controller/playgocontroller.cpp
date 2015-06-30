@@ -8,6 +8,7 @@
 #include <QPixmap>
 #include <QPixmap>
 #include <QRectF>
+#include "searchview.h"
 
 #include "graphicssearchitem.h"
 
@@ -111,19 +112,7 @@ private:
 		}
         initController();
 
-        {
-			searchView = new QGraphicsView();
-			QString imageDir = getHomeDirectory() + QString("/testimages/");
-			QGraphicsScene *scene = new QGraphicsScene(view);
-			searchView->setScene(scene);
-			//            searchView->fitInView(0,0,500,500, Qt::KeepAspectRatio);
-			////			searchView->setAttribute( Qt::WA_TranslucentBackground, true);
-			//			searchView->setAttribute(Qt::WA_TranslucentBackground);
-			//			searchView->setAttribute(Qt::WA_NoSystemBackground,false);
-			//			searchView->setWindowFlags(Qt::FramelessWindowHint);
-
-			searchView->show();
-        }
+		searchView = _toplevelWindow->searchView;
 	}
 
 	void PlayGoController::initController()
@@ -187,16 +176,6 @@ private:
 		_currentStroke = _scene->addStroke(_currentComponent,
 										   _defaultPen.color(), _defaultPen.widthF());
 		_currentStroke->push_back(pos);
-//		_currentStroke = new GraphicsPathItem(NULL, pos, pos.pressure(), pos.time());
-//		_currentStroke->setPen(_defaultPen);
-//		_currentStroke->setBrush(_defaultBrush);
-
-		// TODO - Create a Scene::addStroke function
-		// which automatically handles stroke addition
-//		_scene->addItem(_currentStroke);
-
-//		_currentStroke->parentStroke->setThickness(_defaultPen.widthF());
-//		_currentStroke->parentStroke->setColor(_defaultPen.color());
 
 		_isDrawingNow = true;
 	}
@@ -239,16 +218,6 @@ private:
 			// TODO Apply smoothing before the object is updated maybe?
 			_isDrawingNow = false;
 
-#ifdef CDI_DEBUG_MODE
-            qDebug() << "Component" << _currentStroke->parentStroke()->parentItem()->transform();
-            qDebug() << "Stroke" << _currentStroke->parentStroke()->transform();
-            qDebug() << "Stroke global" << _currentStroke->parentStroke()->globalTransform();
-            qDebug() << "---------------------------";
-            qDebug() << "g_group" << _currentComponent->transform();
-            qDebug() << "g_stroke" << _currentStroke->transform();
-            qDebug() << "g_stroke global" << _currentStroke->sceneTransform();
-            // Run some test for transformation
-#endif
 			_currentStroke = NULL;
 			_scene->update();
 		}
@@ -267,7 +236,7 @@ private:
 	void PlayGoController::eraserMove(Point2DPT pos)
 	{
 		QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
-		qDebug() << "Deleting" << selectedStrokes.size() << " items";
+		QLOG_INFO() << "Deleting" << selectedStrokes.size() << " items";
 		foreach (GraphicsPathItem* stroke, selectedStrokes)
         {
 			Stroke* s = stroke->parentStroke();
@@ -276,8 +245,6 @@ private:
 			delete s;
         }
 //		if (selectedStrokes.size()) _scene->update();
-
-		qDebug() << "Looks fine";
 		// \todo - Implement related functions in scene
 		//		QList<GraphicsPolygon2D*> selectedPolygons = _scene->getSelectedPoly(pos);
 		//		QList<QGraphicsPathItem*> selectedItems = _scene->getMiscSelection(pos);
@@ -411,22 +378,19 @@ private:
         // Reset the lasso selection polygon
         _lassoPolygon = QPolygonF();
 
-        if (selectedStrokes.size() == 0)
-        {
-            qDebug() << "No stroke selected";
-            return;
-        }
+		if (selectedStrokes.size() == 0) return;
 
-        qDebug() << selectedStrokes.size() << "Strokes selected";
         // Print stroke IDs
         for (int i=0; i < selectedStrokes.size(); i++)
         {
             selectedStrokes[i]->highlight(true);
-            qDebug() << selectedStrokes[i]->parentStroke()->id().toString();
+			QLOG_INFO() << selectedStrokes[i]->parentStroke()->id().toString();
         }
 		QList<SearchResult*> searchResults =
                 _scene->page()->getSearchManager()->search(inputImage, 20);
 
+		searchView->LoadSearchData(selectedStrokes, searchResults);
+		/*
         int itemHeight = 150; int itemWidth = 150;
 		QList<QGraphicsPixmapItem*> searchItems;
         for (int i=0; i< searchResults.size(); i++)
@@ -444,7 +408,7 @@ private:
         searchView->show();
 
         searchView->setSceneRect(searchView->scene()->itemsBoundingRect());
-
+		*/
         if (searchResults.size())
         {
             emit onSearchComplete();
@@ -554,13 +518,13 @@ private:
 		{
 			const QTouchEvent::TouchPoint &touchPoint1
 					= event->touchPoints().first();
-			QPointF currentPos = touchPoint1.scenePos();
-			QPointF previousPos = touchPoint1.lastScenePos();
+			QPointF currentPos =view->transform().map(touchPoint1.scenePos());
+			QPointF previousPos =view->transform().map(touchPoint1.lastScenePos());
 
 			view->translate(currentPos.x()-previousPos.x(),
 							currentPos.y()-previousPos.y());
 
-			qDebug() << "View move by " << (currentPos.x() - previousPos.x());
+			QLOG_INFO() << "View move by " << (currentPos.x() - previousPos.x());
 			view->translate((currentPos.x() - previousPos.x()),
 							(currentPos.y() - previousPos.y()));
 		}
@@ -577,8 +541,6 @@ private:
 			}
 
 			QPointF difference = currentCenter - previousCenter;
-
-
 
 			// 2. Translate by motion of center
 			// 3. Rotate by mean of rotation of each point by center

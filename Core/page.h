@@ -66,8 +66,6 @@ namespace CDI
 
 		virtual ~Page();
 
-
-
 		//-----------------------------------------------
 		// Query/Set functions(same order in derived class)
 		// Non-virtual

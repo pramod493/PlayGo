@@ -2,6 +2,7 @@
 #include "page.h"
 #include "commonfunctions.h"
 #include <QDebug>
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -145,7 +146,7 @@ namespace CDI
 	bool Assembly::mergeAssembly(Assembly* assembly)
 	{
 		Q_UNUSED(assembly);
-		qDebug() << "@Assembly::mergeAssembly(assembly: Assembly*)"
+		QLOG_INFO() << "@Assembly::mergeAssembly(assembly: Assembly*)"
 				 << "feature not implemented";
 		return false;
 	}

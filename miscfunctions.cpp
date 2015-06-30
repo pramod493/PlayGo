@@ -5,7 +5,109 @@
 #include <QDebug>
 #include <QString>
 #include <QStringList>
+#include "opencv2/opencv.hpp"
+#include <iostream>
 
+using namespace cv;
+using namespace std;
+
+
+cv::Point pt1, pt2;
+bool draggin = false;
+void mouseHandler(int event, int x, int y, int flags, void* param)
+{
+	if (event == CV_EVENT_LBUTTONDOWN)
+	{
+		pt1 = Point(x, y);
+		draggin = true;
+	}
+	if (event == CV_EVENT_MOUSEMOVE && draggin )
+	{
+		pt2 = Point(x, y);
+	}
+	if (event == CV_EVENT_LBUTTONUP)
+	{
+		pt2 = Point(x, y);
+		//draggin = false;
+	}
+}
+
+int grabcut_load(string outputfile)
+{
+	// Open Camera
+	/*VideoCapture cap(0); // open the default camera
+	if (!cap.isOpened())  // check if we succeeded
+		return -1;
+
+	// Snap Photo
+	Mat image;
+	namedWindow("Camera", 1);
+	for (;;)
+	{
+		Mat frame;
+		cap >> frame; // get a new frame from camera
+		imshow("Camera", frame);
+		if (waitKey(30) >= 0)
+		{
+			image = frame;
+			break;
+		}
+	}
+
+	// Select Roi
+
+	imshow("Camera", image);
+	for (;;)
+	{
+		Mat cln = image.clone();
+
+		cvSetMouseCallback("Camera", mouseHandler, NULL);
+		if (draggin)
+		{
+			rectangle(cln, cv::Rect(pt1.x, pt1.y, pt2.x - pt1.x, pt2.y - pt1.y), CV_RGB(255, 0, 0), 3, 8, 0);
+			imshow("Camera", cln);
+		}
+
+		if (waitKey(30) >= 0)
+		{
+			break;
+		}
+	}
+
+	// Initialization
+	cv::Rect rectangle(pt1.x, pt1.y, pt2.x-pt1.x, pt2.y-pt1.y);
+	cv::Mat result; // segmentation result (4 possible values)
+	cv::Mat bgModel, fgModel; // the models (internally used)
+
+	// GrabCut segmentation
+	cv::grabCut(image,    // input image
+		result,   // segmentation result
+		rectangle,// rectangle containing foreground
+		bgModel, fgModel, // models
+		1,        // number of iterations
+		cv::GC_INIT_WITH_RECT); // use rectangle
+	// Get the pixels marked as likely foreground
+	cv::compare(result, cv::GC_PR_FGD, result, cv::CMP_EQ);
+
+	// Generate output image
+	cv::Mat foreground(image.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+
+	image.copyTo(foreground, result); // bg pixels not copied
+
+	// display result
+	cv::namedWindow("Extracted Image");
+	cv::imshow("Extracted Image", foreground);
+
+	{
+//		strcat(argv[1], ".png");
+//		std::cout << argv[1];
+		imwrite(outputfile, foreground);
+	}
+
+	waitKey();*/
+	return 0;
+
+}
 /**
  * @brief GenerateMaskFromFile generates mask from given file
  * based on alpha channel values

@@ -3,6 +3,7 @@
 #include "commonfunctions.h"
 #include "ramerdouglaspeucker.h"
 #include "vector"
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -177,9 +178,9 @@ namespace CDI
 		}
 		RamerDouglas rdp;
 
-		qDebug() << "Initial size" << ptvec.size();
+		QLOG_INFO() << "Initial size" << ptvec.size();
 		ptvec = rdp.simplifyWithRDP(ptvec, margin);
-		qDebug() << "Final size" << ptvec.size();
+		QLOG_INFO() << "Final size" << ptvec.size();
 
 		clear();
 		for (int i=0; i<ptvec.size(); i++)

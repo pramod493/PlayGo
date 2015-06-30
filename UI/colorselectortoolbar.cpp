@@ -1,5 +1,6 @@
 #include "colorselectortoolbar.h"
 #include <QDebug>
+#include "QsLog.h"
 #include <QPixmap>
 #include "commonfunctions.h"
 

@@ -1,6 +1,6 @@
 #include "cdisearchgraphicsitem.h"
 #include <QGraphicsScene>
-#include <QDebug>
+#include "QsLog.h"
 #include "sketchscene.h"
 //#include "pixmapitem.h"
 

@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QDebug>
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -12,9 +13,9 @@ namespace CDI
 			_device = static_cast<QTabletEvent *>(event)->device();
 			{
 				if (event->type() == QEvent::TabletEnterProximity)
-				qDebug() << "Enter proximity with device" << _device;
+				QLOG_INFO() << "Enter proximity with device" << _device;
 				else if (event->type() == QEvent::TabletLeaveProximity)
-					qDebug() << "Leave proximity with device" << _device;
+					QLOG_INFO() << "Leave proximity with device" << _device;
 			}
 			emit OnStylusProximity(event);
 			return true;

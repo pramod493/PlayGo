@@ -1,4 +1,5 @@
 #include "playgo.h"
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -182,7 +183,7 @@ namespace CDI
 			file.close();
 			return true;
 		} else {
-			qDebug() << "Error in opening the file";
+			QLOG_INFO() << "Error in opening the file";
 		}
 		return false;
 	}
@@ -197,7 +198,7 @@ namespace CDI
 			stream >> i;
 			if (i!= VERSION_STR)
 			{
-				qDebug() << "Version not supported";
+				QLOG_INFO() << "Version not supported";
 				file.close();
 				return false;
 			}
@@ -205,7 +206,7 @@ namespace CDI
 			file.close();
 			return true;
 		} else {
-			qDebug() << "Error in opening the file";
+			QLOG_INFO() << "Error in opening the file";
 		}
 		return false;
 	}

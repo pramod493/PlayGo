@@ -11,7 +11,7 @@
 #include "poly2tri.h"
 #include <vector>
 #include "FindContours.h"
-
+#include "QsLog.h"
 using namespace std;
 
 namespace CDI
@@ -264,7 +264,7 @@ namespace CDI
 		// Sanity check
 		if (outerContours.size()!= allInnerContours.size())
 		{
-			qDebug() << "Mismatch in the number of loops @generatePolygonFromImage";
+			QLOG_INFO() << "Mismatch in the number of loops @generatePolygonFromImage";
 			return triangles;
 		}
 
@@ -283,7 +283,7 @@ namespace CDI
 			tmp_contour.reserve(outerContour.size());
 			size_t max_points = outerContour.size();
 
-			qDebug() << "Initial Points" << max_points;
+			QLOG_INFO() << "Initial Points" << max_points;
 
 			for (size_t j=0; j< max_points ; j++)
 			{
@@ -294,7 +294,7 @@ namespace CDI
 			// 3. Simplify outer loop with RDp
 			vector<p2t::Point> simplied_outerContour = rdp.simplifyWithRDP(tmp_contour, deltaOutside);
 
-			qDebug() << "Simplied version" << simplied_outerContour.size();
+			QLOG_INFO() << "Simplied version" << simplied_outerContour.size();
 
 			// prepare the smoothed polyline for poly2tri
 			vector<p2t::Point*> p2t_polyline;
@@ -308,12 +308,12 @@ namespace CDI
 
 //			std::reverse(p2t_polyline.begin(), p2t_polyline.end());
 
-			qDebug() << "Adding simplied outer loop to polyline";
+			QLOG_INFO() << "Adding simplied outer loop to polyline";
 
 			// Initialize CDT with simplified contour
 			p2t::CDT *cdt = new p2t::CDT(p2t_polyline);
 
-			qDebug() << "Added outer loop to p2t";
+			QLOG_INFO() << "Added outer loop to p2t";
 
 			// Create a hole for each of the inner loop
 			size_t max_inner_loops = innerContours.size();
@@ -330,10 +330,10 @@ namespace CDI
 					tmp_contour.push_back(p2t::Point(pt.x, pt.y));
 				}
 
-				qDebug() << "Hole - Before RDP" << tmp_contour.size();
+				QLOG_INFO() << "Hole - Before RDP" << tmp_contour.size();
 				// Apply RDP on inner loop
 				vector<p2t::Point> simplified_innerContour = rdp.simplifyWithRDP(tmp_contour, deltaInside);
-				qDebug() << "Hole - After RDP" << simplified_innerContour.size();
+				QLOG_INFO() << "Hole - After RDP" << simplified_innerContour.size();
 
 				vector<p2t::Point*> p2t_hole;
 				p2t_hole.reserve(simplified_innerContour.size());
@@ -344,17 +344,17 @@ namespace CDI
 					p2t_hole.push_back(new p2t::Point(pt.x,pt.y));
 				}
 
-				qDebug() << "Adding hole" << p2t_hole.size();
+				QLOG_INFO() << "Adding hole" << p2t_hole.size();
 				cdt->AddHole(p2t_hole);
 
-				qDebug() << "Hole added " << p2t_hole.size();
+				QLOG_INFO() << "Hole added " << p2t_hole.size();
 			}
 
-			qDebug() << "Triangulation start";
+			QLOG_INFO() << "Triangulation start";
 			// Triangulate
 			cdt->Triangulate();
 
-			qDebug() << "Triangulation end";
+			QLOG_INFO() << "Triangulation end";
 
 			// Append the traingulated results to the vector
 			vector<p2t::Triangle*> tmp_trias = cdt->GetTriangles();

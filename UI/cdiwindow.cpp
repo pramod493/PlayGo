@@ -1,14 +1,6 @@
 #include "cdiwindow.h"
 #include <QDebug>
-#include <QGraphicsProxyWidget>
-#include <QColorDialog>
-#include <QDir>
-#include <QFile>
-#include <QTextStream>
-#include <QPushButton>
-#include <QSplitter>
-#include "playgocore.h"
-#include "searchview.h"
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -53,22 +45,21 @@ namespace CDI
 
 		createActions();
 		setupToolbar();
-		connectActions();
 
 		sketchView = new SketchView(playgo->currentPage(), this);
 		sketchScene = sketchView->getSketchScene();
-//		SearchView* searchView = new SearchView(this);
+		searchView = new SearchView(this);
+		searchScene = searchView->scene();
 		controller = new PlayGoController(sketchScene, sketchView, this);
 
 //		QHBoxLayout* boxlayout = new QHBoxLayout;
-//		QSplitter *split = new QSplitter;
-//		split->addWidget(sketchView);
-//		split->addWidget(searchView);
-//		boxlayout->addWidget(split);
+		splitter = new QSplitter;
+		splitter->addWidget(sketchView);
+		splitter->addWidget(searchView);
 
-//		setLayout(boxlayout);
-
-		setCentralWidget(sketchView);
+		connectActions();
+//		setCentralWidget(sketchView);
+		setCentralWidget(splitter);
 	}
 
 	//// Protected functions. Called only for initialization only
@@ -203,9 +194,10 @@ namespace CDI
 
 	void CDIWindow::clear()
 	{
-        sketchScene->clear();
-		sketchScene->update();
-        controller->clearCurrentScene();
+//        sketchScene->clear();
+//		sketchScene->update();
+		if (controller != NULL)
+			controller->clearCurrentScene();
 	}
 
 	void CDIWindow::save()
@@ -243,7 +235,7 @@ namespace CDI
 
 	void CDIWindow::onSearchTrigger()
 	{
-		qDebug() << "Search selection";
+		QLOG_INFO() << "Search selection";
 		if (controller!= NULL)
 		{
 			controller->searchAction();

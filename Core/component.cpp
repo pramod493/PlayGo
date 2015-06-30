@@ -3,7 +3,7 @@
 #include "polygon2d.h"
 #include "stroke.h"
 #include "image.h"
-
+#include "QsLog.h"
 namespace CDI
 {
 	Component::Component(Page *parent)
@@ -351,7 +351,7 @@ namespace CDI
 			ptr = addStroke();
 			break;
 		case IMAGE :
-			qDebug() << "Creating empty Image object";
+			QLOG_INFO() << "Creating empty Image object";
 			ptr = addImage();
 			break;
 		case POLYGON2D :
@@ -359,11 +359,11 @@ namespace CDI
 			addItem(ptr);
 			break;
 		case COMPONENT :
-			qDebug() << "Components are not supposed to contain components"
+			QLOG_INFO() << "Components are not supposed to contain components"
 					 << "@Component::createEmptyItem(ItemType): AbstractModelItem*";
 			break;
 		default :
-			qDebug() << "@Component::createEmptyItem(itemType: ItemType)"
+			QLOG_INFO() << "@Component::createEmptyItem(itemType: ItemType)"
 					 << "Default constructor for given itemtype is not available. Returning NULL";
 		}
 		return ptr;

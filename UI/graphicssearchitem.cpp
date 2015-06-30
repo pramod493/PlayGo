@@ -1,4 +1,6 @@
 #include "graphicssearchitem.h"
+#include "QsLog.h"
+#include "searchview.h"
 
 namespace CDI
 {
@@ -12,6 +14,8 @@ namespace CDI
 		pixmap.load(_parentResult->resultFilePath);
 		pixmap = pixmap.scaled(QSize(dim, dim), Qt::KeepAspectRatio);
 		setPixmap(pixmap);
+
+		_searchView = NULL;
 	}
 
 	QUuid GraphicsSearchItem::getSearchItemId()
@@ -23,5 +27,25 @@ namespace CDI
 	SearchResult* GraphicsSearchItem::getSearchResult()
 	{
 		return _parentResult;
+	}
+
+	void GraphicsSearchItem::setView(SearchView *view)
+	{
+		_searchView = view;
+	}
+
+	void GraphicsSearchItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+	{
+		QGraphicsPixmapItem::mousePressEvent(event);
+	}
+
+	void GraphicsSearchItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+	{
+		QLOG_INFO() << "Search result selected";
+		QLOG_INFO() << _parentResult->resultFilePath;
+		if (_searchView != NULL)
+		{
+			_searchView->onSearchResultSelect(_parentResult);
+		}
 	}
 }

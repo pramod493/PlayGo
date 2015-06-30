@@ -1,5 +1,9 @@
 #pragma once
 #include <QMainWindow>
+#include <QSplitter>
+#include <QColorDialog>
+#include <QDir>
+#include <QFile>
 #include <QObject>
 #include <QAction>
 #include <QActionGroup>
@@ -14,11 +18,12 @@
 #include <QGridLayout>
 #include <QTabletEvent>
 #include "colorselectortoolbar.h"
-#include "playgo.h"
 
 #include "sketchview.h"
 #include "sketchscene.h"
 #include "PlayGoController.h"
+#include "searchview.h"
+#include "playgocore.h"
 
 namespace CDI
 {
@@ -59,14 +64,17 @@ namespace CDI
 
 		QSlider* brushWidthSlider;
 
+		QSplitter *splitter;
+
 		// Sketching related widgets
 		SketchView* sketchView;          // Primarily use this one. Skip the other ones...
 		SketchScene* sketchScene;
 
-		QGraphicsView* searchView;
-		QGraphicsView* gestureView;
+		SearchView* searchView;
 		QGraphicsScene* searchScene;
-		QGraphicsScene* gestureScene;
+
+//		QGraphicsView* gestureView;
+//		QGraphicsScene* gestureScene;
 
 		// Status bar displaye hints and user actions
 		QStatusBar* statusBar;

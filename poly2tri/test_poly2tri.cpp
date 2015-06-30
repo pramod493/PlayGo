@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include "poly2tri.h"
 #include <QDebug>
-
+#include "QsLog.h"
 using namespace p2t;
 using namespace std;
 
@@ -38,7 +38,7 @@ void testPoly2Tri()
 	polyline.push_back(new p2t::Point(5,6));
 	polyline.push_back(new p2t::Point(0,9));
 
-	qDebug() << "Created polyline with " << polyline.size() << "points";
+	QLOG_INFO() << "Created polyline with " << polyline.size() << "points";
 
 	vector<p2t::Point*> hole;
 	hole.push_back(new p2t::Point(1.5,2.1));
@@ -54,10 +54,10 @@ void testPoly2Tri()
 	cdt->Triangulate();
 	triangles = cdt->GetTriangles();
 
-	qDebug() << "Number of triangles after triangulation: "<< triangles.size();
+	QLOG_INFO() << "Number of triangles after triangulation: "<< triangles.size();
 	for (int i=0; i< triangles.size(); i++)
 	{
-		qDebug() << "Triangle " << i;
+		QLOG_INFO() << "Triangle " << i;
 		triangles[i]->DebugPrint();
 	}
 

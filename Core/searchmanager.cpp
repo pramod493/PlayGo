@@ -1,6 +1,6 @@
 #include "searchmanager.h"
 #include <QDir>
-#include <QDebug>
+#include "QsLog.h"
 #include <vector>
 #include "page.h"
 #include "searchresult.h"
@@ -21,14 +21,14 @@ namespace CDI
         wbBICE *biceDescriptor = new wbBICE();
         searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
 
-		_databaseIndexed = false;
-//		searchEngine->Index();
-//		searchEngine->Load();
+		_databaseIndexed = true;
+		searchEngine->Index();
+		searchEngine->Load();
     }
 
 /*	SearchManager* SearchManager::_instance = NULL;
 
-	SearchManager* SearchManager::instance()
+	SearchManager* SearchManager::instance()	// static function for singleton class
 	{
 		if (_instance == NULL) _instance = new SearchManager();
 		return _instance;

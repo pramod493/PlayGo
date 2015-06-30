@@ -3,7 +3,7 @@
 #include "ramerdouglaspeucker.h"
 #include <QVectorIterator>
 #include "component.h"
-
+#include "QsLog.h"
 namespace CDI
 {
 	Stroke::Stroke(Component *component)
@@ -208,7 +208,7 @@ namespace CDI
 			return false;
 		if (!_transform.isIdentity() || !(stroke->transform().isIdentity()))
 		{
-			qDebug() << "Add transformation support later";
+			QLOG_INFO() << "Add transformation support later";
 			return false;
 		}
 

@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QVectorIterator>
+#include "QsLog.h"
 #include <QDebug>
 #include "graphicsitemgroup.h"
 

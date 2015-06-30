@@ -1,8 +1,7 @@
 #include "sketchscene.h"
 #include <QtAlgorithms>
-#include <QDebug>
 #include <QList>
-
+#include "QsLog.h"
 #include "graphicsitemgroup.h"
 #include "graphicspathitem.h"
 #include "graphicspolygon2d.h"
@@ -62,12 +61,6 @@ namespace CDI
 			connect(_page, SIGNAL(signalComponentMerge(Component*,Component*)),
 					this, SLOT(onComponentMerge(Component*,Component*)));
 
-			connect(_page, SIGNAL(signalAssemblyUpdate(Assembly*)),
-					this, SLOT(onAssemblyUpdate(Assembly*)));
-
-			connect(_page, SIGNAL(signalComponentUpdate(Component*)),
-					this, SLOT(onComponentUpdate(Component*)));
-
 			connect(_page, SIGNAL(signalAssemblyDelete(Assembly*)),
 					this, SLOT(onAssemblyDelete(Assembly*)));
 
@@ -78,7 +71,7 @@ namespace CDI
 
 	SketchScene::~SketchScene()
 	{
-		qDebug() << "Deleting SketchScene";
+		QLOG_INFO() << "Deleting SketchScene";
 		clear();
 	}
 
@@ -285,7 +278,7 @@ namespace CDI
 
 			item->paint(&painter, NULL);
 
-			qDebug() << "ERROR! SketchScene::getSelectionImage() does not transform to scene coords";
+			QLOG_INFO() << "ERROR! SketchScene::getSelectionImage() does not transform to scene coords";
 			QRect rect = item->boundingRect().toRect();
 			x_min = (x_min < rect.x() ? x_min : rect.x());
 			y_min = (y_min < rect.y() ? y_min : rect.y());
@@ -681,7 +674,7 @@ namespace CDI
 		}
 		if (item->type() == IMAGE)
 		{
-			qDebug() << "GraphicsPixmapItem not defined";
+			QLOG_INFO() << "GraphicsPixmapItem not defined";
 		}
 
 		if (newGraphicsItem != NULL)

@@ -2,6 +2,7 @@
 #include <QGraphicsView>
 #include "stroke.h"
 #include "searchresult.h"
+#include "graphicspathitem.h"
 #include "graphicssearchitem.h"
 
 namespace CDI
@@ -9,10 +10,14 @@ namespace CDI
 	class SearchView : public QGraphicsView
 	{
 		Q_OBJECT
+	public:
+		int imgDim;
+
+		int margin;
 	protected:
 		QList<GraphicsSearchItem*> _searchDispItems;
 
-		QList<Stroke*> _selectedStrokes;
+		QList<GraphicsPathItem*> _selectedStrokes;
 
 		// When one of the search results are selected,
 		// all the strokes are grouped into one Component
@@ -27,9 +32,10 @@ namespace CDI
 		void clear();
 
 	public slots:
-		void LoadSearchData(QList<Stroke *> selectedStrokes, QList<SearchResult*> searchResults);
+		void LoadSearchData(QList<GraphicsPathItem *>& selectedStrokes, QList<SearchResult*>& searchResults);
 
+		void onSearchResultSelect(SearchResult* result) { emit signalOnSearchResultSelect(result); }
 	signals:
-		void signalOnSearchResultSelect();
+		void signalOnSearchResultSelect(SearchResult*);
 	};
 }

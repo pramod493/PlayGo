@@ -2,6 +2,7 @@
 #include "physicsmanager.h"
 #include "page.h"
 #include <QDebug>
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -40,7 +41,7 @@ namespace CDI
 
 	PhysicsJoint* PhysicsManager::createJoint()
 	{
-		qDebug() << "@PhysicsManager::createJoint() not implemented";
+		QLOG_INFO() << "@PhysicsManager::createJoint() not implemented";
 		// TODO - Implementation of joint creation
 		return NULL;
 	}

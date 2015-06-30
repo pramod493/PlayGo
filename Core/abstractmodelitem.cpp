@@ -5,7 +5,7 @@
 #include "polygon2d.h"
 #include "component.h"
 #include "assembly.h"
-
+#include "QsLog.h"
 namespace CDI
 {
 	AbstractModelItem::AbstractModelItem()
@@ -131,7 +131,7 @@ namespace CDI
 //		case ASSEMBLY :
 //			ptr = new Assembly();
 		default :
-			qDebug() << "Default constructor for given itemtype is not available. Returning NULL";
+			QLOG_INFO() << "Default constructor for given itemtype is not available. Returning NULL";
 		}
 		return ptr;
 	}

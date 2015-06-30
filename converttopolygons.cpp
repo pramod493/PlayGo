@@ -5,6 +5,7 @@
 #include <QGraphicsPolygonItem>
 #include <QGraphicsPixmapItem>
 #include <QPixmap>
+#include "QsLog.h"
 
 using namespace CDI;
 
@@ -22,7 +23,7 @@ void Polygonize::openFile()
 	scene->addItem(imageItem);
 
 	vector<p2t::Triangle*> trias = generatePolygonFromImage(fileName, 5, 5);
-	qDebug() << trias.size() << "triangles created";
+	QLOG_INFO() << trias.size() << "triangles created";
 
 	QPen pen = QPen();
 	pen.setColor(Qt::red);
