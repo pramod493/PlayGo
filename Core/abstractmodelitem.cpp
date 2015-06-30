@@ -8,8 +8,7 @@
 
 namespace CDI
 {
-	AbstractModelItem::AbstractModelItem(QObject *parent)
-		: QObject(parent)
+	AbstractModelItem::AbstractModelItem()
 	{
 		itemId = uniqueHash();
 		mask = 0;
@@ -20,7 +19,7 @@ namespace CDI
 	{
 		if (_parentComponent!= NULL)
 		{
-			// remove from reference
+            _parentComponent->onItemDelete(this);
 		}
 	}
 
@@ -44,10 +43,13 @@ namespace CDI
 
 	bool AbstractModelItem::setParentItem(Component *parentComponent)
 	{
-		if (_parentComponent!= NULL)
-		{/*Remove from parent reference*/}
+		// Prevent infinite loop in case of bad prog.
+		if (_parentComponent == parentComponent) return false;
+		if (_parentComponent!= NULL) _parentComponent->removeItem(this);
+
 		_parentComponent = parentComponent;
-		{/*Add to reference*/}
+		if (_parentComponent != NULL) _parentComponent->addItem(this);
+
 		return true;
 	}
 
@@ -58,8 +60,12 @@ namespace CDI
 
 	void AbstractModelItem::setVisible(bool visible)
 	{
+        if(mask & isLocked)  return;
+		if (visible == isVisible()) return;	// No need to change the state of display
 		if (visible) mask &= ~isHidden;
 		else mask |= isHidden;
+		if(_parentComponent!= NULL)
+			_parentComponent->onItemDisplayUpdate(id());
 	}
 
 	bool AbstractModelItem::isVisible() const
@@ -78,26 +84,28 @@ namespace CDI
 		setVisible(false);
 	}
 
-	QDataStream& AbstractModelItem::serializeInternal(QDataStream& stream) const
-	{
-		stream << itemId;
-		return this->serialize(stream);
-	}
+    bool AbstractModelItem::locked() const
+    {
+        if (mask & isLocked) return true;
+        return false;
+    }
 
-	QDataStream& AbstractModelItem::deserializeInternal(QDataStream& stream)
-	{
-		stream >> itemId;
-		return this->deserialize(stream);
-	}
+    void AbstractModelItem::lock(bool value)
+    {
+        if (value)
+            mask |= isLocked;
+        else
+            mask &= ~isLocked;
+    }
 
 	QDataStream& operator<<(QDataStream& stream, const AbstractModelItem& item)
 	{
-		return item.serializeInternal(stream);
+		return item.serialize(stream);
 	}
 
 	QDataStream& operator>>(QDataStream& stream, AbstractModelItem& item)
 	{
-		return item.deserializeInternal(stream);
+		return item.serialize(stream);
 	}
 
 	AbstractModelItem* getItemPtrByType(ItemType t, Component *parentComponent)
@@ -109,18 +117,18 @@ namespace CDI
 
 		switch (t)
 		{
-		case ItemType::STROKE :
+		case STROKE :
 			ptr = parentComponent->addStroke();
 			break;
-		case ItemType::IMAGE :
+		case IMAGE :
 			ptr = parentComponent->addImage();
 			break;
-		case ItemType::POLYGON2D :
+		case POLYGON2D :
 			ptr = new Polygon2D(parentComponent);
 			parentComponent->addItem(ptr);
-//		case ItemType::COMPONENT :
+//		case COMPONENT :
 //			ptr = new Component();
-//		case ItemType::ASSEMBLY :
+//		case ASSEMBLY :
 //			ptr = new Assembly();
 		default :
 			qDebug() << "Default constructor for given itemtype is not available. Returning NULL";

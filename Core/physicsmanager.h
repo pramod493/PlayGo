@@ -28,7 +28,7 @@ namespace CDI
 	/**
 	 * @brief physicsFixture attaches physicsFixtureDef to the physics body
 	 */
-	typedef struct b2Fixture physicsFixture;
+	typedef b2Fixture physicsFixture;
 
 	/**
 	 * @brief physicsJointDef contains joint type info as well as reference to connected

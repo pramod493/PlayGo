@@ -30,7 +30,7 @@ namespace CDI
 
 	ItemType Assembly::type() const
 	{
-		return ItemType::ASSEMBLY;
+		return ASSEMBLY;
 	}
 
 	QTransform Assembly::transform() const
@@ -74,12 +74,16 @@ namespace CDI
 		if (contains(key)) return true;
 		if (searchRecursive)
 		{
-			QHash<QUuid, Component*>::const_iterator iter;
+			/*QHash<QUuid, Component*>*/ItemHash::const_iterator iter;
 			for (iter = constBegin(); iter != constEnd(); ++iter)
 			{
-				Component* component = iter.value();
-				if (component->containsItem(key, searchRecursive))
-					return true;
+				Item* item = iter.value();
+				if (item->type() == COMPONENT)
+				{
+					Component* component = static_cast<Component*>(item);
+					if (component->containsItem(key, searchRecursive))
+						return true;
+				}
 			}
 		}
 		return false;

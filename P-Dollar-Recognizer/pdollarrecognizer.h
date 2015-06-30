@@ -14,6 +14,7 @@
 #include <string>
 #include <algorithm>
 #include <QString>
+#include <math.h>
 
 #include <QDataStream>
 #include <QFile>

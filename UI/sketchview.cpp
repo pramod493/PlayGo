@@ -22,13 +22,17 @@ namespace CDI
 		setSceneRect(0,0,5000,5000);
 		setRenderHint(QPainter::Antialiasing);
 		setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+
+		// Rotate the view so that y-axis is positive in upwards direction
+		QTransform t = QTransform();
+		t = t.rotate(180);
+		setTransform(t);
     }
 
 	SketchView::~SketchView()
     {
 		// Need not delete the scene since its destructor will automatically
 		// be called because its parent QObject is being destroyed here
-		qDebug() << "Deleting SketchView";
     }
 
 	void SketchView::drawBackground(QPainter * painter, const QRectF & rect)
@@ -64,6 +68,7 @@ namespace CDI
 
 	void SketchView::drawForeground(QPainter *painter, const QRectF &rect)
 	{
+		QGraphicsView::drawForeground(painter, rect);
 		emit viewDrawforeground(painter, rect);
 	}
 

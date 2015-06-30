@@ -19,6 +19,7 @@ email: pramod493@gmail.com
  */
 namespace CDI
 {
+	const int VERSION_STR = 0;
 	/**
 	 * @brief
 	 * The root object which contains all the components.
@@ -27,7 +28,10 @@ namespace CDI
 	 */
 	class PlayGo : public QObject
 	{
+        Q_OBJECT
 	protected:
+		QUuid _rootID;
+
 		QHash<QUuid, Page*> _pages;
 		Page* _currentPage;
 	public:
@@ -37,6 +41,10 @@ namespace CDI
 		 * @brief Delete all the components in the scene and destroys the object
 		 */
 		~PlayGo();
+
+		ItemType type() const { return ROOT; }
+
+		QUuid id() const { return _rootID; }
 
 		/**
 		 * @brief deleteAllItems: Clear all items in the database
@@ -87,10 +95,13 @@ namespace CDI
 		QDataStream& serialize(QDataStream& stream) const;
 		QDataStream& deserialize(QDataStream& stream);
 
+		bool SaveModel(QString filePath);
+		bool ReadModel(QString filePath);
+
 	signals:
 	public slots:
 
-		friend QDataStream& operator<<(QDataStream& stream, const PlayGo& item);
-		friend QDataStream& operator>>(QDataStream& stream, PlayGo& item);
+//		friend QDataStream& operator<<(QDataStream& stream, const PlayGo& item);
+//		friend QDataStream& operator>>(QDataStream& stream, PlayGo& item);
 	};
 }

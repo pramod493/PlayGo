@@ -83,18 +83,18 @@ namespace CDI
 
 	ItemType Page::getItemType(QUuid id)
 	{
-		if (_assemblies.contains(id)) return ItemType::ASSEMBLY;
-		if (_components.contains(id)) return ItemType::COMPONENT;
+		if (_assemblies.contains(id)) return ASSEMBLY;
+		if (_components.contains(id)) return COMPONENT;
 		AbstractModelItem* itemPtr = getItemPtrById(id);
-		if (itemPtr == NULL) return ItemType::NONE;
+		if (itemPtr == NULL) return NONE;
 		return itemPtr->type();
 	}
 
 	/*AbstractModelItem* Page::getParent(AbstractModelItem *item)
 	{
 
-		if (item->type() == ItemType::ASSEMBLY) return NULL;
-		if (item->type() == ItemType::COMPONENT)
+		if (item->type() == ASSEMBLY) return NULL;
+		if (item->type() == COMPONENT)
 		{
 			QHash<QUuid, Assembly*>::const_iterator assemiter;
 			for (assemiter = _assemblies.constBegin();
@@ -149,7 +149,7 @@ namespace CDI
 
 	ItemType Page::type() const
 	{
-		return ItemType::PAGE;
+		return PAGE;
 	}
 
 	Assembly* Page::createAssembly()
@@ -205,14 +205,19 @@ namespace CDI
 		if (_assemblies.contains(assembly->id()))
 		{
 
-			QHash<QUuid, Component*>::const_iterator iter;
+			/*QHash<QUuid, Component*>*/ItemHash::const_iterator iter;
 			for(iter = assembly->constBegin(); iter != assembly->constEnd(); ++iter)
 			{
-				Component* component = iter.value();
-				if (component!= NULL)
+				Item* item = iter.value();
+				// TODO - How to manage others?
+				// Also can we keep components in the same league as other <Item>
+				if (item->type() == COMPONENT)
 				{
+					Component* component = static_cast<Component*>(item);
 					_components.remove(component->id());
 					delete component;
+				} else {
+					delete item;
 				}
 			}
 			_assemblies.remove(assembly->id());
@@ -236,7 +241,6 @@ namespace CDI
 		// 0. Remove the component from component hash
 		if (_components.contains(component->id()))
 		{
-
 			markForDelete = true;
 			_components.remove(component->id());
 		}
@@ -268,7 +272,6 @@ namespace CDI
 		return false;
 	}
 
-
 	QDataStream& Page::serialize(QDataStream& stream) const
 	{
 		stream << _id;
@@ -276,17 +279,15 @@ namespace CDI
 		// Implement saving of component data only
 		int num_components = _components.size();
 		stream << num_components;
-		if (num_components != 0)
-		{
-			QHash<QUuid, Component*>::const_iterator componentiter;
-			for (componentiter = _components.constBegin();
-				 componentiter != _components.constEnd(); ++componentiter)
-			{
-				Component* component = componentiter.value();
-				component->serialize(stream);
-			}
-		}
+		if (num_components == 0) return stream;
 
+		QHash<QUuid, Component*>::const_iterator componentiter;
+		for (componentiter = _components.constBegin();
+			 componentiter != _components.constEnd(); ++componentiter)
+		{
+			Component* component = componentiter.value();
+			component->serialize(stream);
+		}
 		return stream;
 	}
 
@@ -316,57 +317,19 @@ namespace CDI
 	void Page::deleteAll()
 	{
 		emit signalDeleteAllItems(this);
-		qDeleteAll(_components);
+		// Destroys the relationship between components
 		qDeleteAll(_assemblies);
-		/*
-		QHash<QUuid, Assembly*>::const_iterator iter;
-		for (iter = _assemblies.constBegin();
-			 iter != _assemblies.constEnd(); ++iter)
-		{
-			destroyAssembly(iter.value());
-		}
+		// Destroys all the components
+		qDeleteAll(_components);
 
-		QHash<QUuid, Component*>::const_iterator comp_iter;
-		for (comp_iter = _components.constBegin();
-			 comp_iter != _components.constEnd(); ++iter)
-		{
-			destroyComponent(comp_iter.value());
-		}*/
+		_components.clear();
+		_assemblies.clear();
 	}
 
-
-	/*bool Page::mergeAssembly(Assembly *a1, Assembly *a2)
+	void Page::onItemAdd(AbstractModelItem *item)
 	{
-		if (a1 != NULL && a2 != NULL )
-			if (!(a2->isEmpty() || a1->isEmpty()))
-				if (a1->mergeAssembly(a2))
-				{
-					emit onAssemblyMerge(a1,a2);
-					if (_assemblies.contains(a2->id()))
-						_assemblies.remove(a2->id());
-
-					delete a2;
-					return true;
-				}
-		return false;
+		emit signalItemAdd(item);
 	}
-
-
-	void Page::triggerUpdate(AbstractModelItem* item)
-	{
-		if (item->type() == ItemType::ASSEMBLY)
-		{
-			emit onAssemblyUpdate(static_cast<Assembly*>(item));
-			return;
-		}
-		if (item->type() == ItemType::COMPONENT)
-		{
-			emit onComponentUpdate(static_cast<Component*>(item));
-			return;
-		}
-		AbstractModelItem* parent = getParent(item);
-		if (parent != NULL) triggerUpdate(parent);
-	}*/
 
 	void Page::onItemRemove(QUuid itemId)
 	{
@@ -378,36 +341,23 @@ namespace CDI
 		emit signalItemUpdate(itemId);
 	}
 
+	void Page::onItemDisplayUpdate(QUuid itemId)
+	{
+		emit signalItemDisplayUpdate(itemId);
+	}
+
 	void Page::onItemRedraw(QUuid itemId)
 	{
 		emit signalItemRedraw(itemId);
 	}
 
+	void Page::onItemTransformUpdate(QUuid itemId)
+	{
+		emit signalItemTransformUpdate(itemId);
+	}
+
 	void Page::onItemIdUpdate(QUuid oldID, QUuid newID)
 	{
 		emit signalItemIdUpdate(oldID, newID);
-	}
-
-	void Page::onAssemblyUpdate(Assembly* assembly)
-	{
-		if (_assemblies.contains(assembly->id()))
-			emit signalAssemblyUpdate(assembly);
-	}
-
-	void Page::onComponentUpdate(Component* component)
-	{
-		qDebug() << "@Page::onComponentUpdate";
-		if (_components.contains(component->id()))
-			emit signalComponentUpdate(component);
-	}
-
-	QDataStream& operator<<(QDataStream& stream, const Page& page)
-	{
-		return page.serialize(stream);
-	}
-
-	QDataStream& operator>>(QDataStream& stream, Page& page)
-	{
-		return page.deserialize(stream);
 	}
 }

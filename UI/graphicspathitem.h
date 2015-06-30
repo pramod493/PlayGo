@@ -11,23 +11,19 @@
 namespace CDI
 {
 	class GraphicsItemGroup;
-	class GraphicsPathItem : public QGraphicsPathItem
+	class GraphicsPathItem : public QGraphicsItem //QGraphicsPathItem
 	{
 	public:
-		Stroke* parentStroke;
+		enum { Type = UserType + STROKEVIEW };
 
-		enum { Type = UserType + GraphicsItemType::STROKEVIEW };
+	protected:
+		Stroke* _parentStroke;
+		QPen _pen;
+		QBrush _brush;
+
+        bool _highlighted;
+
 	public:
-		// We can simpley replace Point2D with Point2DPT but not doing it now
-		// Only allow to be created as children of a GraphicsItemGroup
-		/**
-		 * @brief GraphicsPathItem
-		 * @param parent
-		 * @param startPoint
-		 * @param pressure
-		 * @param time
-		 */
-//		GraphicsPathItem(QGraphicsItem* parent, Point2D startPoint, float pressure=1.0f, int time = 0);
 
 		/**
 		 * @brief Create a new GraphicsPathItem object based on Stroke object
@@ -40,7 +36,23 @@ namespace CDI
 
 		int type() const { return Type; }
 
+		QBrush brush() const;
+
+		QPen pen() const;
+
+		Stroke* parentStroke() const;
+
+		void setBrush(const QBrush &brush);
+
+		void setPen(const QPen &pen);
+
+		void setParentStroke(Stroke* stroke);
+
 		void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
+
+		bool contains(QPointF point);
+
+		QRectF boundingRect() const;
 
 		void push_back(QPointF point, float pressure=1.0, int time = 0);
 
@@ -50,8 +62,10 @@ namespace CDI
 
 		bool Selected(QPointF point, float extraWidth);
 
-		QRectF boundingRect() const;
-
 		void updateStroke();
+
+        bool isHighlighted() const;
+
+        void highlight(bool value);
 	};
 }

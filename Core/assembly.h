@@ -8,6 +8,8 @@
 namespace CDI
 {
 	class Page;
+
+	typedef QHash<QUuid, Item*> ItemHash;
 	/**
 	 * @brief The Assembly class contains a list of components
 	 * NOTE: Unlike component object, it does not contain allow
@@ -16,8 +18,11 @@ namespace CDI
 	 * only for ease of use
 	 * It contains other componets which enable creation of linkages between
 	 * Components.physicsBody
+	 * @remark (17 June, 2015) Let the Assembly manage a list of all the
+	 * items which form part of the assembly. Note that not all CDI::Item are
+	 * allowed in the assembly and therefore limit addition of items to QHash
 	 */
-	class Assembly : /*public QObject, */public QHash<QUuid, Component*>
+	class Assembly : public Item, protected ItemHash
 	{
 
 	public:
@@ -34,6 +39,16 @@ namespace CDI
 		// TODO In assembly we want to create an adjancency map between physics bodies and joints
 
 	public:
+		//-----------------------------------------------
+		// Expose selected memebers from protected base class
+		//-----------------------------------------------
+		using ItemHash::contains;
+		using ItemHash::value;
+		using ItemHash::values;
+		using ItemHash::size;
+		using ItemHash::constBegin;
+		using ItemHash::constEnd;
+
 		//-----------------------------------------------
 		// Constructors/Destructors
 		//-----------------------------------------------
@@ -65,9 +80,9 @@ namespace CDI
 		//-----------------------------------------------
 		/**
 		 * @brief Returns the ItemType of object
-		 * @return ItemType::ASSEMBLY
+		 * @return ASSEMBLY
 		 */
-		virtual ItemType type() const;
+		ItemType type() const;
 
 		/**
 		 * @brief transform returns identity matrix

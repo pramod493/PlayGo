@@ -84,6 +84,13 @@ namespace CDI
 		 */
 		QImage getSelectionImage();
 
+        /**
+         * @brief Create Image based on strokes which are highlighted
+         * @return Image containing selected strokes
+         * @todo Allow Images to be selected as well.
+         */
+        QImage getSelectionImageFromHighlight();
+
 		/**
 		 * @brief getSelectedStrokes returns a list of strokes near a
 		 * the given point pos within margin
@@ -96,6 +103,15 @@ namespace CDI
 		 */
 		QList<GraphicsPathItem*> getSelectedStrokes(Point2D pos, float margin);
 
+        /**
+         * @brief Checks if a given stroke is contained within the given polygon
+         * @param selectionPolygon Envelope polygon
+         * @param minimalAllowedSelection Sets the minimum length of strokes which need to \
+         * be within the given polygon
+         * @return List of strokes contained within the polygon region
+         */
+        QList<GraphicsPathItem*> getSelectedStrokes(QPolygonF selectionPolygon, float minimalAllowedSelection);
+
 		void SelectSearchResult(SearchGraphicsItem* searchItem);
 
 	protected:
@@ -105,23 +121,13 @@ namespace CDI
 
 		void mouseReleaseEvent(QGraphicsSceneMouseEvent* mouseEvent) ;
 
-		void searchFromSelection();
-
 	signals:
 		void signalMouseEvent(QGraphicsSceneMouseEvent* mouseEvent, int status);
 
 	public slots:
+        void clearHighlight();
+
 		void OnSearchComplete();
-
-		void onItemDisplayStatusChanged(AbstractModelItem* item);
-
-		void onItemTransformChanged(AbstractModelItem* item);
-
-		void onItemDestroy(AbstractModelItem* item);
-
-		void onItemParentChange(AbstractModelItem* item);
-
-		/////////////////////////////////////////////////////////////
 
 		void onDeleteAllItems(Page* page);
 
@@ -132,6 +138,10 @@ namespace CDI
 		void onItemUpdate(QUuid itemId);
 
 		void onItemRedraw(QUuid itemId);
+
+		void onItemDisplayUpdate(QUuid itemId);
+
+		void onItemTransformUpdate(QUuid itemId);
 
 		void onItemIdUpdate(QUuid oldID, QUuid newID);
 
@@ -144,11 +154,36 @@ namespace CDI
 		void onComponentMerge(Component* a, Component* b);
 		void onAssemblyMerge(Assembly* a, Assembly* b);
 
+		/**
+		 * @brief Calls the update function corresponding to
+		 * the graphics object
+		 * @param assembly Assembly whose display needs to be updated
+		 * @remark It does not trigger an update of children components
+		 */
 		void onAssemblyUpdate(Assembly* assembly);
+
+		/**
+		 * @brief Calls the update function corresponding to
+		 * the graphics object
+		 * @param component Component whose display needs to be updated
+		 * @remark It does not trigger an update of children components
+		 */
 		void onComponentUpdate(Component* component);
 
-		// Equivalent to deleting object
+		/**
+		 * @brief Deletes a Assembly from the display
+		 * @param assembly Assembly to delete
+		 * @remark It removes the GraphicsItemGroup object
+		 * corresponding to given object. It also DOES NOT delete the children
+		 */
 		void onAssemblyDelete(Assembly* assembly);
+
+		/**
+		 * @brief Deletes a Component from the display
+		 * @param component Component to delete
+		 * @remark It removes the GraphicsItemGroup object
+		 * corresponding to given object. It also DOES NOT delete the children
+		 */
 		void onComponentDelete(Component* component);
 
 	};

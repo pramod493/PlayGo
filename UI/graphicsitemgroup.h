@@ -28,7 +28,7 @@ namespace CDI
 	public:
 		Component* component;
 
-		enum { Type = UserType + GraphicsItemType::COMPONENTVIEW };
+        enum { Type = UserType + COMPONENTVIEW };
     public:
 		GraphicsItemGroup(QGraphicsItem* graphicsParent = NULL);
 

@@ -14,40 +14,93 @@ namespace CDI
 //	GraphicsPathItem::GraphicsPathItem(QGraphicsItem *parent, Point2D startPoint, float pressure, int time)
 //		: QGraphicsPathItem (parent)
 //	{
-//		parentStroke = new Stroke();
-//		parentStroke->setTransform
-//				(parentStroke->transform().translate(startPoint.x(), startPoint.y()));
-//		setTransform(parentStroke->transform());
+//		_parentStroke = new Stroke();
+//		_parentStroke->setTransform
+//				(_parentStroke->transform().translate(startPoint.x(), startPoint.y()));
+//		setTransform(_parentStroke->transform());
 //		push_back(startPoint,pressure,time);
 //    }
 
 	GraphicsPathItem::GraphicsPathItem(GraphicsItemGroup *parent, Stroke *stroke)
-		: QGraphicsPathItem (parent)
+		: QGraphicsItem (parent)
     {
-		parentStroke = stroke;
+		_parentStroke = stroke;
+		_pen = QPen();
+		_pen.setColor(_parentStroke->color());
+		_pen.setWidthF(_parentStroke->thickness());
+		_brush = QBrush(Qt::NoBrush);
+
+        _highlighted = false;
+
 		update();
     }
 
     GraphicsPathItem::~GraphicsPathItem()
     {
-		// Do not delete the parentStroke object here. This is deleted when parentStroke object is deleted
+		// Do not delete the __parentStroke object here. This is deleted when _parentStroke object is deleted
     }
+
+	QBrush GraphicsPathItem::brush() const
+	{
+		return _brush;
+	}
+
+	QPen GraphicsPathItem::pen() const
+	{
+		return _pen;
+	}
+
+	Stroke* GraphicsPathItem::parentStroke() const
+	{
+		return _parentStroke;
+	}
+
+	void GraphicsPathItem::setBrush(const QBrush &brush)
+	{
+		_brush = QBrush(brush);
+	}
+
+	void GraphicsPathItem::setPen(const QPen &pen)
+	{
+		_pen = QPen(pen);
+	}
+
+	void GraphicsPathItem::setParentStroke(Stroke *stroke)
+	{
+		if (stroke!= NULL)
+		{
+			_parentStroke = stroke;
+			setTransform(_parentStroke->transform());
+		}
+	}
 
     void GraphicsPathItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
     {
 		Q_UNUSED(widget)
 		Q_UNUSED(option)
 		// Hide when hidden
-		if (parentStroke->isVisible() == false) return;
-		if (parentStroke->size() < 3) return;
+		if (_parentStroke->isVisible() == false) return;
+		if (_parentStroke->size() < 3) return;
 
-		QPen pen = this->pen();
-		pen.setColor(parentStroke->color());
-		float width = parentStroke->thickness();
+		painter->setBrush(_brush);
+		QPen pen = QPen(_pen);
 
-		Point2DPT* data = parentStroke->data();		// gives out the data. Careful not to overwrite that information
-		int num_points = parentStroke->size();
+		float width = _parentStroke->thickness();
 
+		Point2DPT* data = _parentStroke->data();		// gives out the data. Careful not to overwrite that information
+		int num_points = _parentStroke->size();
+        if (_highlighted)
+        {
+            QPen highlighter = QPen(_pen);
+            highlighter.setWidthF(width * 1.5f);
+            highlighter.setColor(Qt::red);
+            painter->setPen(highlighter);
+            for (int i=1; i< num_points; i++)
+            {
+                Point2DPT p1 = data[i-1]; Point2DPT p2 = data[i];
+                painter->drawLine(p1, p2);
+            }
+        }
 		for (int i=1; i< num_points; i++)
 		{
 			Point2DPT p1 = data[i-1]; Point2DPT p2 = data[i];
@@ -56,47 +109,69 @@ namespace CDI
 		}
     }
 
+	bool GraphicsPathItem::contains(QPointF point)
+	{
+		return Selected(point, 0.0f);
+	}
+
+
 	void GraphicsPathItem::push_back(QPointF point, float pressure, int time)
     {
-		if (parentStroke!= NULL)
+		if (_parentStroke!= NULL)
 		{
 			Point2D pt = mapFromScene(point);
-			parentStroke->push_point(Point2DPT(pt.x(),pt.y(), pressure, time));
+			_parentStroke->push_point(Point2DPT(pt.x(),pt.y(), pressure, time));
 		}
     }
 
     void GraphicsPathItem::push_back(Point2DPT point)
     {
-		if (parentStroke!= NULL)
+		if (_parentStroke!= NULL)
 		{
 			Point2D pt = mapFromScene(point);
 			point.setX(pt.x()); point.setY(pt.y());
-			parentStroke->push_point(point);
+			_parentStroke->push_point(point);
 		}
     }
 
     void GraphicsPathItem::ApplySmoothing(int order)
     {
-		if (parentStroke!= NULL) parentStroke->applySmoothing(order);
+		if (_parentStroke!= NULL) _parentStroke->applySmoothing(order);
     }
 
     bool GraphicsPathItem::Selected(QPointF point, float extraWidth)
     {
-		if (parentStroke== NULL) return false;
+		if (_parentStroke== NULL) return false;
 		Point2D p = Point2D(point.x(),point.y());
-		bool val = parentStroke->containsPoint(p, SelectionType::OnItem, extraWidth);
+		bool val = _parentStroke->containsPoint(p, OnItem, extraWidth);
         return val;
     }
 
 	QRectF GraphicsPathItem::boundingRect() const
 	{
-		if (parentStroke== NULL) return QRectF();
-		return parentStroke->boundingRect();
+		if (_parentStroke== NULL) return QRectF();
+		return _parentStroke->boundingRect();
 	}
 
 	void GraphicsPathItem::updateStroke()
     {
-		if (parentStroke!= NULL)
-			setTransform(parentStroke->transform());
+		if (_parentStroke!= NULL)
+		{
+			setTransform(_parentStroke->transform());
+			_pen.setColor(_parentStroke->color());
+			_pen.setWidthF(_parentStroke->thickness());
+		}
+    }
+
+    bool GraphicsPathItem::isHighlighted() const
+    {
+        return _highlighted;
+    }
+
+    void GraphicsPathItem::highlight(bool value)
+    {
+        if (_highlighted == value) return;
+        _highlighted = value;
+        update(boundingRect());
     }
 }

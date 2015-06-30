@@ -6,8 +6,9 @@
 #include <QFile>
 #include <QTextStream>
 #include <QPushButton>
-
+#include <QSplitter>
 #include "playgocore.h"
+#include "searchview.h"
 
 namespace CDI
 {
@@ -15,12 +16,27 @@ namespace CDI
 	{
 		playgo = new PlayGo();
 
+		playgo->ReadModel("PlayGoData.dat");
+		Page* newPage = NULL;
+		if (playgo->currentPage()!= NULL)
+		{
+			newPage = playgo->currentPage();
+		} else
+		{
+			playgo->addNewPage();
+			newPage = playgo->addNewPage();
+		}
+		playgo->setCurrentPage(newPage);
+
 		tabletDevice = QTabletEvent::NoDevice;
 	}
 
 	CDIWindow::~CDIWindow()
 	{
-		qDebug() << "Deleting CDIWindow";
+		if(playgo!= NULL)
+		{
+			playgo->SaveModel("PlayGoData.dat");
+		}
 	}
 
 	void CDIWindow::initWidgets()
@@ -37,35 +53,21 @@ namespace CDI
 
 		createActions();
 		setupToolbar();
+		connectActions();
 
-		playgo->addNewPage();
-		Page* newPage = playgo->addNewPage();
-		playgo->setCurrentPage(newPage);
-
-		mainLayout = new QVBoxLayout;
-		sketchView = new SketchView(newPage, this);
+		sketchView = new SketchView(playgo->currentPage(), this);
 		sketchScene = sketchView->getSketchScene();
-		// parent the controller to SketchView
-		// View need not be aware of the controller and there do not put it inside the
-		// SketchView object
+//		SearchView* searchView = new SearchView(this);
 		controller = new PlayGoController(sketchScene, sketchView, this);
 
-		if (0) {
-			//             Testing out duplicate scenes. We can show same scene in multiple views.
-			// Zoom works too
-			QGraphicsView* view = new QGraphicsView();
-			view->setScene(sketchScene);
-			view->fitInView(0,0,1000,1000,Qt::KeepAspectRatio);
-			view->show();
+//		QHBoxLayout* boxlayout = new QHBoxLayout;
+//		QSplitter *split = new QSplitter;
+//		split->addWidget(sketchView);
+//		split->addWidget(searchView);
+//		boxlayout->addWidget(split);
 
-			view->setAttribute(Qt::WA_AcceptTouchEvents, true);
-			QLinearGradient gradient = QLinearGradient(0,0,0,1000);
-			gradient.setColorAt(0.0,QColor(255,175,175,100));
-			gradient.setColorAt(1.0, QColor(200,200,200,255));
-			view->setBackgroundBrush(QBrush(gradient));
-		}
+//		setLayout(boxlayout);
 
-		connectActions();
 		setCentralWidget(sketchView);
 	}
 
@@ -113,8 +115,8 @@ namespace CDI
 
 	void CDIWindow::setupToolbar()
 	{
-		// mainToolbar = new QToolBar(this);
-		mainToolbar = addToolBar(tr("Main operations"));
+		mainToolbar = new QToolBar(QString(tr("Main toolbar")), this);
+		addToolBar(Qt::RightToolBarArea, mainToolbar);
 
 		mainToolbar->addAction(newAction);
 		mainToolbar->addAction(openPageAction);
@@ -136,7 +138,7 @@ namespace CDI
 		mainToolbar->addAction(pauseAction);
 		mainToolbar->addAction(resetAction);
 
-		mainToolbar->setIconSize(QSize(64,64));
+        mainToolbar->setIconSize(QSize(32,32));
 
 		brushWidthSlider = new QSlider(Qt::Horizontal);
 		brushWidthSlider->setRange(2,20);
@@ -150,10 +152,7 @@ namespace CDI
 		// Create a color selector toolbar
 		colorToolbar = new ColorSelectorToolbar();
 		colorToolbar->InitToolbarItems();
-//		colorToolbar->setOrientation(Qt::Vertical);
-//		colorToolbar->setFloatable(true);
-//		colorToolbar->setMovable(true);
-		insertToolBar(mainToolbar, colorToolbar);
+		addToolBar(Qt::LeftToolBarArea, colorToolbar);
 		colorToolbar->show();
 	}
 
@@ -167,7 +166,7 @@ namespace CDI
 	void CDIWindow::connectActions()
 	{
 		// New
-		connect(newAction, SIGNAL(triggered()),
+        connect(newAction, SIGNAL(triggered()),
 				this, SLOT(clear()));
 		// Save
 		connect(saveImageAction, SIGNAL(triggered()),
@@ -204,13 +203,17 @@ namespace CDI
 
 	void CDIWindow::clear()
 	{
-		controller->clearCurrentScene();
-//		sketchScene->clear();
+        sketchScene->clear();
+		sketchScene->update();
+        controller->clearCurrentScene();
 	}
 
 	void CDIWindow::save()
 	{
-
+		if(playgo!= NULL)
+		{
+			playgo->SaveModel("PlayGoData.dat");
+		}
 	}
 
 	void CDIWindow::setToDraw()
@@ -254,3 +257,20 @@ namespace CDI
 			controller->enableMouse(false);
 	}
 }
+/*
+ *
+		if (0) {
+			//             Testing out duplicate scenes. We can show same scene in multiple views.
+			// Zoom works too
+			QGraphicsView* view = new QGraphicsView();
+			view->setScene(sketchScene);
+			view->fitInView(0,0,1000,1000,Qt::KeepAspectRatio);
+			view->show();
+
+			view->setAttribute(Qt::WA_AcceptTouchEvents, true);
+			QLinearGradient gradient = QLinearGradient(0,0,0,1000);
+			gradient.setColorAt(0.0,QColor(255,175,175,100));
+			gradient.setColorAt(1.0, QColor(200,200,200,255));
+			view->setBackgroundBrush(QBrush(gradient));
+		}
+		*/

@@ -1,3 +1,5 @@
+#include <cmath>
+#include <limits>
 #include "pdollarrecognizer.h"
 #include <QDebug>
 

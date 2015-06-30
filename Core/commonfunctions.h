@@ -17,6 +17,7 @@
 #define MASK_BIT5	32
 #define MASK_BIT6	64
 #define MASK_BIT7	128
+#define _PI_ 3.14159265
 
 namespace CDI
 {
@@ -31,34 +32,39 @@ namespace CDI
 	const unsigned int isHidden			= MASK_BIT1;
 	const unsigned int isShared			= MASK_BIT2;
 	const unsigned int isTransformed	= MASK_BIT3;
+	const unsigned int isLocked			= MASK_BIT4;
 	// Add as per requirement
 
 	// IMPORTANT - Do not change from CAPS. It creates conflict with class name
 	// Also, MUST update the getItemType() and getSelectionType() function to reflect the changes
-	enum ItemType : int {
+    enum ItemType : int {
 		STROKE = 10,	// geometry
 		IMAGE,
 		POLYGON2D,		// Nothing but objects with holes. Maybe triangulated
 		SEARCHRESULT,	// display items
 		PHYSICSBODY,	// physics items
 		PHYSICSJOINT,
+		PHYSICSSHAPE,
 		COMPONENT,		// core components
 		ASSEMBLY,
 		PAGE,
+		ROOT,
 		NONE
-	};
+    };
 
-	enum SelectionType : int {
+    enum SelectionType : int {
 		OnItem,
 		Inside,
 		Outside,
 		Nearby
 	};
 
-	ItemType getItemType(int i);
+    ItemType getItemType(int i);
 	SelectionType getSelectionType(int i);
 
-	QString getItemNameByType(ItemType i);
+    QString getItemNameByType(ItemType i);
+
+    QString getHomeDirectory();
 
     typedef QPointF Point2D;
 
@@ -83,6 +89,8 @@ namespace CDI
     float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd);
 
     bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance);
+
+	bool extractTransformComponents(QTransform &t, float* rotation, float* scale, Point2D* translation);
 
 	bool colorCompare(QColor c1, QColor c2);
 

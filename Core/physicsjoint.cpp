@@ -10,30 +10,30 @@ namespace CDI
 	{
 		switch (def->type)
 		{
-		case b2JointType::e_revoluteJoint :
-			return JointType::REVOLUTE;
+        case e_revoluteJoint :
+            return REVOLUTE;
 		case e_prismaticJoint :
-			return JointType::PRISMATIC;
-		case b2JointType::e_distanceJoint :
-			return JointType::DISTANCE;
-		case b2JointType::e_pulleyJoint :
-			return JointType::PULLEY;
-		case b2JointType::e_mouseJoint :
-			return JointType::MOUSE;
-		case b2JointType::e_gearJoint :
-			return JointType::GEAR;
-		case b2JointType::e_wheelJoint :
-			return JointType::WHEEL;
-		case b2JointType::e_weldJoint :
-			return JointType::WELD;
-		case b2JointType::e_frictionJoint :
-			return JointType::FRICTION;
-		case b2JointType::e_ropeJoint :
-			return JointType::ROPE;
-		case b2JointType::e_motorJoint :
-			return JointType::MOTOR;
+            return PRISMATIC;
+        case e_distanceJoint :
+            return DISTANCE;
+        case e_pulleyJoint :
+            return PULLEY;
+        case e_mouseJoint :
+            return MOUSE;
+        case e_gearJoint :
+            return GEAR;
+        case e_wheelJoint :
+            return WHEEL;
+        case e_weldJoint :
+            return WELD;
+        case e_frictionJoint :
+            return FRICTION;
+        case e_ropeJoint :
+            return ROPE;
+        case e_motorJoint :
+            return MOTOR;
 		}
-		return JointType::NO_JOINT;
+        return NO_JOINT;
 	}
 
 	PhysicsJoint::PhysicsJoint(b2JointDef* jointDefinition, b2World* world)
@@ -83,6 +83,18 @@ namespace CDI
 	QUuid PhysicsJoint::id() const
 	{
 		return _jointID;
+	}
+
+	// TODO
+	QDataStream& PhysicsJoint::serialize(QDataStream &stream) const
+	{
+		return stream;
+	}
+
+	// TODO
+	QDataStream& PhysicsJoint::deserialize(QDataStream &stream)
+	{
+		return stream;
 	}
 
 	b2Joint* PhysicsJoint::joint()

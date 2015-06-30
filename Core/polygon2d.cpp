@@ -31,6 +31,12 @@ namespace CDI
 		setParentItem(component);
 	}
 
+	Polygon2D::~Polygon2D()
+	{
+		if (parentItem() != NULL)
+			parentItem()->removeItem(id());
+	}
+
 	QColor Polygon2D::color() const
 	{
 		return _color;
@@ -79,7 +85,7 @@ namespace CDI
 
 	ItemType Polygon2D::type() const
 	{
-		return ItemType::POLYGON2D;
+		return POLYGON2D;
 	}
 
 	QTransform Polygon2D::transform() const

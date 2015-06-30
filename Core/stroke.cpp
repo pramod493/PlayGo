@@ -2,6 +2,7 @@
 #include "commonfunctions.h"
 #include "ramerdouglaspeucker.h"
 #include <QVectorIterator>
+#include "component.h"
 
 namespace CDI
 {
@@ -37,11 +38,14 @@ namespace CDI
 
 	Stroke::~Stroke()
 	{
-		// Do something here
+		if (parentItem()!= NULL)
+			parentItem()->removeItem(this);
 	}
 
-	void Stroke::push_point(Point2DPT &pt)
+    void Stroke::push_point(Point2DPT pt)
 	{
+        if(mask & isLocked)  return;
+
 		push_back(pt);
 		float px = pt.x();
 		float py = pt.y();
@@ -57,12 +61,10 @@ namespace CDI
 		aabb.setHeight(aabb.height()+2*_thickness);
 	}
 
-
 	bool Stroke::containsPoint(const Point2D &pt, SelectionType rule, float margin)
 	{
 		Q_UNUSED(rule)
 
-		Point2D relPos = inverseTransform().map(pt);
 		float width = _thickness + margin;
 		float sqrWidth = width*width;
 		int num_points = size() - 1;
@@ -72,7 +74,7 @@ namespace CDI
 			Point2DPT p1 = points[i];
 			Point2DPT p2 = points[i+1];
 
-			Point2D v1 = Point2D(relPos-p1);
+            Point2D v1 = Point2D(pt-p1);
 			Point2D v2 = Point2D(p2-p1);
 			float v2SqrMag = sqrMagnitude(&v2);
 
@@ -94,7 +96,7 @@ namespace CDI
 
 		for (int i=0; i< num_points; i++)
 		{
-			if (polygon->contains(points[i]) == false) return false;
+            if (polygon->containsPoint(points[i], Qt::WindingFill) == false) return false;
 		}
 		return true;
 	}
@@ -109,7 +111,7 @@ namespace CDI
 
 	ItemType Stroke::type() const
 	{
-		return ItemType::STROKE;
+		return STROKE;
 	}
 
 	QTransform Stroke::transform() const
@@ -119,6 +121,7 @@ namespace CDI
 
 	void Stroke::setTransform(QTransform t)
 	{
+        if(mask & isLocked)  return;
 		mask |= isTransformed;
 		_transform = t;
 		_inverseTransform = t.inverted();
@@ -131,8 +134,10 @@ namespace CDI
 
 	QDataStream& Stroke::serialize(QDataStream &stream) const
 	{
+		QUuid tmpId = id();
 		int len = this->size();
 		int i;
+		stream << tmpId;
 		stream << color();
 		stream << float(thickness());
 		stream << transform();
@@ -146,7 +151,8 @@ namespace CDI
 	{
 		qint32 len =0;
 		QTransform t;
-
+		QUuid tmpId;
+		stream >> tmpId;	itemId = tmpId;
 		stream >> _color;
 		stream >> _thickness;
 		stream >> t;
@@ -167,6 +173,8 @@ namespace CDI
 
 	void Stroke::translate(const Point2D &offset)
 	{
+        if(mask & isLocked)  return;
+
 		if (offset.isNull()) return;
 
 		mask |= isModified;
@@ -192,6 +200,7 @@ namespace CDI
 
 	bool Stroke::mergeWith(Stroke *stroke, bool joinAtEnd)
 	{
+        if(mask & isLocked)  return false;
 		// Check thickness match
 		if (!qFuzzyCompare(stroke->thickness(), _thickness))
 			return false;

@@ -8,4 +8,5 @@ TEMPLATE = app
 
 include (../Core/PlayGoCore.pri)
 
-SOURCES += $$PWD/testpixmapmask.cpp
+SOURCES += \
+            $$PWD/testcoremain.cpp

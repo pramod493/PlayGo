@@ -5,6 +5,9 @@
 //// Use this file to store the values which can be accessed from anywhere
 namespace CDI
 {
+
+	//todo -- singleton class for loading the uisettings... pref  from user area
+	// do not implement now. for very later into future
 	// main window settings
 	bool MainWindowFullscreen = true;
 	bool MainWindowTransparent = false;

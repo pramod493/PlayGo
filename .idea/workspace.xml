@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" assignedExecutableTargets="true" buildAllGenerated="true">
+    <generated>
+      <config projectName="PlayGo" targetName="QsLog" />
+      <config projectName="PlayGo" targetName="PlayGo" />
+      <config projectName="PlayGo" targetName="PlayGo_lib" />
+    </generated>
+  </component>
+  <component name="CMakeSettings" AUTO_RELOAD="false" GENERATION_OPTIONS="-DCMAKE_PREFIX_PATH=/opt/Qt5.4.2/5.4/gcc_64/lib/cmake" GENERATION_PASS_SYSTEM_ENVIRONMENT="true">
+    <ADDITIONAL_GENERATION_ENVIRONMENT>
+      <envs />
+    </ADDITIONAL_GENERATION_ENVIRONMENT>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="847a351e-2ee7-4e6b-9dde-2e4b60a67c77" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/QsLog/CMakeLists.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Core/physicsshape.cpp" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Core/physicsshape.h" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Tests/testcoremain.cpp" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/desktop.ini" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Indexer-Minimal/.gitignore" afterPath="$PROJECT_DIR$/Indexer-Minimal/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/.gitignore" afterPath="$PROJECT_DIR$/Physics/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Box2D.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Box2D.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CDI_PlayGo.pro" afterPath="$PROJECT_DIR$/CDI_PlayGo.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Controller/Controller.pri" afterPath="$PROJECT_DIR$/Controller/Controller.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EdgeDetect/Edge Detect.pri" afterPath="$PROJECT_DIR$/EdgeDetect/Edge Detect.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/EdgeDetectTest.cpp" afterPath="$PROJECT_DIR$/Tests/EdgeDetectTest.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/EdgeDetectTest.pro" afterPath="$PROJECT_DIR$/Tests/EdgeDetectTest.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Indexer-Minimal/External Libraries.pri" afterPath="$PROJECT_DIR$/Indexer-Minimal/External Libraries.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EdgeDetect/FindContours.cpp" afterPath="$PROJECT_DIR$/EdgeDetect/FindContours.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EdgeDetect/FindContours.h" afterPath="$PROJECT_DIR$/EdgeDetect/FindContours.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar.pro" afterPath="$PROJECT_DIR$/P-Dollar.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/P_Dollar.pri" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/P_Dollar.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Controller/PlayGoController.h" afterPath="$PROJECT_DIR$/Controller/PlayGoController.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/PlayGoCore.pri" afterPath="$PROJECT_DIR$/Core/PlayGoCore.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/PlayGoTestMain.cpp" afterPath="$PROJECT_DIR$/Tests/PlayGoTestMain.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/PlayGoTestUI_Main.cpp" afterPath="$PROJECT_DIR$/Tests/PlayGoTestUI_Main.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/PlayGoUI.pri" afterPath="$PROJECT_DIR$/UI/PlayGoUI.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/PlayGo_Core.pro" afterPath="$PROJECT_DIR$/Tests/PlayGo_Core.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/PlayGo_TestUI_withCore.pro" afterPath="$PROJECT_DIR$/Tests/PlayGo_TestUI_withCore.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/QBox2D.pri" afterPath="$PROJECT_DIR$/Physics/QBox2D.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsDebugOutput.cpp" afterPath="$PROJECT_DIR$/QsLog/QsDebugOutput.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsDebugOutput.h" afterPath="$PROJECT_DIR$/QsLog/QsDebugOutput.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsLog.cpp" afterPath="$PROJECT_DIR$/QsLog/QsLog.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsLog.h" afterPath="$PROJECT_DIR$/QsLog/QsLog.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsLog.pri" afterPath="$PROJECT_DIR$/QsLog/QsLog.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsLogDest.cpp" afterPath="$PROJECT_DIR$/QsLog/QsLogDest.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/QsLogDest.h" afterPath="$PROJECT_DIR$/QsLog/QsLogDest.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EdgeDetect/Source.cpp" afterPath="$PROJECT_DIR$/EdgeDetect/Source.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/abstractmodelitem.cpp" afterPath="$PROJECT_DIR$/Core/abstractmodelitem.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/abstractmodelitem.h" afterPath="$PROJECT_DIR$/Core/abstractmodelitem.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/advancing_front.cc" afterPath="$PROJECT_DIR$/poly2tri/sweep/advancing_front.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/advancing_front.h" afterPath="$PROJECT_DIR$/poly2tri/sweep/advancing_front.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/asmopencv.h" afterPath="$PROJECT_DIR$/Core/asmopencv.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/assembly.cpp" afterPath="$PROJECT_DIR$/Core/assembly.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/assembly.h" afterPath="$PROJECT_DIR$/Core/assembly.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2BlockAllocator.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2BlockAllocator.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2BlockAllocator.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2BlockAllocator.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Body.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Body.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Body.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Body.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2BroadPhase.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2BroadPhase.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2BroadPhase.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2BroadPhase.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2ChainShape.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2ChainShape.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2ChainShape.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2ChainShape.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2CircleContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2CircleContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2CircleContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2CircleContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2CircleShape.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2CircleShape.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2CircleShape.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2CircleShape.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2CollideCircle.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2CollideCircle.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2CollideEdge.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2CollideEdge.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2CollidePolygon.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2CollidePolygon.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Collision.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Collision.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Collision.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Collision.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2Contact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2Contact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2Contact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2Contact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2ContactManager.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2ContactManager.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2ContactManager.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2ContactManager.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ContactSolver.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ContactSolver.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ContactSolver.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2ContactSolver.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Distance.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Distance.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Distance.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2Distance.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2DistanceJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2DistanceJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2DistanceJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2DistanceJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Draw.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Draw.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Draw.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Draw.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2DynamicTree.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2DynamicTree.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2DynamicTree.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2DynamicTree.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2EdgeShape.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2EdgeShape.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2EdgeShape.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2EdgeShape.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Fixture.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Fixture.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Fixture.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Fixture.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2FrictionJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2FrictionJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2FrictionJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2FrictionJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2GearJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2GearJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2GearJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2GearJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2GrowableStack.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2GrowableStack.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Island.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Island.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Island.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2Island.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2Joint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2Joint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2Joint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2Joint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Math.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Math.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Math.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Math.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MotorJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MotorJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MotorJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MotorJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MouseJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MouseJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MouseJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2MouseJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonContact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonContact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonContact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Contacts/b2PolygonContact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2PolygonShape.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2PolygonShape.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2PolygonShape.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2PolygonShape.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PrismaticJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PrismaticJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PulleyJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PulleyJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PulleyJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2PulleyJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RevoluteJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RevoluteJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RevoluteJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RevoluteJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Rope/b2Rope.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Rope/b2Rope.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Rope/b2Rope.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Rope/b2Rope.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RopeJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RopeJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RopeJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2RopeJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Settings.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Settings.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Settings.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Settings.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2Shape.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/Shapes/b2Shape.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2StackAllocator.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2StackAllocator.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2StackAllocator.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2StackAllocator.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2TimeOfImpact.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2TimeOfImpact.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Collision/b2TimeOfImpact.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Collision/b2TimeOfImpact.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2TimeStep.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2TimeStep.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Timer.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Timer.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Common/b2Timer.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Common/b2Timer.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WeldJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WeldJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WeldJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WeldJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WheelJoint.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WheelJoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WheelJoint.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/Joints/b2WheelJoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2World.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2World.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2WorldCallbacks.cpp" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2WorldCallbacks.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2WorldCallbacks.h" afterPath="$PROJECT_DIR$/Physics/Box2D/Dynamics/b2WorldCallbacks.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/box2dworld.cpp" afterPath="$PROJECT_DIR$/Physics/box2dworld.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/box2dworld.h" afterPath="$PROJECT_DIR$/Physics/box2dworld.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/cdi2qtwrapper.cpp" afterPath="$PROJECT_DIR$/UI/cdi2qtwrapper.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/cdi2qtwrapper.h" afterPath="$PROJECT_DIR$/UI/cdi2qtwrapper.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/cdisearchgraphicsitem.cpp" afterPath="$PROJECT_DIR$/UI/cdisearchgraphicsitem.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/cdisearchgraphicsitem.h" afterPath="$PROJECT_DIR$/UI/cdisearchgraphicsitem.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/cdiwindow.cpp" afterPath="$PROJECT_DIR$/UI/cdiwindow.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/cdiwindow.h" afterPath="$PROJECT_DIR$/UI/cdiwindow.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/cdt.cc" afterPath="$PROJECT_DIR$/poly2tri/sweep/cdt.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/cdt.h" afterPath="$PROJECT_DIR$/poly2tri/sweep/cdt.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/Clipper/clipper.cpp" afterPath="$PROJECT_DIR$/Core/Clipper/clipper.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/Clipper/clipper.hpp" afterPath="$PROJECT_DIR$/Core/Clipper/clipper.hpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/colorselectortoolbar.cpp" afterPath="$PROJECT_DIR$/UI/colorselectortoolbar.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/colorselectortoolbar.h" afterPath="$PROJECT_DIR$/UI/colorselectortoolbar.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/commonfunctions.cpp" afterPath="$PROJECT_DIR$/Core/commonfunctions.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/commonfunctions.h" afterPath="$PROJECT_DIR$/Core/commonfunctions.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/component.cpp" afterPath="$PROJECT_DIR$/Core/component.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/component.h" afterPath="$PROJECT_DIR$/Core/component.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/converttopolygons.cpp" afterPath="$PROJECT_DIR$/converttopolygons.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/converttopolygons.h" afterPath="$PROJECT_DIR$/converttopolygons.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/doxygen-settings" afterPath="$PROJECT_DIR$/doxygen-settings" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/fileio.cpp" afterPath="$PROJECT_DIR$/Core/fileio.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/fileio.h" afterPath="$PROJECT_DIR$/Core/fileio.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gestureMain.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gestureMain.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gestureScene.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gestureScene.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gestureScene.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gestureScene.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/gesturemanager.cpp" afterPath="$PROJECT_DIR$/UI/gesturemanager.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/gesturemanager.h" afterPath="$PROJECT_DIR$/UI/gesturemanager.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturepoint2d.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturepoint2d.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturepoint2d.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturepoint2d.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturestroke.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturestroke.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturestroke.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/gesturestroke.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicsitemgroup.cpp" afterPath="$PROJECT_DIR$/UI/graphicsitemgroup.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicsitemgroup.h" afterPath="$PROJECT_DIR$/UI/graphicsitemgroup.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicspathitem.cpp" afterPath="$PROJECT_DIR$/UI/graphicspathitem.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicspathitem.h" afterPath="$PROJECT_DIR$/UI/graphicspathitem.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicspixmap.cpp" afterPath="$PROJECT_DIR$/UI/graphicspixmap.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicspixmap.h" afterPath="$PROJECT_DIR$/UI/graphicspixmap.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicspolygon2d.cpp" afterPath="$PROJECT_DIR$/UI/graphicspolygon2d.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/graphicspolygon2d.h" afterPath="$PROJECT_DIR$/UI/graphicspolygon2d.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/image.cpp" afterPath="$PROJECT_DIR$/Core/image.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/image.h" afterPath="$PROJECT_DIR$/Core/image.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/images.qrc" afterPath="$PROJECT_DIR$/images.qrc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Indexer-Minimal/indexer-main.cpp" afterPath="$PROJECT_DIR$/Indexer-Minimal/indexer-main.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/log_example.pro" afterPath="$PROJECT_DIR$/QsLog/log_example.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.cpp" afterPath="$PROJECT_DIR$/main.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QsLog/main.cpp" afterPath="$PROJECT_DIR$/QsLog/main.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/miscfunctions.cpp" afterPath="$PROJECT_DIR$/miscfunctions.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/modelviewtreewidget.cpp" afterPath="$PROJECT_DIR$/UI/modelviewtreewidget.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/modelviewtreewidget.h" afterPath="$PROJECT_DIR$/UI/modelviewtreewidget.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/page.cpp" afterPath="$PROJECT_DIR$/Core/page.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/page.h" afterPath="$PROJECT_DIR$/Core/page.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollargesture.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollargesture.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollargesture.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollargesture.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollarrecognizer.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollarrecognizer.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollarrecognizer.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/pdollarrecognizer.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/physicsbody.cpp" afterPath="$PROJECT_DIR$/Core/physicsbody.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/physicsbody.h" afterPath="$PROJECT_DIR$/Core/physicsbody.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/physicsjoint.cpp" afterPath="$PROJECT_DIR$/Core/physicsjoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/physicsjoint.h" afterPath="$PROJECT_DIR$/Core/physicsjoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/physicsmanager.cpp" afterPath="$PROJECT_DIR$/Core/physicsmanager.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/physicsmanager.h" afterPath="$PROJECT_DIR$/Core/physicsmanager.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/pixmapitem.cpp" afterPath="$PROJECT_DIR$/UI/pixmapitem.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/pixmapitem.h" afterPath="$PROJECT_DIR$/UI/pixmapitem.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/playgo.cpp" afterPath="$PROJECT_DIR$/Core/playgo.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/playgo.h" afterPath="$PROJECT_DIR$/Core/playgo.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Controller/playgocontroller.cpp" afterPath="$PROJECT_DIR$/Controller/playgocontroller.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/playgocore.h" afterPath="$PROJECT_DIR$/Core/playgocore.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/point2dpt.cpp" afterPath="$PROJECT_DIR$/Core/point2dpt.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/point2dpt.h" afterPath="$PROJECT_DIR$/Core/point2dpt.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/pointcloudrecognizer.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/pointcloudrecognizer.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/pointcloudrecognizer.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/pointcloudrecognizer.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/poly2tri.h" afterPath="$PROJECT_DIR$/poly2tri/poly2tri.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/poly2tri.pri" afterPath="$PROJECT_DIR$/poly2tri/poly2tri.pri" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/polygon2d.cpp" afterPath="$PROJECT_DIR$/Core/polygon2d.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/polygon2d.h" afterPath="$PROJECT_DIR$/Core/polygon2d.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2dbody.cpp" afterPath="$PROJECT_DIR$/Physics/qbox2dbody.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2dbody.h" afterPath="$PROJECT_DIR$/Physics/qbox2dbody.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2dcommon.h" afterPath="$PROJECT_DIR$/Physics/qbox2dcommon.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2djoint.cpp" afterPath="$PROJECT_DIR$/Physics/qbox2djoint.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2djoint.h" afterPath="$PROJECT_DIR$/Physics/qbox2djoint.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2dworld.cpp" afterPath="$PROJECT_DIR$/Physics/qbox2dworld.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Physics/qbox2dworld.h" afterPath="$PROJECT_DIR$/Physics/qbox2dworld.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/ramerdouglaspeucker.cpp" afterPath="$PROJECT_DIR$/Core/ramerdouglaspeucker.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/ramerdouglaspeucker.h" afterPath="$PROJECT_DIR$/Core/ramerdouglaspeucker.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/reconizerwindow.cpp" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/reconizerwindow.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/reconizerwindow.h" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/reconizerwindow.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/P-Dollar-Recognizer/reconizerwindow.ui" afterPath="$PROJECT_DIR$/P-Dollar-Recognizer/reconizerwindow.ui" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/searchmanager.cpp" afterPath="$PROJECT_DIR$/Core/searchmanager.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/searchmanager.h" afterPath="$PROJECT_DIR$/Core/searchmanager.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/searchresult.cpp" afterPath="$PROJECT_DIR$/Core/searchresult.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/searchresult.h" afterPath="$PROJECT_DIR$/Core/searchresult.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/common/shapes.cc" afterPath="$PROJECT_DIR$/poly2tri/common/shapes.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/common/shapes.h" afterPath="$PROJECT_DIR$/poly2tri/common/shapes.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/sketchscene.cpp" afterPath="$PROJECT_DIR$/UI/sketchscene.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/sketchscene.h" afterPath="$PROJECT_DIR$/UI/sketchscene.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/sketchview.cpp" afterPath="$PROJECT_DIR$/UI/sketchview.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/sketchview.h" afterPath="$PROJECT_DIR$/UI/sketchview.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/stroke.cpp" afterPath="$PROJECT_DIR$/Core/stroke.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Core/stroke.h" afterPath="$PROJECT_DIR$/Core/stroke.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/sweep.cc" afterPath="$PROJECT_DIR$/poly2tri/sweep/sweep.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/sweep.h" afterPath="$PROJECT_DIR$/poly2tri/sweep/sweep.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/sweep_context.cc" afterPath="$PROJECT_DIR$/poly2tri/sweep/sweep_context.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/sweep/sweep_context.h" afterPath="$PROJECT_DIR$/poly2tri/sweep/sweep_context.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/tabletapplication.cpp" afterPath="$PROJECT_DIR$/UI/tabletapplication.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/tabletapplication.h" afterPath="$PROJECT_DIR$/UI/tabletapplication.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/test_poly2tri.cpp" afterPath="$PROJECT_DIR$/poly2tri/test_poly2tri.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tests/testpixmapmask.cpp" afterPath="$PROJECT_DIR$/Tests/testpixmapmask.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UI/uisettings.h" afterPath="$PROJECT_DIR$/UI/uisettings.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poly2tri/common/utils.h" afterPath="$PROJECT_DIR$/poly2tri/common/utils.h" />
+    </list>
+    <ignored path="CDI_PlayGo-Final.iws" />
+    <ignored path=".idea/workspace.xml" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="CreatePatchCommitExecutor">
+    <option name="PATCH_PATH" value="" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
+  <component name="FavoritesManager">
+    <favorites_list name="CDI_PlayGo-Final" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-14.28">
+              <caret line="32" column="22" selection-start-line="32" selection-start-column="22" selection-end-line="32" selection-end-column="22" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/QsLog/CMakeLists.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.66831684">
+              <caret line="15" column="47" selection-start-line="15" selection-start-column="47" selection-end-line="15" selection-end-column="47" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/CMakeLists.txt" />
+        <option value="$PROJECT_DIR$/QsLog/CMakeLists.txt" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+  </component>
+  <component name="NamedScopeManager">
+    <order />
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="-1" />
+    <option name="y" value="27" />
+    <option name="width" value="1368" />
+    <option name="height" value="742" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
+    <OptionsSetting value="true" id="Add" />
+    <OptionsSetting value="true" id="Remove" />
+    <OptionsSetting value="true" id="Checkout" />
+    <OptionsSetting value="true" id="Update" />
+    <OptionsSetting value="true" id="Status" />
+    <OptionsSetting value="true" id="Edit" />
+    <ConfirmationsSetting value="0" id="Add" />
+    <ConfirmationsSetting value="0" id="Remove" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CDI_PlayGo-Final" />
+              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$1$1" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CDI_PlayGo-Final" />
+              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$1$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CDI_PlayGo-Final" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="FullScreen" value="false" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="settings.editor.splitter.proportion" value="0.2" />
+    <property name="recentsLimit" value="5" />
+  </component>
+  <component name="RunManager" selected="Application.Build All">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="PlayGo" TARGET_NAME="PlayGo" CONFIG_NAME="Debug">
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
+      <method />
+    </configuration>
+    <configuration default="false" name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS="FALSE" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PlayGo" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="PlayGo" TARGET_NAME="PlayGo" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="PlayGo" RUN_TARGET_NAME="PlayGo">
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PlayGo_lib" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="PlayGo" TARGET_NAME="PlayGo_lib" CONFIG_NAME="Debug">
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="QsLog" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="PlayGo" TARGET_NAME="QsLog" CONFIG_NAME="Debug">
+      <envs />
+      <method />
+    </configuration>
+    <list size="4">
+      <item index="0" class="java.lang.String" itemvalue="Application.Build All" />
+      <item index="1" class="java.lang.String" itemvalue="Application.PlayGo" />
+      <item index="2" class="java.lang.String" itemvalue="Application.PlayGo_lib" />
+      <item index="3" class="java.lang.String" itemvalue="Application.QsLog" />
+    </list>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="847a351e-2ee7-4e6b-9dde-2e4b60a67c77" name="Default" comment="" />
+      <created>1435306166391</created>
+      <option name="number" value="Default" />
+      <updated>1435306166391</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-1" y="27" width="1368" height="742" extended-state="6" />
+    <editor active="false" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21303074" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.288162" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.38317758" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="Vcs.Log.UiProperties">
+    <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+      <collection />
+    </option>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///opt/Qt5.4.2/5.4/gcc_64/lib/cmake/Qt5Core/Qt5CoreMacros.cmake">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.3325062">
+          <caret line="258" column="0" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-14.28">
+          <caret line="32" column="22" selection-start-line="32" selection-start-column="22" selection-end-line="32" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.clion10/system/cmake/generated/f24d47da/f24d47da/Debug/moc_converttopolygons.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/QsLog/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.66831684">
+          <caret line="15" column="47" selection-start-line="15" selection-start-column="47" selection-end-line="15" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

@@ -1,4 +1,5 @@
 #pragma once
+#include <QtAlgorithms>
 #include <QObject>
 #include <QString>
 #include <QList>
@@ -12,9 +13,15 @@
 #include "wbbice.h"
 #include "wbsearchengine.h"
 #include "asmopencv.h"
-
+#include "searchresult.h"
 namespace CDI
 {
+    /**
+     * @brief Initializes the search engine as well as manages
+     * the tags used to filter search results.
+     * @todo Use the search tags to populate the search results or read
+     * from another database.
+     */
     class SearchManager : public QObject
     {
         Q_OBJECT
@@ -26,17 +33,16 @@ namespace CDI
 
 		bool limitSearchByTag;
 
-        QList<QString> localFileList;
 		QList<QString> tags;
 
         wbSearchEngine* searchEngine;
 
 	protected:
-		bool _databaseNotIndexed;
+		bool _databaseIndexed;
 
 	public:
 		/**
-		 * @brief Private constructor of SearchManager to maintain uniqueness
+         * @brief Constructor of SearchManager to maintain uniqueness
 		 * @param parent Parent object(defaults to NULL)
 		 */
         SearchManager(QObject *parent=0);
@@ -54,9 +60,9 @@ namespace CDI
 		 * @brief Searches based on the input image
 		 * @param image Input Sketch
 		 * @param numResults Number of results to store
-		 * @return True on complete. False on error
+         * @return List of SearchResult objects
 		 */
-        bool search(QImage &image, int numResults=10);
+        QList<SearchResult *> search(QImage &image, int numResults=10);
 
 		/**
 		 * @brief Searches based on image store at filePath
@@ -64,12 +70,7 @@ namespace CDI
 		 * @param numResults Number of resulsts to store
 		 * @return True on complete. False on error
 		 */
-		bool search(QString filePath, int numResults= 20);
-
-        void ConvertResultsToLocalPath(int numResults);
-
-	signals:
-		void onSearchComplete(SearchManager* searchmanager);
+        QList<SearchResult *> search(QString filePath, int numResults= 20);
 
     };
 }

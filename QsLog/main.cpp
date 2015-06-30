@@ -3,15 +3,21 @@
 #include <QtCore/QCoreApplication>
 #include <QDir>
 #include <iostream>
+#include <QDateTime>
 
+// Using this to save the file name and therefore need not
+// have ms as well as must not contain ":" else file won't open on windows
+const QString qslog_time_format("yyyy-MM-ddThh-mm-ss");
 int main(int argc, char *argv[])
 {
    QCoreApplication a(argc, argv);
 
+   QString logfilename = QDateTime::currentDateTime().toString(qslog_time_format);
+   logfilename += QString(".log");
    // init the logging mechanism
    QsLogging::Logger& logger = QsLogging::Logger::instance();
    logger.setLoggingLevel(QsLogging::TraceLevel);
-   const QString sLogPath(QDir(a.applicationDirPath()).filePath("log.txt"));
+   const QString sLogPath(QDir(a.applicationDirPath()).filePath(logfilename));
    QsLogging::DestinationPtr fileDestination(
       QsLogging::DestinationFactory::MakeFileDestination(sLogPath) );
    QsLogging::DestinationPtr debugDestination(

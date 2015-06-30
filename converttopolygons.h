@@ -7,6 +7,7 @@ using namespace CDI;
 class Polygonize : public QObject
 {
 	Q_OBJECT
+public:
 	QGraphicsScene* scene;
 
 	CDIWindow* _window;

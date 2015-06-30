@@ -1,4 +1,4 @@
-QT       += core gui widgets winextras
+QT       += core gui widgets
 
 TARGET = PDollarRecognizer
 

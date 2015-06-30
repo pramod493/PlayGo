@@ -1,21 +1,98 @@
 #include "PlayGoController.h"
 #include <QObject>
 #include <QDebug>
+#include "QsLog.h"
 #include "cdiwindow.h"
+#include <QGraphicsPixmapItem>
+#include <QGraphicsWidget>
+#include <QPixmap>
+#include <QPixmap>
+#include <QRectF>
+
+#include "graphicssearchitem.h"
 
 namespace CDI
 {
+
+class Button : public QGraphicsWidget
+{
+    Q_OBJECT
+public:
+    Button(const QPixmap &pixmap, QString filePath, QGraphicsItem *parent = 0)
+        : QGraphicsWidget(parent), _pix(pixmap)
+    {
+        _filePath = filePath;
+        setAcceptHoverEvents(true);
+        setCacheMode(DeviceCoordinateCache);
+    }
+
+    QRectF boundingRect() const Q_DECL_OVERRIDE
+    {
+        return QRectF(_pix.rect());
+    }
+
+    QPainterPath shape() const Q_DECL_OVERRIDE
+    {
+        QPainterPath path;
+        path.addEllipse(boundingRect());
+        return path;
+    }
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *) Q_DECL_OVERRIDE
+    {
+        bool down = option->state & QStyle::State_Sunken;
+        QRectF r = boundingRect();
+        QLinearGradient grad(r.topLeft(), r.bottomRight());
+        grad.setColorAt(down ? 1 : 0, option->state & QStyle::State_MouseOver ? Qt::white : Qt::lightGray);
+        grad.setColorAt(down ? 0 : 1, Qt::darkGray);
+        painter->setPen(Qt::darkGray);
+        painter->setBrush(grad);
+        painter->drawEllipse(r);
+        QLinearGradient grad2(r.topLeft(), r.bottomRight());
+        grad.setColorAt(down ? 1 : 0, Qt::darkGray);
+        grad.setColorAt(down ? 0 : 1, Qt::lightGray);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(grad);
+        if (down)
+            painter->translate(2, 2);
+        painter->drawEllipse(r.adjusted(5, 5, -5, -5));
+        painter->drawPixmap(-_pix.width()/2, -_pix.height()/2, _pix);
+    }
+
+signals:
+    void pressed(QString filepath);
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *) Q_DECL_OVERRIDE
+    {
+//        emit pressed();
+//        update();
+    }
+
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *) Q_DECL_OVERRIDE
+    {
+//        update(_filePath);
+    }
+
+private:
+    QPixmap _pix;
+    QString _filePath;
+};
+
 	PlayGoController::PlayGoController(SketchScene *scene, SketchView *view, CDIWindow *parent)
 		:QObject(parent)
 	{
-		tree = new ModelViewTreeWidget(parent->playgo);
-		tree->show();
+        // Hide display of the model tree...
+//		tree = new ModelViewTreeWidget(parent->playgo);
+//		tree->show();
+		tree = NULL;
 
 		_toplevelWindow = parent;
 		if (scene != NULL && view != NULL)
 		{
 			_scene = scene;
 			_view = view;
+			view->setTransformationAnchor(QGraphicsView::NoAnchor);
 			// Create all sort of connections
 			// Connect this to the given view and scene objects for rendering and all other operations
 			// connect(_scene, SIGNAL(),this, SLOT());
@@ -25,15 +102,35 @@ namespace CDI
 
 			connect(_scene, SIGNAL(signalMouseEvent(QGraphicsSceneMouseEvent*,int)),
 					this, SLOT(onMouseEventFromScene(QGraphicsSceneMouseEvent*,int)));
+
+			connect(_view, SIGNAL(viewTouchEvent(QTouchEvent*,QGraphicsView*)),
+					this, SLOT(onTouchEventFromView(QTouchEvent*,QGraphicsView*)));
+
+			connect(_view, SIGNAL(viewDrawforeground(QPainter*,const QRectF&)),
+					this, SLOT(drawMenusOnView(QPainter*,const QRectF&)));
 		}
-		initController();
+        initController();
+
+        {
+			searchView = new QGraphicsView();
+			QString imageDir = getHomeDirectory() + QString("/testimages/");
+			QGraphicsScene *scene = new QGraphicsScene(view);
+			searchView->setScene(scene);
+			//            searchView->fitInView(0,0,500,500, Qt::KeepAspectRatio);
+			////			searchView->setAttribute( Qt::WA_TranslucentBackground, true);
+			//			searchView->setAttribute(Qt::WA_TranslucentBackground);
+			//			searchView->setAttribute(Qt::WA_NoSystemBackground,false);
+			//			searchView->setWindowFlags(Qt::FramelessWindowHint);
+
+			searchView->show();
+        }
 	}
 
 	void PlayGoController::initController()
 	{
 		// Set the deafult value of other settings
 		_mouseModeEnabled = true;
-		_activeMode = MODE::Sketch;
+        _activeMode = UI::Sketch;
 		_device = QTabletEvent::NoDevice;
 
 		_defaultPen = QPen(Qt::black);
@@ -65,6 +162,9 @@ namespace CDI
 		_lasso->setBrush(_lassoBrush);
 		_scene->addItem(_lasso);
 		_isLassoDisplayed = false;
+
+		_itemHighlighted = false;
+
 	}
 
 	void PlayGoController::brushPress(QPointF pos, float pressure, int time)
@@ -79,13 +179,13 @@ namespace CDI
 		if (_currentComponent == NULL)
 		{
 			_currentComponent = _scene->addComponent();
-			_currentComponent->component->setTransform(QTransform().translate
-									   (pos.x(), pos.y()));
+			QTransform t = _currentComponent->component->transform();
+			t = t.translate(pos.x(), pos.y());
+			t = t.rotate(30);
+			_currentComponent->component->setTransform(t);
 		}
 		_currentStroke = _scene->addStroke(_currentComponent,
 										   _defaultPen.color(), _defaultPen.widthF());
-
-
 		_currentStroke->push_back(pos);
 //		_currentStroke = new GraphicsPathItem(NULL, pos, pos.pressure(), pos.time());
 //		_currentStroke->setPen(_defaultPen);
@@ -138,6 +238,17 @@ namespace CDI
 			emit strokeComplete(_currentStroke);
 			// TODO Apply smoothing before the object is updated maybe?
 			_isDrawingNow = false;
+
+#ifdef CDI_DEBUG_MODE
+            qDebug() << "Component" << _currentStroke->parentStroke()->parentItem()->transform();
+            qDebug() << "Stroke" << _currentStroke->parentStroke()->transform();
+            qDebug() << "Stroke global" << _currentStroke->parentStroke()->globalTransform();
+            qDebug() << "---------------------------";
+            qDebug() << "g_group" << _currentComponent->transform();
+            qDebug() << "g_stroke" << _currentStroke->transform();
+            qDebug() << "g_stroke global" << _currentStroke->sceneTransform();
+            // Run some test for transformation
+#endif
 			_currentStroke = NULL;
 			_scene->update();
 		}
@@ -155,12 +266,16 @@ namespace CDI
 
 	void PlayGoController::eraserMove(Point2DPT pos)
 	{
-
 		QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
 		qDebug() << "Deleting" << selectedStrokes.size() << " items";
 		foreach (GraphicsPathItem* stroke, selectedStrokes)
-			delete (stroke->parentStroke);
-		if (selectedStrokes.size()) _scene->update();
+        {
+			Stroke* s = stroke->parentStroke();
+			if (s == NULL) continue;
+			_scene->onItemRemove(s->id());
+			delete s;
+        }
+//		if (selectedStrokes.size()) _scene->update();
 
 		qDebug() << "Looks fine";
 		// \todo - Implement related functions in scene
@@ -175,7 +290,6 @@ namespace CDI
 
 	void PlayGoController::lassoPress(Point2DPT pos)
 	{
-		qDebug() << "Selection begin";
 		_isLassoDisplayed = true;
 		_lassoPolygon = QPolygonF();
 		_lassoPolygon.push_back(pos);
@@ -196,7 +310,30 @@ namespace CDI
 		_lasso->setPolygon(_lassoPolygon);
 		_lasso->update(_lasso->boundingRect());
 
+        QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(_lassoPolygon, 1.0f);
+        if (selectedStrokes.size()) _itemHighlighted = true;
+        for (int i=0; i < selectedStrokes.size(); i++)
+        {
+            selectedStrokes[i]->highlight(true);
+        }
 	}
+
+    void PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
+    {
+        if (oldmode == UI::Select)
+        {
+            if (_itemHighlighted)
+                _scene->clearHighlight();
+            _isLassoDisplayed = false;
+            _lassoPolygon.clear();
+            _lasso->setPolygon(_lassoPolygon);
+        }
+        if (oldmode == UI::Sketch)
+        {
+            _currentStroke = NULL;
+            _isDrawingNow = false;
+        }
+    }
 
 	void PlayGoController::sketchAction(QTabletEvent *event)
 	{
@@ -262,18 +399,56 @@ namespace CDI
 
 	void PlayGoController::searchAction()
 	{
-		if (_isLassoDisplayed)
-		{
-			if (_lassoPolygon.size())
-			{
-				// No transformation
-				QImage inputImage = _scene->getSelectionImage(_lassoPolygon);
-				inputImage.save ("Search_lasso_input.png");
-			}
-			_isLassoDisplayed = false;
-			_lassoPolygon = QPolygonF();
-			_lasso->setPolygon(QPolygonF());
-		}
+        if (_isLassoDisplayed == false) return;
+        _isLassoDisplayed = false;
+        _lasso->setPolygon(QPolygonF());
+
+        if (_lassoPolygon.size() == 0) return;
+        // No transformation
+        QImage inputImage = _scene->getSelectionImage(_lassoPolygon);
+        QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(_lassoPolygon, 1.0f);
+
+        // Reset the lasso selection polygon
+        _lassoPolygon = QPolygonF();
+
+        if (selectedStrokes.size() == 0)
+        {
+            qDebug() << "No stroke selected";
+            return;
+        }
+
+        qDebug() << selectedStrokes.size() << "Strokes selected";
+        // Print stroke IDs
+        for (int i=0; i < selectedStrokes.size(); i++)
+        {
+            selectedStrokes[i]->highlight(true);
+            qDebug() << selectedStrokes[i]->parentStroke()->id().toString();
+        }
+		QList<SearchResult*> searchResults =
+                _scene->page()->getSearchManager()->search(inputImage, 20);
+
+        int itemHeight = 150; int itemWidth = 150;
+		QList<QGraphicsPixmapItem*> searchItems;
+        for (int i=0; i< searchResults.size(); i++)
+        {
+			SearchResult* result = searchResults[i];
+            QPixmap pixmap = QPixmap();
+			pixmap.load(result->resultFilePath);
+            pixmap = pixmap.scaled(QSize(itemHeight,itemWidth), Qt::KeepAspectRatio, Qt::FastTransformation);
+
+            QGraphicsPixmapItem* pixmapItem =  searchView->scene()->addPixmap(pixmap);
+            pixmapItem->setPos((i % 5) * itemWidth,
+                               (i / 5) * itemHeight);
+            searchItems.push_back(pixmapItem);
+        }
+        searchView->show();
+
+        searchView->setSceneRect(searchView->scene()->itemsBoundingRect());
+
+        if (searchResults.size())
+        {
+            emit onSearchComplete();
+        }
 	}
 
 	// Slot functions
@@ -305,13 +480,13 @@ namespace CDI
 		{
 			switch (_activeMode)
 			{
-			case MODE::Sketch :
+            case UI::Sketch :
 				sketchAction(event);
 				break;
-			case MODE::Erase :
+            case UI::Erase :
 				eraseAction(event);
 				break;
-			case MODE::Select :
+            case UI::Select :
 				selectAction(event);
 				break;
 			}
@@ -328,7 +503,7 @@ namespace CDI
 		Point2DPT pos = Point2DPT(mousePos.x(), mousePos.y(), 1.0f, 0);
 		switch (_activeMode)
 		{
-		case MODE::Sketch :
+        case UI::Sketch :
 			switch (status)
 			{
 			case 0 :
@@ -342,7 +517,7 @@ namespace CDI
 				break;
 			}
 			break;
-		case MODE::Erase :
+        case UI::Erase :
 			switch (status)
 			{
 			case 0 :
@@ -356,7 +531,7 @@ namespace CDI
 				break;
 			}
 			break;
-		case MODE::Select :
+        case UI::Select :
 			switch (status)
 			{
 			case 0 :
@@ -373,27 +548,72 @@ namespace CDI
 		}
 	}
 
+	void PlayGoController::onTouchEventFromView(QTouchEvent *event, QGraphicsView *view)
+	{
+		if (event->touchPoints().count() == 1)
+		{
+			const QTouchEvent::TouchPoint &touchPoint1
+					= event->touchPoints().first();
+			QPointF currentPos = touchPoint1.scenePos();
+			QPointF previousPos = touchPoint1.lastScenePos();
+
+			view->translate(currentPos.x()-previousPos.x(),
+							currentPos.y()-previousPos.y());
+
+			qDebug() << "View move by " << (currentPos.x() - previousPos.x());
+			view->translate((currentPos.x() - previousPos.x()),
+							(currentPos.y() - previousPos.y()));
+		}
+		if (event->touchPoints().count() == 3)
+		{
+			QList<QTouchEvent::TouchPoint> touchpoints = event->touchPoints();
+			// 1. Scaling by increase in radius
+			QPointF previousCenter = QPointF();
+			QPointF currentCenter = QPointF();
+			foreach(QTouchEvent::TouchPoint touch, touchpoints)
+			{
+				previousCenter += touch.lastScenePos();
+				currentCenter += touch.scenePos();
+			}
+
+			QPointF difference = currentCenter - previousCenter;
+
+
+
+			// 2. Translate by motion of center
+			// 3. Rotate by mean of rotation of each point by center
+
+		}
+	}
+
 	void PlayGoController::setToDraw()
 	{
-		setMode(MODE::Sketch);
+        setMode(UI::Sketch);
 	}
 
 	void PlayGoController::setToErase()
 	{
-		setMode(MODE::Erase);
+        setMode(UI::Erase);
 	}
 	void PlayGoController::setToSelect()
 	{
-		setMode(MODE::Select);
+        _scene->clearHighlight();
+        setMode(UI::Select);
 	}
 
 	void PlayGoController::setToEdit()
 	{
-		setMode(MODE::Edit);
+        setMode(UI::Edit);
 	}
 
-	void PlayGoController::setMode(MODE newMode)
+    void PlayGoController::setMode(UI::MODE newMode)
 	{
+        onModeChange(_activeMode, newMode);
+        if (_activeMode == newMode)
+        {
+            // No change of mode required
+            return;
+        }
 		_activeMode = newMode;
 	}
 
@@ -405,5 +625,13 @@ namespace CDI
 	void PlayGoController::clearCurrentScene()
 	{
 		_scene->page()->deleteAll();
+        _scene->clear();
+        _currentComponent = NULL;
+        _currentStroke = NULL;
+	}
+
+	void PlayGoController::drawMenusOnView(QPainter * painter, const QRectF & rect)
+	{
+
 	}
 }

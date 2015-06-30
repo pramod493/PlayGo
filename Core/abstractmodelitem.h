@@ -7,11 +7,49 @@
 namespace CDI {
 
 	class Component;
+
+	/**
+	 * @brief The Item class is base class for all the components derived in the Model
+	 * @remarks - Can we also have item type for manager classes?
+	 * NOTE - Manager classes might might have settings that we need to store
+	 */
+	class Item
+	{
+	public:
+        virtual ~Item() {}
+		/**
+		 * @brief type return the AbstractModelItem type. Must be implemented by
+		 * derived classes
+		 * @return Item Type
+		 */
+		virtual ItemType type() const = 0;
+
+		/**
+		 * @brief id returns the item ID
+		 * @return item's QUuid
+		 */
+		virtual QUuid id() const = 0;
+
+		/**
+		 * @brief serialize implements the serialization of the object
+		 * @param stream QDataStream on which to write the information
+		 * @return QDataStream after write
+		 */
+		virtual QDataStream& serialize(QDataStream& stream) const = 0;
+
+		/**
+		 * @brief deserialize implements deserialization of the object
+		 * @param stream QDataStream from which to read the information
+		 * @return  QDataStream after writing
+		 */
+		virtual QDataStream& deserialize(QDataStream& stream) = 0;
+	};
+
 	/**
 	 * @brief The AbstractModelItem class is base class for all the items created in model.
 	 *
 	 */
-	class AbstractModelItem : public QObject
+	class AbstractModelItem : public Item
 	{
 	public:
 		unsigned int mask;	/**< Item's mask */
@@ -24,7 +62,7 @@ namespace CDI {
 		//-----------------------------------------------
 		// Constructors/Destructors
 		//-----------------------------------------------
-		AbstractModelItem(QObject *parent = NULL);
+		AbstractModelItem();
 
 		virtual ~AbstractModelItem();
 
@@ -41,12 +79,6 @@ namespace CDI {
 		//-----------------------------------------------
 		// Virtual functions (same order in derived class)
 		//-----------------------------------------------
-		/**
-		 * @brief type return the AbstractModelItem type. Must be implemented by
-		 * derived classes
-		 * @return Item Type
-		 */
-		virtual ItemType type() const = 0;
 
 		/**
 		 * @brief transform returns the item's transformation w.r.t it's parent
@@ -109,33 +141,23 @@ namespace CDI {
 		 */
 		virtual void hide();
 
-		/**
-		 * @brief serialize implements the serialization of the object
-		 * @param stream QDataStream on which to write the information
-		 * @return QDataStream after write
-		 */
-		virtual QDataStream& serialize(QDataStream& stream) const = 0;
+        virtual bool locked() const;
 
-		/**
-		 * @brief deserialize implements deserialization of the object
-		 * @param stream QDataStream from which to read the information
-		 * @return  QDataStream after writing
-		 */
-		virtual QDataStream& deserialize(QDataStream& stream) = 0;
+        virtual void lock(bool value);
 
 	private:
-		/**
-		 * @brief serializeInternal internal function which writes the QUuid of the item
-		 * @param stream
-		 * @return
-		 */
-		QDataStream& serializeInternal(QDataStream& stream) const;
-		/**
-		 * @brief deserializeInternal private function which reads back the QUuid of the item
-		 * @param stream
-		 * @return
-		 */
-		QDataStream& deserializeInternal(QDataStream& stream);
+//		/**
+//		 * @brief serializeInternal internal function which writes the QUuid of the item
+//		 * @param stream
+//		 * @return
+//		 */
+//		QDataStream& serializeInternal(QDataStream& stream) const;
+//		/**
+//		 * @brief deserializeInternal private function which reads back the QUuid of the item
+//		 * @param stream
+//		 * @return
+//		 */
+//		QDataStream& deserializeInternal(QDataStream& stream);
 
 //	signals:
 //		void itemDelete(AbstractModelItem *item);

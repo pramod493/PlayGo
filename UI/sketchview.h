@@ -47,8 +47,8 @@ namespace CDI
 		 * @param painter
 		 * @param rect
 		 */
-		void viewDrawbackground(QPainter* painter, const QRectF& rect);
+		void viewDrawbackground(QPainter* painter, const QRectF & rect);
 
-		void viewDrawforeground(QPainter* painter, const QRectF& rect);
+		void viewDrawforeground(QPainter* painter, const QRectF & rect);
 	};
 }

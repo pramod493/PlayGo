@@ -7,7 +7,11 @@
 #include <QIcon>
 #include <QStatusBar>
 #include <QSlider>
+#include <QStackedLayout>
+#include <QGridLayout>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QTabletEvent>
 #include "colorselectortoolbar.h"
 #include "playgo.h"
@@ -55,7 +59,6 @@ namespace CDI
 
 		QSlider* brushWidthSlider;
 
-		QVBoxLayout* mainLayout;
 		// Sketching related widgets
 		SketchView* sketchView;          // Primarily use this one. Skip the other ones...
 		SketchScene* sketchScene;

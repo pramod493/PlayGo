@@ -2,6 +2,7 @@ include ($$PWD/../Indexer-Minimal/Indexer.pri)
 include ($$PWD/../poly2tri/poly2tri.pri)
 include ($$PWD/../Physics/QBox2D.pri)
 include ($$PWD/../EdgeDetect/Edge Detect.pri)
+#include ($$PWD/../QsLog/QsLog.pri)
 
 INCLUDEPATH += $$PWD
 
@@ -24,7 +25,8 @@ HEADERS += \
     $$PWD/physicsbody.h \
     $$PWD/physicsjoint.h \
     $$PWD/playgocore.h \
-    $$PWD/searchresult.h
+    $$PWD/searchresult.h \
+    $$PWD/physicsshape.h
 
 SOURCES += \
     $$PWD/commonfunctions.cpp \
@@ -43,7 +45,8 @@ SOURCES += \
     $$PWD/page.cpp \
     $$PWD/physicsbody.cpp \
     $$PWD/physicsjoint.cpp \
-    $$PWD/searchresult.cpp
+    $$PWD/searchresult.cpp \
+    $$PWD/physicsshape.cpp
 
 INCLUDEPATH += $$PWD/Clipper
 HEADERS += $$PWD/Clipper/clipper.hpp

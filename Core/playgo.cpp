@@ -4,7 +4,9 @@ namespace CDI
 {
 	PlayGo::PlayGo()
 	{
+		_currentPage = NULL;
 		_pages = QHash<QUuid, Page*>();
+		_rootID = uniqueHash();
 	}
 
 	PlayGo::~PlayGo()
@@ -118,12 +120,16 @@ namespace CDI
 
 	QDataStream& PlayGo::serialize(QDataStream& stream) const
 	{
-		stream << _pages.size();
+		stream << _rootID;
+
+		int num_pages = _pages.size();
+		stream << num_pages;
+
 		QHash<QUuid, Page*>::const_iterator iter;
 		for (iter = _pages.constBegin(); iter != _pages.constEnd(); ++iter)
 		{
 			Page*  page= iter.value();
-			stream << *page;
+			page->serialize(stream);
 		}
 		// Mark for setting current page
 		if (_currentPage== NULL)
@@ -139,12 +145,16 @@ namespace CDI
 
 	QDataStream& PlayGo::deserialize(QDataStream& stream)
 	{
+		QUuid tmpId; stream >> tmpId;
+		_rootID = tmpId;
+
 		int num_pages;
 		stream >> num_pages;
+
 		for (int i=0; i< num_pages; i++)
 		{
 			Page *page = new Page(this);
-			stream >> *page;
+			page->deserialize(stream);
 			_pages.insert(page->id(), page);
 		}
 		int i;	stream >> i;
@@ -161,14 +171,53 @@ namespace CDI
 		return stream;
 	}
 
-	QDataStream& operator>>(QDataStream& stream, const PlayGo& item)
+	bool PlayGo::SaveModel(QString filePath)
 	{
-		return item.serialize(stream);
+		QFile file(filePath);
+		if (file.open(QIODevice::WriteOnly))
+		{
+			QDataStream stream(&file);
+			stream << VERSION_STR;
+			serialize(stream);
+			file.close();
+			return true;
+		} else {
+			qDebug() << "Error in opening the file";
+		}
+		return false;
 	}
 
-	QDataStream& operator<<(QDataStream& stream, PlayGo& item)
+	bool PlayGo::ReadModel(QString filePath)
 	{
-		return item.deserialize(stream);
+		QFile file(filePath);
+		if (file.open(QIODevice::ReadOnly))
+		{
+			QDataStream stream(&file);
+			int i;
+			stream >> i;
+			if (i!= VERSION_STR)
+			{
+				qDebug() << "Version not supported";
+				file.close();
+				return false;
+			}
+			deserialize(stream);
+			file.close();
+			return true;
+		} else {
+			qDebug() << "Error in opening the file";
+		}
+		return false;
 	}
+
+//	QDataStream& operator>>(QDataStream& stream, const PlayGo& item)
+//	{
+//		return item.serialize(stream);
+//	}
+
+//	QDataStream& operator<<(QDataStream& stream, PlayGo& item)
+//	{
+//		return item.deserialize(stream);
+//	}
 }
 

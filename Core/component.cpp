@@ -28,9 +28,17 @@ namespace CDI
 	{
 		// Do not call directly. Rather call from Page::destroyComponent()
 		// delete all the contained components;
-		QList<AbstractModelItem*> allitems = values();
-		foreach(AbstractModelItem* item, allitems)
+		QHash<QUuid, AbstractModelItem*>::const_iterator iter;
+		for (iter = constBegin(); iter != constEnd(); ++iter)
+		{
+			AbstractModelItem* item = iter.value();
 			delete item;
+		}
+		clear();
+		if (_pagePtr != NULL)
+		{
+			_pagePtr->destroyComponent(this);
+		}
 	}
 
 	QUuid Component::id() const
@@ -50,7 +58,7 @@ namespace CDI
 
 	ItemType Component::type() const
 	{
-		return ItemType::COMPONENT;
+		return COMPONENT;
 	}
 
 	Point2D Component::position()
@@ -105,6 +113,9 @@ namespace CDI
 	void Component::scaleBy(float scaleFactor)
 	{
 		_scale *= scaleFactor;
+
+		_transformModified = true;
+		_componentScaled = true;
 	}
 
 	void Component::onIdUpdate(QUuid oldID, QUuid newID)
@@ -117,22 +128,32 @@ namespace CDI
 		}
 	}
 
-	QTransform Component::transform() const
+	QTransform Component::transform()
 	{
+		if (_transformModified || _componentScaled)
+		{
+			_transform = QTransform();
+			/*_transform = */_transform.rotate(_rotation);
+			/*_transform = */_transform.scale(_scale, _scale);
+			/*_transform = */_transform.translate
+					(_position.x(), _position.y());
+			_transformModified = false;
+			_componentScaled = false;
+		}
 		return _transform;
 	}
 
-	QTransform Component::globalTransform() const
+	QTransform Component::globalTransform()
 	{
 		return transform();
 	}
 
-	QTransform Component::itemTransform(AbstractModelItem* item) const
+	QTransform Component::itemTransform(AbstractModelItem* item)
 	{
 		return transform() * (item->transform());
 	}
 
-	QTransform Component::itemTransform(QUuid itemId) const
+	QTransform Component::itemTransform(QUuid itemId)
 	{
 		QTransform t = transform();
 		if (contains(itemId))
@@ -145,14 +166,28 @@ namespace CDI
 
 	void Component::setTransform(QTransform& transform, bool combine)
 	{
-		mask |= isTransformed;
-		_transform = (combine ? _transform * transform : transform);
+		// NOTE This does not check for difference inscaling along different axes as well as
+		// for
+		{
+			_transform = (combine ? _transform * transform : transform);
+			float *tmpRotation, *tmpScale;
+			tmpRotation = new float;
+			tmpScale = new float;
+			Point2D* tmpTranslation = new Point2D();
+			extractTransformComponents(_transform, tmpRotation, tmpScale, tmpTranslation);
+
+			_rotation = *tmpRotation;
+			_scale = *tmpScale;
+			_position = *tmpTranslation;
+
+			delete tmpRotation;
+			delete tmpScale;
+			delete tmpTranslation;
+		}
+
 		_inverseTransform = _transform.inverted();
 
-		_transformModified = true;
-
-		qDebug() << "@Component::setTransform()";
-		if (_pagePtr != NULL) _pagePtr->onComponentUpdate(this);
+		if (_pagePtr != NULL) _pagePtr->onItemUpdate(id());
 	}
 
 	Stroke* Component::addStroke(QColor color, float thickness)
@@ -193,7 +228,9 @@ namespace CDI
 	void Component::addItem(AbstractModelItem* item)
 	{
 		if (contains(item->id()) == false)
+		{
 			insert(item->id(), item);
+		}
 	}
 
 	bool Component::removeItem(AbstractModelItem* item)
@@ -216,14 +253,16 @@ namespace CDI
 	{
 		if (contains(key)) return true;
 
-		/*if (searchRecurive)
+		/* NOTE - This will be useful in searching for items contained within
+		 * AbstractModelItem objects such as PhysicsShape and PhysicsJoint
+		 * if (searchRecurive)
 		{
 			// Search into member components if they are of relevant type
 			QHash<QUuid, AbstractModelItem*>::const_iterator iter;
 			for (iter = constBegin(); iter != constEnd(); ++iter)
 			{
 				AbstractModelItem* item = iter.value();
-				if (item->type()== ItemType::COMPONENT)
+				if (item->type()== COMPONENT)
 				{
 					Component* component = static_cast<Component*>(item);
 					if (component->containsItem(key)) return true;
@@ -245,31 +284,16 @@ namespace CDI
 		if (contains(id))
 			return value(id);
 		return NULL;
-		/*
-		if (!searchRecursive)
-		{
-			if (contains(id)) return value(id);
-			return NULL;
-		}
-		// Iterate over all the items in hash and check if any of them is component
-		QHash<QUuid, AbstractModelItem*>::const_iterator iter;
-		for (iter = constBegin(); iter != constEnd(); ++iter)
-		{
-			AbstractModelItem* item = iter.value();
-			if (item->type()== ItemType::COMPONENT)
-			{
-				Component* component = static_cast<Component*>(item);
-				if (component->containsItem(id, searchRecursive))
-				{
-					return component->getItemPtrById(id);
-				}
-			}
-		}
-		return NULL;*/
 	}
 
 	QDataStream& Component::serialize(QDataStream& stream) const
 	{
+		stream << _transform;
+		stream << _inverseTransform;
+		stream << _position;
+		stream << _scale;
+		stream << _rotation;
+
 		stream << size();
 		if (!isEmpty())
 		{
@@ -279,8 +303,12 @@ namespace CDI
 			{
 				AbstractModelItem* item = iter.value();
 				int j = item->type();
-				stream << j;
-				stream << *item;
+				// Do not write items which are not supported by the component
+				if (isItemTypeSupported(item->type()))
+				{
+					stream << j;
+					item->serialize(stream);
+				}
 			}
 		}
 		return stream;
@@ -288,6 +316,12 @@ namespace CDI
 
 	QDataStream& Component::deserialize(QDataStream& stream)
 	{
+		stream >> _transform;
+		stream >> _inverseTransform;
+		stream >> _position;
+		stream >> _scale;
+		stream >> _rotation;
+
 		int num_items;
 		stream >> num_items;
 		if (num_items!= 0)
@@ -296,9 +330,13 @@ namespace CDI
 			{
 				int j;
 				stream >> j;
-				AbstractModelItem* item = createEmptyItem(getItemType(j));
-				stream >> *item;
-				addItem(item);
+				ItemType t = getItemType(j);
+				if (isItemTypeSupported(t))
+				{
+					AbstractModelItem* item = createEmptyItem(getItemType(j));
+					item->deserialize(stream);
+					addItem(item);
+				}
 			}
 		}
 		return stream;
@@ -309,18 +347,18 @@ namespace CDI
 		AbstractModelItem* ptr = NULL;
 		switch (itemType)
 		{
-		case ItemType::STROKE :
+		case STROKE :
 			ptr = addStroke();
 			break;
-		case ItemType::IMAGE :
+		case IMAGE :
 			qDebug() << "Creating empty Image object";
 			ptr = addImage();
 			break;
-		case ItemType::POLYGON2D :
+		case POLYGON2D :
 			ptr = new Polygon2D(this);
 			addItem(ptr);
 			break;
-		case ItemType::COMPONENT :
+		case COMPONENT :
 			qDebug() << "Components are not supposed to contain components"
 					 << "@Component::createEmptyItem(ItemType): AbstractModelItem*";
 			break;
@@ -329,6 +367,20 @@ namespace CDI
 					 << "Default constructor for given itemtype is not available. Returning NULL";
 		}
 		return ptr;
+	}
+
+	bool Component::isItemTypeSupported(ItemType t) const
+	{
+		switch (t)
+        {
+        case STROKE :
+        case IMAGE :
+        case POLYGON2D :
+            return true;
+        default:
+            return false;
+        }
+        return false;
 	}
 
 	void Component::updateTransform()
@@ -357,13 +409,36 @@ namespace CDI
 
 	void Component::onItemUpdate(AbstractModelItem* item)
 	{
-		if (contains(item->id()) && _pagePtr != NULL)
-			_pagePtr->onItemUpdate(item->id());
+		onItemUpdate(item->id());
 	}
 
 	void Component::onItemUpdate(QUuid itemKey)
 	{
 		if (contains(itemKey) && _pagePtr != NULL)
 			_pagePtr->onItemUpdate(itemKey);
+	}
+
+	void Component::onItemDisplayUpdate(AbstractModelItem *item)
+	{
+		onItemDisplayUpdate(item->id());
+	}
+
+	void Component::onItemDisplayUpdate(QUuid itemKey)
+	{
+		if(contains(itemKey) && _pagePtr != NULL)
+			_pagePtr->onItemDisplayUpdate(itemKey);
+	}
+
+	void Component::onItemTransformUpdate(AbstractModelItem *item)
+	{
+		onItemTransformUpdate(item->id());
+	}
+
+	void Component::onItemTransformUpdate(QUuid itemKey)
+	{
+		if (contains(itemKey) && _pagePtr != NULL)
+		{
+			_pagePtr->onItemTransformUpdate(itemKey);
+		}
 	}
 }

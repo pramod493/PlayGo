@@ -17,7 +17,7 @@ namespace CDI
 	 * related to joint objects used in simulation
 	 * @remarks use b2JointType as enum to represent joints
 	 */
-	class PhysicsJoint //: public AbstractModelItem
+	class PhysicsJoint : public Item
 	{
 	protected:
 //		JointType _jointType;
@@ -33,9 +33,13 @@ namespace CDI
 
 		void createJointByType();
 	public:
-		virtual ItemType type() { return ItemType::PHYSICSJOINT; }
+		virtual ItemType type() { return PHYSICSJOINT; }
 
 		QUuid id() const;
+
+		QDataStream& serialize(QDataStream &stream) const;
+
+		QDataStream& deserialize(QDataStream &stream);
 
 		virtual b2Joint* joint();
 

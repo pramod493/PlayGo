@@ -18,29 +18,33 @@ namespace CDI
 {
 	////////////// ENUM conversion from int
 	ItemType getItemType(int i)
-	{
-		switch (i)
-		{
-		case ItemType::STROKE :
-			return ItemType::STROKE;
-		case ItemType::IMAGE :
-			return ItemType::IMAGE;
-		case ItemType::POLYGON2D:
-			return ItemType::POLYGON2D;
-		case ItemType::SEARCHRESULT :
-			return ItemType::SEARCHRESULT;
-		case ItemType::PHYSICSBODY :
-			return ItemType::PHYSICSBODY;
-		case ItemType::PHYSICSJOINT :
-			return ItemType::PHYSICSJOINT;
-		case ItemType::COMPONENT :
-			return ItemType::COMPONENT;
-		case ItemType::ASSEMBLY :
-			return ItemType::ASSEMBLY;
-		case ItemType::PAGE :
-			return ItemType::PAGE;
-		}
-		return ItemType::NONE;
+    {
+        switch (i)
+        {
+        case STROKE :
+            return STROKE;
+        case IMAGE :
+            return IMAGE;
+        case POLYGON2D:
+            return POLYGON2D;
+        case SEARCHRESULT :
+            return SEARCHRESULT;
+        case PHYSICSBODY :
+            return PHYSICSBODY;
+		case PHYSICSSHAPE :
+			return PHYSICSSHAPE;
+        case PHYSICSJOINT :
+            return PHYSICSJOINT;
+        case COMPONENT :
+            return COMPONENT;
+        case ASSEMBLY :
+            return ASSEMBLY;
+        case PAGE :
+            return PAGE;
+        case ROOT :
+            return ROOT;
+        }
+        return NONE;
 	}
 
 	SelectionType getSelectionType(int i)
@@ -48,43 +52,54 @@ namespace CDI
 		// This function is not needed since we are not going to serialize the selection type
 		switch (i)
 		{
-		case SelectionType::OnItem :
-			return SelectionType::OnItem;
-		case SelectionType::Inside :
-			return SelectionType::Inside;
-		case SelectionType::Outside :
-			return SelectionType::Outside;
-		case SelectionType::Nearby :
-			return SelectionType::Nearby;
+        case OnItem :
+            return OnItem;
+        case Inside :
+            return Inside;
+        case Outside :
+            return Outside;
+        case Nearby :
+            return Nearby;
 		}
-		return SelectionType::Nearby;
+        return Nearby;
 	}
 
 	QString getItemNameByType(ItemType i)
 	{
 		switch (i)
 		{
-		case ItemType::STROKE :
+        case STROKE :
 			return "ItemType::STROKE";
-		case ItemType::IMAGE :
+        case IMAGE :
 			return "ItemType::IMAGE";
-		case ItemType::POLYGON2D:
+        case POLYGON2D:
 			return "ItemType::POLYGON2D";
-		case ItemType::SEARCHRESULT :
+        case SEARCHRESULT :
 			return "ItemType::SEARCHRESULT";
-		case ItemType::PHYSICSBODY :
+        case PHYSICSBODY :
 			return "ItemType::PHYSICSBODY";
-		case ItemType::PHYSICSJOINT :
+        case PHYSICSJOINT :
 			return "ItemType::PHYSICSJOINT";
-		case ItemType::COMPONENT :
+        case COMPONENT :
 			return "ItemType::COMPONENT";
-		case ItemType::ASSEMBLY :
+        case ASSEMBLY :
 			return "ItemType::ASSEMBLY";
-		case ItemType::PAGE :
+        case PAGE :
 			return "ItemType::PAGE";
+        case ROOT :
+			return "ItemType::ROOT";
 		}
 		return "ItemType::NONE";
 	}
+
+    QString getHomeDirectory()
+    {
+#ifdef Q_OS_LINUX
+        return QString("/home/pramod/Junks/database/");
+#else
+        return QString("C:/Database/");
+#endif
+    }
 
 	////////////////////////////////////////
 
@@ -98,9 +113,9 @@ namespace CDI
 		return (p1->x() * (p2->y()) - p2->x() * (p1->y()) );
     }
 
-    float AngleBetweenPoints(Point2D* p1, Point2D* p2)
+	float angleBetweenPoints(Point2D* p1, Point2D* p2)
     {
-        return atan ((p2->y()-p1->y())/(p2->x()-p1->x()));
+		return atan2 ((p2->y()-p1->y()), (p2->x()-p1->x()));
     }
 
 	float magnitude(Point2D* p)
@@ -171,6 +186,28 @@ namespace CDI
         return OnSegment;
     }
 
+	bool extractTransformComponents(QTransform& t, float* rotation, float* scale, Point2D* translation)
+	{
+		Point2D origin = t.map(Point2D(0,0));
+
+		Point2D unitX = t.map(Point2D(1,0));
+
+		Point2D* newVec = new Point2D(unitX-origin);
+		Point2D* baseAxis = new Point2D(1,0);
+
+		translation->setX(origin.x());
+		translation->setY(origin.y());
+
+		*scale = sqrEuclideanDistance(&origin, &unitX);
+
+		*rotation = angleBetweenPoints(newVec, baseAxis) * 180.0f / _PI_;
+
+		delete newVec;
+		delete baseAxis;
+
+		return true;
+	}
+
     bool colorCompare(QColor c1, QColor c2)
     {
          return (c1.red()== c2.red()) && (c1.green() == c2.green()) && (c1.blue() == c2.blue());
@@ -239,7 +276,7 @@ namespace CDI
 		{
 			// 1. Get outer loop and corresponding inner loop
 			vector<cv::Point> outerContour = outerContours[i];
-			vector<vector<cv::Point>> innerContours = allInnerContours[i];
+            vector<vector<cv::Point> > innerContours = allInnerContours[i];
 
 			// 2. Convert into format accepted by RDP algo
 			vector<p2t::Point> tmp_contour;

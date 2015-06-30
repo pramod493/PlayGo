@@ -10,14 +10,28 @@ namespace CDI
 	class GraphicsPixmap : public QGraphicsPixmapItem
 	{
 	public:
-		Image* parentImage;
+        enum {Type = UserType + IMAGEVIEW };
 
-		enum {Type = UserType + GraphicsItemType::IMAGEVIEW };
+    protected:
+        Image* _parentImage;
 
+        bool _highlighted;
+
+    public:
 		GraphicsPixmap(GraphicsItemGroup* parent, Image* image);
 
 		int type() const { return Type; }
 
+        Image* parentImage() const;
+
+        void setParentImage(Image* image);
+
+        bool contains(QPointF pos);
+
 		void updateImage();
+
+        bool isHighlighted() const;
+
+        void highlight(bool value);
 	};
 }

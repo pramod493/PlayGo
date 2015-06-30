@@ -11,37 +11,33 @@ namespace CDI
     SearchManager::SearchManager(QObject *parent)
         : QObject(parent)
     {
-		databaseDir     = QString("C:/Database/");
+        databaseDir = getHomeDirectory();
 		inputFilePath   = databaseDir + QString("Input.png");
 		resultFilePath  = databaseDir + QString("results/results.yml");
 		origImagePath   = databaseDir + QString("trans");
-
-        localFileList = QList<QString>();
 
         namespace po = boost::program_options;
         path datapasePath = path(databaseDir.toStdString());
         wbBICE *biceDescriptor = new wbBICE();
         searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
 
-		_databaseNotIndexed = true;
-
-        // TODO - Enable indexing for test
-//        searchEngine->Index();
-//        searchEngine->Load();
+		_databaseIndexed = false;
+//		searchEngine->Index();
+//		searchEngine->Load();
     }
 
-//	SearchManager* SearchManager::_instance = NULL;
+/*	SearchManager* SearchManager::_instance = NULL;
 
-//	SearchManager* SearchManager::instance()
-//	{
-//		if (_instance == NULL) _instance = new SearchManager();
-//		return _instance;
-//	}
+	SearchManager* SearchManager::instance()
+	{
+		if (_instance == NULL) _instance = new SearchManager();
+		return _instance;
+	}
+	*/
 
     SearchManager::~SearchManager()
     {
         if (searchEngine!= NULL) delete searchEngine;
-        localFileList.clear();
     }
 
 	void SearchManager::refresh()
@@ -56,50 +52,35 @@ namespace CDI
 		searchEngine->Load();
 	}
 
-    bool SearchManager::search(QImage &image, int numResults)
+	QList<SearchResult*> SearchManager::search(QImage &image, int numResults)
     {
-		if (image.isNull()) return false;
-		// TODO - Image is saved only for debugging and testing purposes
+		if (image.isNull()) return QList<SearchResult*>();
 		image.save(inputFilePath);
-
 		return search(inputFilePath, numResults);
-		/*
-		vector<string> results =
-				searchEngine->Query(ASM::QImageToCvMat(image, true), numResults);
-
-		localFileList.clear();
-		for (vector<string>::iterator it = results.begin();
-			 it != results.begin()+numResults; ++it)
-		{
-			string name = *it;
-			localFileList.push_back(QString::fromStdString(name));
-		}
-		//ConvertResultsToLocalPath(numResults);
-		return true;
-		*/
     }
 
-	bool SearchManager::search(QString filePath, int numResults)
+	QList<SearchResult*> SearchManager::search(QString filePath, int numResults)
 	{
-		if (_databaseNotIndexed == false)
+		if (_databaseIndexed == false)
 		{
-			_databaseNotIndexed == true;
+			_databaseIndexed = true;
 			searchEngine->Index();
 			searchEngine->Load();
 		}
 		vector<string> results = searchEngine->Query(filePath.toStdString(), numResults);
 
-		localFileList.clear();
-		for (vector<string>::iterator it = results.begin();
-			 it != results.begin()+numResults; ++it)
-		{
-			string name = *it;
-			localFileList.push_back(QString::fromStdString(name));
-		}
-		//ConvertResultsToLocalPath(numResults);
-		return true;
+		QList<SearchResult*> searchResults;
+        for(vector<string>::iterator it = results.begin();
+            it != results.end(); ++it)
+        {
+            QString str = QString::fromStdString(*it);
+			SearchResult *searchResult = new SearchResult(str);
+            searchResults.push_back(searchResult);
+        }
+        return searchResults;
 	}
 
+    /* OBSOLETE FUNCTION
     void SearchManager::ConvertResultsToLocalPath(int numResults)
     {   // Populates the file list vector
         // No longer needed since we are directly querying the file name from
@@ -126,5 +107,5 @@ namespace CDI
                 lineNumber++;
             }
         }
-    }
+    }*/
 }

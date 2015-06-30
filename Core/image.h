@@ -18,15 +18,16 @@ namespace CDI
 	 * */
 
 	/**
-	 * @brief The Image class
+     * @brief Represents Image information for display, triangulation,
+     * and metadata container.
 	 * @remarks: QRectF class need not be public since we are
 	 * not supposed to change any of its attributes from outside
 	 * Its dimensions must be set based on image dimensions ONLY.
 	 */
-	class Image : public AbstractModelItem, protected QRectF
+    class Image : public AbstractModelItem
 	{
 	protected:
-		QPixmap _pixmap;
+        QPixmap* _pixmap;
 		QString _filepath;
 		QTransform _transform;
 		QTransform _inverseTransform;
@@ -40,15 +41,17 @@ namespace CDI
 		Image(const Image & image);
 		Image(Component* component, const QPixmap & pixmap, QString filename);
 
+        virtual ~Image();
+
 		//-----------------------------------------------
 		// Query/Set functions(same order in derived class)
 		// Non-virtual
 		//-----------------------------------------------
-		QPixmap pixmap() const;
+        QPixmap* pixmap() const;
 		QString filepath() const;
 
-		void setPixmap(QPixmap& pixmap);
-		void setFilepath(QString filepath);
+        void setPixmap(QPixmap* pixmap);
+        void setFilepath(QString filepath, bool updateImage = true);
 
 		//-----------------------------------------------
 		// Virtual functions (same order in derived class)
@@ -65,9 +68,6 @@ namespace CDI
 
 		QDataStream& serialize(QDataStream& stream) const;
 		QDataStream& deserialize(QDataStream& stream);
-
-	protected:
-		void updateRect();
 	};
 
 	/************************************************************

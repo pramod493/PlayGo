@@ -26,7 +26,7 @@ QDebug operator <<(QDebug d, const p2t::Point& p)
 
 void testPoly2Tri()
 {
-	vector<vector<p2t::Point*>> polylines;
+    vector<vector<p2t::Point*> > polylines;
 	vector<Triangle*> triangles;
 
 	vector<p2t::Point*> polyline;

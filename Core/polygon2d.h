@@ -29,6 +29,8 @@ namespace CDI
 		Polygon2D(const Polygon2D& p);
 		Polygon2D(Component* component, const QVector<Point2D>& points, QColor color, float thickness);
 
+		virtual ~Polygon2D();
+
 		//-----------------------------------------------
 		// Query/Set functions(same order in derived class)
 		// Non-virtual

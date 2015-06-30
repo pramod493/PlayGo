@@ -13,8 +13,6 @@ namespace CDI
 	class Polygon2D;
 	class PhysicsBody : public AbstractModelItem
 	{
-		Q_OBJECT
-
 	protected:
 		b2Body* _b2body;
 
@@ -54,7 +52,7 @@ namespace CDI
 		//-----------------------------------------------
 		// Virtual functions (same order in derived class)
 		//-----------------------------------------------
-		ItemType type() const;// { return ItemType::PHYSICSBODY; }
+		ItemType type() const;// { return PHYSICSBODY; }
 
 		QTransform transform() const;
 

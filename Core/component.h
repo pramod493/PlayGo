@@ -15,9 +15,8 @@ namespace CDI
 	// TODO - Destructor should delete all the items as well
 	// Do not add Assembly objects to this.
 	// Limit types to COMPONENT, STROKE, IMAGE, PHYSICS..., POLYGON2D
-	class Component : /*public QObject, */public QHash<QUuid, AbstractModelItem*>
+	class Component : public Item, public QHash<QUuid, AbstractModelItem*>
 	{
-//		Q_OBJECT
 	public:
 		unsigned int mask;
 
@@ -42,7 +41,7 @@ namespace CDI
 
 		/**
 		 * @brief Mark as true whenever object is scaled.
-		 * @remark Scaling of component requires re-creation of b2body shape and therefore is important
+		 * @remarks Scaling of component requires re-creation of b2body shape and therefore is important
 		 */
 		bool _componentScaled;
 
@@ -77,10 +76,10 @@ namespace CDI
 		// Virtual functions (same order in derived class)
 		//-----------------------------------------------
 		/**
-		 * @brief Returns ItemType::COMPONENT
-		 * @return ItemType::COMPONENT
+		 * @brief Returns COMPONENT
+		 * @return COMPONENT
 		 */
-		virtual ItemType type() const;
+		ItemType type() const;
 
 		virtual Point2D position();
 
@@ -111,20 +110,20 @@ namespace CDI
 		 * @brief Returns component transform
 		 * @return
 		 */
-		virtual QTransform transform() const;
+		virtual QTransform transform();
 
 		/**
 		 * @brief Returns the global transformation of this Component w.r.t. scene
 		 * @return Global transform
 		 */
-		virtual QTransform globalTransform() const;
+		virtual QTransform globalTransform();
 
 		/**
 		 * @brief Get transformation w.r.t. to given component
 		 * @param itemId
 		 * @return Absolute transform of given item.
 		 */
-		virtual QTransform itemTransform(AbstractModelItem*) const;
+		virtual QTransform itemTransform(AbstractModelItem*);
 
 		/**
 		 * @brief Get transformation w.r.t. to given component
@@ -132,22 +131,54 @@ namespace CDI
 		 * @return Absolute transform of given item. Returns transform of
 		 * first item in case of multiple matches
 		 */
-		virtual QTransform itemTransform(QUuid itemId) const;
+		virtual QTransform itemTransform(QUuid itemId);
 
 		/**
 		 * @brief setTransform sets the Component transform
 		 * @param transform: New transformation
 		 * @todo Must be able to extract position, rotation and scale values from transform
+		 * @remarks This also extracts the rotation, scaling and translation values
+		 * and might be computationally expensive. Use with caution
 		 */
 		virtual void setTransform(QTransform& transform, bool combine = false);
 
-		// Extra create functions for convenience. Automatically adds the item
-		// given component.
+		/**
+		 * @brief Creates a new Stroke and adds it to the component
+		 * @param color Stroke color
+		 * @param thickness Stroke thickness
+		 * @return Pointer to created Stroke
+		 */
 		virtual Stroke* addStroke(QColor color = Qt::black, float thickness = 1.0f);
+
+		/**
+		 * @brief Creates a new Stroke and adds it to the component
+		 * @param points List of points to add to the Stroke
+		 * @param color Stroke color
+		 * @param thickness Stroke thickness
+		 * @return Pointer to created Stroke
+		 */
 		virtual Stroke* addStroke(const QVector<Point2DPT>& points, QColor color, float thickness);
 
+		/**
+		 * @brief Creates and adds an empty Image to the Component
+		 * @return pointer to created Image object
+		 */
 		virtual Image* addImage();
+
+		/**
+		 * @brief Creates an Image object based on the given filepath
+		 * @param filename Filepath containing Image information (primarily png file)
+		 * @return Pointer to created Image object
+		 */
 		virtual Image* addImage(const QString filename);
+
+		/**
+		 * @brief Creates an Image object based on the given QPixmap and filepath. It sets the QPixmap
+		 * and filepath values to the input arguments
+		 * @param pixmap QPixmap reference
+		 * @param filename Filename for Image
+		 * @return Pointer to created Image object
+		 */
 		virtual Image* addImage(const QPixmap &pixmap, QString filename);
 
 		/**
@@ -157,11 +188,17 @@ namespace CDI
 		virtual void addItem(AbstractModelItem* item);
 
 		/**
-		 * @brief Removes the reference of the item from the Component. Also sets it parent to NULL.
+		 * @brief Removes the reference of the item from the Component. Don't set it parent to NULL.
 		 * @param item Item to remove from component
 		 * @return True if item was found in the object, false otherwise
 		 */
 		virtual bool removeItem(AbstractModelItem* item);
+
+		/**
+		 * @brief Removes the reference of the item from the Component. Don't set it parent to NULL.
+		 * @param itemId ID of item to remove from component
+		 * @return True if item was found in the object, false otherwise
+		 */
 		virtual bool removeItem(QUuid itemId);
 
 		// Query functions.
@@ -181,6 +218,8 @@ namespace CDI
 	protected:
 		// If new item types are added, extend this class to accomodate those
 		virtual AbstractModelItem* createEmptyItem(ItemType itemtype);
+
+		virtual bool isItemTypeSupported(ItemType t) const;
 
 		void updateTransform();
 
@@ -213,6 +252,21 @@ namespace CDI
 		 * @param itemKey Item QUuid
 		 */
 		void onItemUpdate(QUuid itemKey);
+
+		void onItemDisplayUpdate(AbstractModelItem* item);
+		void onItemDisplayUpdate(QUuid itemKey);
+
+		/**
+		 * @brief Called when AbstractModelItem transform is updated
+		 * @param item Item pointer
+		 */
+		void onItemTransformUpdate(AbstractModelItem* item);
+
+		/**
+		 * @brief called when AbstractModelItem transform is uodated.
+		 * @param itemKey Item QUuid
+		 */
+		void onItemTransformUpdate(QUuid itemKey);
 
 		friend class Page;
 		friend class Assembly;	// Try to make it work without allowing assembly to

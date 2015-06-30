@@ -11,7 +11,7 @@
 #include <QPainter>
 #include <QPointF>
 #include <QPolygonF>
-
+#include <QRectF>
 #include <QTouchDevice>
 #include <QTouchEvent>
 
@@ -19,6 +19,8 @@
 #include "point2dpt.h"
 #include "graphicspathitem.h"
 #include "graphicspolygon2d.h"
+
+#include "searchmanager.h"
 
 #include "sketchscene.h"
 #include "sketchview.h"
@@ -29,12 +31,21 @@
 namespace CDI
 {
 	class CDIWindow;
+    namespace UI
+    {
+        enum MODE {None, Sketch, Erase, Transform,
+                   Edit, Select, Connect};
+    }
 
+    /**
+     * @brief Main controller object. This receives input events from View and Scene
+     * and modifies the view as well as scene based on that.
+     * @remarks We can also implement state machine to manage various modes
+     * but currently using UI::MODE flag to determine the operations
+     */
 	class PlayGoController : public QObject
 	{
 		Q_OBJECT
-	public:
-		enum MODE {None, Sketch, Erase, Transform, Edit, Select, Search};
 
 	protected:
 		/**********************************************************
@@ -48,7 +59,7 @@ namespace CDI
 		 * Tablet relatred operations
 		 *****************************************************/
 		bool _mouseModeEnabled;
-		MODE _activeMode;
+        UI::MODE _activeMode;
 		QTabletEvent::TabletDevice _device;
 		QTabletEvent::PointerType _pointerType;
 
@@ -68,14 +79,20 @@ namespace CDI
 		bool _isLassoDisplayed;
 		QGraphicsPolygonItem* _lasso;
 		QPolygonF _lassoPolygon;
+		bool _itemHighlighted;
 
 		ModelViewTreeWidget* tree;
 
+        /*********************************************************
+         * Search related variables
+         ********************************************************/
+        QGraphicsView* searchView;
 	public:
 		PlayGoController(SketchScene* scene, SketchView* view, CDIWindow *parent = NULL);
 
 		virtual ~PlayGoController()
 		{
+			if (tree != NULL) delete tree;
 		}
 
 	protected:
@@ -106,13 +123,21 @@ namespace CDI
 		virtual void lassoMove(Point2DPT pos);
 		virtual void lassoRelease(Point2DPT pos);
 
+        /**
+         * @brief Handles updates whenever MODE is changed.
+         * Note that this function does not actually change the mode
+         * @param oldmode Current mode of the controller
+         * @param newmode New mode of the controller
+         */
+        virtual void onModeChange(UI::MODE oldmode, UI::MODE newmode);
+
 	public:
 		virtual void sketchAction(QTabletEvent *event);
 		virtual void eraseAction(QTabletEvent *event);
 		virtual void selectAction(QTabletEvent *event);
 		virtual void searchAction();
 
-signals:
+	signals:
 		void strokeComplete(GraphicsPathItem* item);
 		void searchCompleted();
 		void searchTriggered();
@@ -141,19 +166,41 @@ signals:
 		 */
 		void onSearchComplete();
 
+        /**
+         * @brief Receives tablet/pen event from view
+         * @param event QTabletEvent
+         * @param view QGraphicsView from which the event originiated
+         */
 		void onTabletEventFromView(QTabletEvent *event, QGraphicsView *view);
 
+        /**
+         * @brief Receives mouse event from scene
+         * @param mouseEvent QGraphicsSceneMouseEvent
+         * @param status QGraphicsScene from which the event originiated
+         */
 		void onMouseEventFromScene(QGraphicsSceneMouseEvent* mouseEvent, int status);
+
+        /**
+         * @brief Receives touch event from view
+         * @param event QTouchEvent
+         * @param view QGraphicsView from where event originiated
+         */
+		void onTouchEventFromView(QTouchEvent* event, QGraphicsView *view);
 
 		void setToDraw();
 		void setToErase();
 		void setToSelect();
 		void setToEdit();
 
-		void setMode(MODE newMode);
+        void setMode(UI::MODE newMode);
 
 		void enableMouse(bool enable);
 
 		void clearCurrentScene();
+
+		//////////////////////////////////////////////
+		// Experimental
+		void drawMenusOnView(QPainter * painter, const QRectF & rect);
+
 	};
 }

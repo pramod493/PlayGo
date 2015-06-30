@@ -4,8 +4,9 @@
 namespace CDI
 {
 	Image::Image(Component* component)
-			: _filepath(""), _pixmap(), QRectF()
+            : _filepath("")
 	{
+        _pixmap = NULL;
 		setParentItem(component);
 	}
 
@@ -14,27 +15,36 @@ namespace CDI
 	{
 		setParentItem(component);
 
-		QFile f(filename);
-		_pixmap = QPixmap();
-		if (f.exists()) _pixmap.load(f.fileName());
-		updateRect();
+        QFile f(filename);
+        _pixmap = new QPixmap();
+        if (f.exists()) _pixmap->load(f.fileName());
 	}
 
 	Image::Image(const Image & image)
-		: _pixmap(image.pixmap()), _filepath("")
+        : _filepath("")
 	{
 		setParentItem(image.parentItem());
-		updateRect();
+        _filepath = image.filepath();
+        _pixmap = image.pixmap();   // Do not copy the image. Rather share the pointer
 	}
 
 	Image::Image(Component* component, const QPixmap &pixmap, QString filename)
-		: _pixmap(pixmap), _filepath(filename)
+        : _filepath(filename)
 	{
 		setParentItem(component);
-		updateRect();
+        _pixmap = new QPixmap(pixmap);
 	}
 
-	QPixmap Image::pixmap() const
+    Image::~Image()
+    {
+        if (_pixmap != NULL)
+            delete _pixmap;
+
+		if (parentItem() != NULL)
+			parentItem()->removeItem(id());
+    }
+
+    QPixmap *Image::pixmap() const
 	{
 		return _pixmap;
 	}
@@ -44,27 +54,37 @@ namespace CDI
 		return _filepath;
 	}
 
-	void Image::setPixmap(QPixmap& pixmap)
+    void Image::setPixmap(QPixmap *pixmap)
 	{
+        if (pixmap!= NULL) delete _pixmap;
 		_pixmap = pixmap;
 		mask |= isModified;
-		updateRect();
+
 	}
 
-	void Image::setFilepath(QString filepath)
+    void Image::setFilepath(QString filepath, bool updateImage)
 	{
 		_filepath = filepath;
-		mask |= isModified;
+        if (updateImage)
+        {
+            if (_pixmap!= NULL) delete _pixmap;
+            QFile f(_filepath);
+            if (f.exists())
+                _pixmap->load(f.fileName());
+        }
+        mask |= isModified;
 	}
 
 	QRectF Image::boundingRect() const
 	{
-		return _transform.mapRect(*this);
+        if (_pixmap != NULL)
+            return QRectF(_pixmap->rect());
+        return QRectF();
 	}
 
 	ItemType Image::type() const
 	{
-		return ItemType::IMAGE;
+		return IMAGE;
 	}
 
 	QTransform Image::transform() const
@@ -88,7 +108,7 @@ namespace CDI
 	{
 		stream << filepath();
 		stream << transform();
-		stream << pixmap();
+        stream << *_pixmap;
 		return stream;
 	}
 
@@ -104,16 +124,8 @@ namespace CDI
 
 		setFilepath(filepath);
 		setTransform(transform);
-		setPixmap(pixmap);
+        _pixmap = new QPixmap(pixmap);
 
 		return stream;
-	}
-
-	void Image::updateRect()
-	{
-		int *x, *y, *width, *height;
-		QRect box = _pixmap.rect();
-		box.getCoords(x,y,width,height);
-		setCoords(*x, *y, *width, *height);
 	}
 }

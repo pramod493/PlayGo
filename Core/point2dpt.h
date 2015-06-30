@@ -98,6 +98,8 @@ namespace CDI
 	inline const Point2DPT operator*(const QTransform& t, const Point2DPT& p)
 	{
 		qreal *xt, *yt;
+		xt = new qreal;
+		yt = new qreal;
 		t.map(p.x(),p.y(),xt,yt);
 		return Point2DPT(*xt,*yt, p.pressure(),p.time());
 	}

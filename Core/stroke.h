@@ -16,8 +16,6 @@ namespace CDI
 	 */
 	class Stroke : public AbstractModelItem, public QVector<Point2DPT>
 	{
-		Q_OBJECT
-
 	protected:
 		QColor	_color;				/**< Stroke color */
 		float	_thickness;			/**< Maximum thickness of stroke */
@@ -69,13 +67,7 @@ namespace CDI
 		 * @brief push_points Use this method to add points to stroke
 		 * @param pt
 		 */
-		void push_point(Point2DPT& pt);
-
-//		/**
-//		 * @brief Returns the pointer to parent Component
-//		 * @return
-//		 */
-//		AbstractModelItem* parentItem() const;
+        void push_point(Point2DPT pt);
 
 		/**
 		 * @brief Get Color of stroke
@@ -107,7 +99,8 @@ namespace CDI
 		 * @param rule - Not used
 		 * @param margin Maximum allowed radial offset from the point
 		 * @return True if distance between point and Stroke is less than margin, Else false
-		 * @remarks It transforms the point pt internally to local coordinates
+         * @remarks Ensure that point pt is mapped to the local coordinate system.
+         * Use globalTransform().inverted() to map points to local
 		 */
 		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
 
@@ -131,7 +124,7 @@ namespace CDI
 
 		/**
 		 * @brief type Returns Item type
-		 * @return ItemType::STROKE
+		 * @return STROKE
 		 */
 		ItemType type() const;
 

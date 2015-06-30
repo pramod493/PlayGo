@@ -9,12 +9,12 @@ namespace CDI
 		setParentItem(component);
 		shapes = QVector<Polygon2D*>();
 		_b2body = boxBody;
-
 	}
 
 	PhysicsBody::~PhysicsBody()
 	{
-		if (parentItem()!= NULL) parentItem()->removeItem(this);
+		if (parentItem()!= NULL)
+			parentItem()->removeItem(id());
 	}
 
 	b2Body* PhysicsBody::getBox2DBody()
@@ -24,7 +24,7 @@ namespace CDI
 
 	ItemType PhysicsBody::type() const
 	{
-		return ItemType::PHYSICSBODY;
+		return PHYSICSBODY;
 	}
 
 	QTransform PhysicsBody::transform() const

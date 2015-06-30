@@ -9,6 +9,8 @@
 
 using namespace CDI;
 
+// Sorta obsolete
+
 bool enableDebugDetails;
 
 void testPageCreation()

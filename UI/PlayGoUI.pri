@@ -12,7 +12,9 @@ SOURCES += \
     $$PWD/graphicspolygon2d.cpp \
     $$PWD/graphicspathitem.cpp \
     $$PWD/modelviewtreewidget.cpp \
-    $$PWD/graphicspixmap.cpp
+    $$PWD/graphicspixmap.cpp \
+    $$PWD/searchview.cpp \
+    $$PWD/graphicssearchitem.cpp
 
 HEADERS += \
     $$PWD/cdi2qtwrapper.h \
@@ -27,4 +29,6 @@ HEADERS += \
     $$PWD/graphicspolygon2d.h \
     $$PWD/graphicspathitem.h \
     $$PWD/modelviewtreewidget.h \
-    $$PWD/graphicspixmap.h
+    $$PWD/graphicspixmap.h \
+    $$PWD/searchview.h \
+    $$PWD/graphicssearchitem.h

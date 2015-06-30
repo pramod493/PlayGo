@@ -110,7 +110,7 @@ namespace ASM {
 
    // If inPixmap exists for the lifetime of the resulting cv::Mat, pass false to inCloneImageData to share inPixmap's data
    // with the cv::Mat directly
-   //    NOTE: Format_RGB888 is an exception since we need to use a local QImage and thus must clone the data regardless
+   // Format_RGB888 is an exception since we need to use a local QImage and thus must clone the data regardless
    inline cv::Mat QPixmapToCvMat( const QPixmap &inPixmap, bool inCloneImageData = true )
    {
 	  return QImageToCvMat( inPixmap.toImage(), inCloneImageData );

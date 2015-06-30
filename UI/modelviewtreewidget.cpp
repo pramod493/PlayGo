@@ -1,4 +1,5 @@
 #include "modelviewtreewidget.h"
+#include "commonfunctions.h"
 #include <QDebug>
 
 namespace CDI
@@ -6,7 +7,7 @@ namespace CDI
 	ModelViewTreeWidget::ModelViewTreeWidget(PlayGo *root)
 	{
 		playgo = root;
-		setColumnCount(3);
+		setColumnCount(4);
 		rootItem = NULL;
 		populate();
 
@@ -23,7 +24,6 @@ namespace CDI
 
 	void ModelViewTreeWidget::populate()
 	{
-		qDebug() << "Updating root items";
 		if (rootItem!= NULL) delete rootItem;
 		rootItem = new QTreeWidgetItem(this);
 		rootItem->setText(0, "PlayGo");
@@ -34,6 +34,7 @@ namespace CDI
 			QTreeWidgetItem* tmpItem = new QTreeWidgetItem(rootItem);
 			tmpItem->setText(0, "Page");
 			tmpItem->setText(1, page->id().toString());
+			tmpItem->setText(3, getItemNameByType(page->type()));
 
 			QList<Assembly*> assemblies = page->getAssemblies();
 			foreach (Assembly* assembly, assemblies)
@@ -57,15 +58,14 @@ namespace CDI
 		QTreeWidgetItem* assemItem = new QTreeWidgetItem(parent);
 		assemItem->setText(0, "Assembly");
 		assemItem->setText(1, assembly->id().toString());
-
 		updateTransform(2, assemItem, assembly->transform());
-
-		QList<Component*> components = assembly->values();
-		foreach (Component* component, components)
+		assemItem->setText(3, getItemNameByType(assembly->type()));
+		QList<Item*> items = assembly->values();
+		foreach (Item* item, items)
 		{
-			updateComponent(assemItem, component);
+			if (item->type() == COMPONENT)
+				updateComponent(assemItem, static_cast<Component*>(item));
 		}
-
 	}
 
 	void ModelViewTreeWidget::updateComponent(QTreeWidgetItem* parent, Component* component)
@@ -91,8 +91,8 @@ namespace CDI
 		item->setText(0, getItemNameByType(modelItem->type()));
 		item->setText(1, modelItem->id().toString());
 		updateTransform(2,item, modelItem->transform());
-
-		if (modelItem->type() == ItemType::STROKE)
+		item->setText(3, getItemNameByType(modelItem->type()));
+		if (modelItem->type() == STROKE)
 		{
 			Stroke* s = static_cast<Stroke*>(modelItem);
 			QTreeWidgetItem* vectorChild = new QTreeWidgetItem(item);
@@ -101,7 +101,7 @@ namespace CDI
 		}
 	}
 
-	void ModelViewTreeWidget::updateTransform(int column, QTreeWidgetItem* item, QTransform &t)
+    void ModelViewTreeWidget::updateTransform(int column, QTreeWidgetItem* item, QTransform t)
 	{
 		QPointF pos = t.map(QPointF(0,0));
 		QString msg = "(";

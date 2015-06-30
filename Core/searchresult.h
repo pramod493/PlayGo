@@ -8,20 +8,26 @@ namespace CDI
 	 * @brief The SearchResult class contains information related to search results.
 	 * It does not have any transformation
 	 */
-	class SearchResult
+    class SearchResult : public Item
 	{
 	public:
 		QString resultFilePath;	/**< Absolute file path of the result*/
 		bool metadataExists;		/**< Set to true if metadata exists*/
 		QStringList tags;			/**< Stores the list of all the tags*/
+
+    protected:
+        QUuid _id;
 	public:
 		SearchResult();
+        SearchResult(QString& resultImagePath);
 		SearchResult(const SearchResult& result);
-		virtual ~SearchResult();
+        virtual ~SearchResult();
 
-		virtual ItemType type() const;
+        QUuid id() const;
 
-		virtual QDataStream& serialize(QDataStream &stream) const;
-		virtual QDataStream& deserialize(QDataStream &stream);
+        ItemType type() const;
+
+        QDataStream& serialize(QDataStream &stream) const;
+        QDataStream& deserialize(QDataStream &stream);
 	};
 }

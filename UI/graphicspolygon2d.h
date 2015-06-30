@@ -18,7 +18,7 @@ namespace CDI
 	public:
 		Polygon2D* parentPolygon;
 
-		enum {Type = UserType+ GraphicsItemType::POLYGONVIEW};
+        enum {Type = UserType+ POLYGONVIEW};
 
 	public:
 //		GraphicsPolygon2D(QGraphicsItem* parent, Point2D startPoint, float pressure=1.0f, int time = 0);
