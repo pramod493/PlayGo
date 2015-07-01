@@ -36,16 +36,21 @@ namespace CDI
 
 	void GraphicsSearchItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 	{
+		QLOG_INFO() << "Search result clicked" << _parentResult->resultFilePath;
+		if (_searchView != NULL)
+		{
+			_searchView->onSearchResultSelect(_parentResult);
+		}
 		QGraphicsPixmapItem::mousePressEvent(event);
 	}
 
 	void GraphicsSearchItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	{
-		QLOG_INFO() << "Search result selected";
-		QLOG_INFO() << _parentResult->resultFilePath;
+		QLOG_INFO() << "Search result double-clicked" << _parentResult->resultFilePath;
 		if (_searchView != NULL)
 		{
 			_searchView->onSearchResultSelect(_parentResult);
 		}
+		QGraphicsPixmapItem::mouseDoubleClickEvent(event);
 	}
 }

@@ -31,3 +31,5 @@ SOURCES += $$PWD/main.cpp \
 
 HEADERS += \
         $$PWD/converttopolygons.h
+
+CONFIG += c++11

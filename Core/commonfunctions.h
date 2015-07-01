@@ -66,7 +66,7 @@ namespace CDI
 
     QString getHomeDirectory();
 
-    typedef QPointF Point2D;
+	typedef QPointF Point2D;
 
 	float dotProduct(Point2D* p1, Point2D* p2);
 

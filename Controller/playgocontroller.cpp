@@ -9,8 +9,8 @@
 #include <QPixmap>
 #include <QRectF>
 #include "searchview.h"
-
 #include "graphicssearchitem.h"
+#include <QMessageBox>
 
 namespace CDI
 {
@@ -113,6 +113,11 @@ private:
         initController();
 
 		searchView = _toplevelWindow->searchView;
+		if (searchView != NULL)
+		{
+			connect(searchView, SIGNAL(signalOnSearchResultSelect(SearchResult*)),
+					this, SLOT(onSearchItemSelect(SearchResult*)));
+		}
 	}
 
 	void PlayGoController::initController()
@@ -274,7 +279,8 @@ private:
 	void PlayGoController::lassoRelease(Point2DPT pos)
 	{
 		_lassoPolygon.push_back(pos);
-		_lasso->setPolygon(_lassoPolygon);
+		//_lasso->setPolygon(_lassoPolygon);
+		_lasso->setPolygon(QPolygonF());
 		_lasso->update(_lasso->boundingRect());
 
         QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(_lassoPolygon, 1.0f);
@@ -283,6 +289,7 @@ private:
         {
             selectedStrokes[i]->highlight(true);
         }
+		_isLassoDisplayed = false;
 	}
 
     void PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
@@ -366,53 +373,38 @@ private:
 
 	void PlayGoController::searchAction()
 	{
-        if (_isLassoDisplayed == false) return;
-        _isLassoDisplayed = false;
-        _lasso->setPolygon(QPolygonF());
-
-        if (_lassoPolygon.size() == 0) return;
-        // No transformation
-        QImage inputImage = _scene->getSelectionImage(_lassoPolygon);
-        QList<GraphicsPathItem*> selectedStrokes = _scene->getSelectedStrokes(_lassoPolygon, 1.0f);
-
-        // Reset the lasso selection polygon
-        _lassoPolygon = QPolygonF();
+		// We are searching if at least one of the strokes is highlighted
+		if (!_itemHighlighted) return;
+		// Do not use lasso polygon to find the selected strokes because selection can be done in
+		// multiple iterations
+		QImage inputImage =
+				_scene->getSelectionImage(_lassoPolygon);
+//				_scene->getSelectionImageFromHighlight();
+		QList<GraphicsPathItem*> selectedStrokes =
+				_scene->getHighlightedStrokes();
 
 		if (selectedStrokes.size() == 0) return;
 
-        // Print stroke IDs
+		inputImage.save("highlight_selection.png");
+		return;
+		// NOTE - What is going on here??
         for (int i=0; i < selectedStrokes.size(); i++)
         {
-            selectedStrokes[i]->highlight(true);
-			QLOG_INFO() << selectedStrokes[i]->parentStroke()->id().toString();
+			selectedStrokes[i]->highlight(true);
         }
 		QList<SearchResult*> searchResults =
                 _scene->page()->getSearchManager()->search(inputImage, 20);
 
-		searchView->LoadSearchData(selectedStrokes, searchResults);
-		/*
-        int itemHeight = 150; int itemWidth = 150;
-		QList<QGraphicsPixmapItem*> searchItems;
-        for (int i=0; i< searchResults.size(); i++)
-        {
-			SearchResult* result = searchResults[i];
-            QPixmap pixmap = QPixmap();
-			pixmap.load(result->resultFilePath);
-            pixmap = pixmap.scaled(QSize(itemHeight,itemWidth), Qt::KeepAspectRatio, Qt::FastTransformation);
-
-            QGraphicsPixmapItem* pixmapItem =  searchView->scene()->addPixmap(pixmap);
-            pixmapItem->setPos((i % 5) * itemWidth,
-                               (i / 5) * itemHeight);
-            searchItems.push_back(pixmapItem);
-        }
-        searchView->show();
-
-        searchView->setSceneRect(searchView->scene()->itemsBoundingRect());
-		*/
         if (searchResults.size())
         {
+			searchView->LoadSearchData(selectedStrokes, searchResults);
             emit onSearchComplete();
-        }
+		} else
+		{
+			QMessageBox::about(_view,
+							   QString("Search result"),
+							   QString("No result found!"));
+		}
 	}
 
 	// Slot functions
@@ -434,6 +426,12 @@ private:
 	void PlayGoController::onSearchComplete()
 	{
 		emit searchCompleted();
+	}
+
+	void PlayGoController::onSearchItemSelect(SearchResult *result)
+	{
+		qDebug() << "Selected";
+		QMessageBox::about(NULL, "TITLE", "ITEM SELECTED");
 	}
 
 	void PlayGoController::onTabletEventFromView(QTabletEvent *event,

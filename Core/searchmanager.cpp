@@ -21,9 +21,9 @@ namespace CDI
         wbBICE *biceDescriptor = new wbBICE();
         searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
 
-		_databaseIndexed = true;
-		searchEngine->Index();
-		searchEngine->Load();
+		_databaseIndexed = false;
+		//searchEngine->Index();
+		//searchEngine->Load();
     }
 
 /*	SearchManager* SearchManager::_instance = NULL;

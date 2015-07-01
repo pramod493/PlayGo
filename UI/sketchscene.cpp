@@ -313,12 +313,6 @@ namespace CDI
 			}
 		}
 		return selectedStrokes;
-
-		/*for (int i=0;i<freeStrokes.size();i++)
-			if (freeStrokes[i] != NULL)
-				if (freeStrokes[i]->Selected(pos, margin))
-					selectedStrokes.push_back(freeStrokes[i]);
-		return selectedStrokes;*/
 	}
 
 	QList<GraphicsPathItem*> SketchScene::getSelectedStrokes
@@ -346,31 +340,29 @@ namespace CDI
 		return selectedStrokes;
 	}
 
+	QList<GraphicsPathItem*> SketchScene::getHighlightedStrokes()
+	{
+		QList<GraphicsPathItem*> selectedStrokes;
+		QHash<QUuid, QGraphicsItem*>::const_iterator iter;
+		for (iter = item_key_hash.constBegin();
+			 iter != item_key_hash.constEnd();
+			 ++iter)
+		{
+			QGraphicsItem* graphicsitem = iter.value();
+			if (graphicsitem->type() == GraphicsPathItem::Type)
+			{
+				GraphicsPathItem* pathitem = qgraphicsitem_cast<GraphicsPathItem*>
+						(graphicsitem);
+				if (pathitem->isHighlighted())
+					selectedStrokes.push_back(pathitem);
+			}
+		}
+		return selectedStrokes;
+	}
+
 	void SketchScene::SelectSearchResult(SearchGraphicsItem *searchItem)
 	{
-		Q_UNUSED(searchItem)
-		// IMPORTANT - Implement loading of search results
-		// TODO - Get the results file. Load the image and replace it
-		// with all strokes with search results in a way that it fits
-		// neatly in the same area
-		//    QString imageSourceFile = searchItem->sourceFilePath;
-		//    QPixmap pix = QPixmap(imageSourceFile); // Skip sanity checks since its coming from search image
-
-		//    GraphicsItemGroup *itemGroup = new GraphicsItemGroup(NULL, NULL);
-		//    addItem(itemGroup);
-		//    // NOTES - In here we want to allow create all items as ItemGroup of give type.. would that be better?
-		//    // Is it better to keep parent object = NULL if we are planning to reparent object during the workflow?
-		//    PixmapItem* sceneItem = new PixmapItem(pix, imageSourceFile, NULL, NULL);
-		//    itemGroup->addToGroup(sceneItem);
-		//    // Add all the strokes but set the invisible
-		//    for (QList<GraphicsPathItem*>::iterator it = freeStrokes.begin();
-		//         it != freeStrokes.end();
-		//         ++it)
-		//    {
-		//        itemGroup->addToGroup(*it);
-		//        (*it)->setVisible(false);
-		//    }
-		//    freeStrokes.clear();
+		// Obsolete
 	}
 
 	void SketchScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -435,7 +427,8 @@ namespace CDI
 			if (item->type() == GraphicsPathItem::Type)
 			{
 				GraphicsPathItem* graphicspathitem = qgraphicsitem_cast<GraphicsPathItem*>(item);
-				graphicspathitem->highlight(false);
+				if (graphicspathitem->isHighlighted())
+					graphicspathitem->highlight(false);
 			}
 		}
 	}

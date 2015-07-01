@@ -15,7 +15,7 @@ wbSearchEngine::wbSearchEngine(path & top_level_folder,wb2DShapeDescriptor * des
 
 
     if (is_directory(m_db_folder)) {
-        cout  << m_db_folder.string()<< "exists" << endl;
+//        cout  << m_db_folder.string()<< "exists" << endl;
     }
     else
     {
@@ -127,7 +127,7 @@ void wbSearchEngine::Load()
         path entryPath = entry.path();
         if (entryPath.extension() == ".yml" ) {
 
-            cout << "loading  file " << entryPath.string()<< "for "<<desc_name <<" descriptor" << endl;
+			cout << "loading  file " << entryPath.string()<< " for "<<desc_name <<" descriptor" << endl;
             cv::FileStorage fs(entryPath.string(), FileStorage::READ );
             Mat descriptor;
             std::string str;

@@ -7,6 +7,10 @@
 #include <QWidget>
 #include <QPointF>
 #include <QGraphicsItem>
+#include <vector>
+#include "poly2tri.h"
+
+using namespace std;
 
 namespace CDI
 {
@@ -31,10 +35,20 @@ namespace CDI
 	struct PaintSettings {
 		QPen pen;
 		QBrush brush;
+		PaintSettings(QPen penSetting, QBrush brushSetting)
+		{
+			pen = penSetting; brush = brushSetting;
+		}
+
+		void applyToPainter(QPainter* painter)
+		{
+			painter->setPen(pen);
+			painter->setBrush(brush);
+		}
 	};
 	
 
-	class CommonDrawFunction
+	class CommonDrawFunctions
 	{
 		PaintSettings arrowSettings;
 		PaintSettings springSettings;
@@ -46,30 +60,21 @@ namespace CDI
 		// TODO - Implement
 		// \todo - Implement rendering functions
 		// NOTE - make sure that the paitner is already transformed w.r.t. Item
-		void drawArrow(QPointF startPos, QPointF endPos, QPainter *painter)
-		{}
+		void drawArrow(QPointF startPos, QPointF endPos, QPainter *painter);
 
-		void drawCurvedArrow(QPointF center, float radius, float startAngle, float endAngle, QPainter *painter)
-		{}
+		void drawCurvedArrow(QPointF center, float radius, float startAngle, float endAngle, QPainter *painter);
 
-		void  drawSpring(QPointF startPos, QPointF endPos, float width, int num_of_windings, QPainter *painter)
-		{}
+		void  drawSpring(QPointF startPos, QPointF endPos, float height, int num_of_windings, QPainter *painter);
 
 		// Circular disc with holes around circumference
-		void drawJoint(QPointF center, QPointF radius, QPainter *painter)
-		{}
+		void drawJoint(QPointF center, float radius, QPainter *painter);
 
-		void drawContactForces(QPointF origin, QPointF direction, float mag, QPainter *painter)
-		{}
+		void drawContactForces(QPointF origin, QPointF direction, float mag, QPainter *painter);
 
-		void drawTouchPoints(QVector<QPointF> points, bool randomizeColor, QPainter *painter)
-		{
+		void drawTouchPoints(QVector<QPointF> points, bool randomizeColor, QPainter *painter);
 
-		}
+		void drawTriangulatedPolygons(QVector<QPolygonF*> polygons, QPainter *painter);
 
-		void drawTriangulatedPolygons(QVector<QPolygonF*> polygons, QPainter *painter)
-		{
-
-		}
+		void drawTriangulatedPolygons(vector<p2t::Triangle*> triangles, QPainter* painter);
 	};
 }

@@ -112,6 +112,12 @@ namespace CDI
          */
         QList<GraphicsPathItem*> getSelectedStrokes(QPolygonF selectionPolygon, float minimalAllowedSelection);
 
+		/**
+		 * @brief Returns list of highlighted strokes
+		 * @return
+		 */
+		QList<GraphicsPathItem*> getHighlightedStrokes();
+
 		void SelectSearchResult(SearchGraphicsItem* searchItem);
 
 	protected:

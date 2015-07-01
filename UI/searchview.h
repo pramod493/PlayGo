@@ -31,10 +31,13 @@ namespace CDI
 
 		void clear();
 
+	protected:
+		void mousePressEvent(QMouseEvent *event);
+
 	public slots:
 		void LoadSearchData(QList<GraphicsPathItem *>& selectedStrokes, QList<SearchResult*>& searchResults);
 
-		void onSearchResultSelect(SearchResult* result) { emit signalOnSearchResultSelect(result); }
+		void onSearchResultSelect(SearchResult* result);
 	signals:
 		void signalOnSearchResultSelect(SearchResult*);
 	};

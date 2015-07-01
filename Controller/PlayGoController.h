@@ -167,6 +167,8 @@ namespace CDI
 		 */
 		void onSearchComplete();
 
+		void onSearchItemSelect(SearchResult* result);
+
         /**
          * @brief Receives tablet/pen event from view
          * @param event QTabletEvent

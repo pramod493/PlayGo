@@ -97,7 +97,7 @@ namespace CDI
 #ifdef Q_OS_LINUX
         return QString("/home/pramod/Junks/database/");
 #else
-        return QString("C:/Database/");
+		return QString("C:\\Database\\");
 #endif
     }
 

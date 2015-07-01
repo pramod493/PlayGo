@@ -8,7 +8,7 @@ namespace CDI
 	{
 		playgo = new PlayGo();
 
-		playgo->ReadModel("PlayGoData.dat");
+//		playgo->ReadModel("PlayGoData.dat");
 		Page* newPage = NULL;
 		if (playgo->currentPage()!= NULL)
 		{
