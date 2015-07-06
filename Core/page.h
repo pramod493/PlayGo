@@ -4,6 +4,7 @@
 #include <QList>
 #include <QUuid>
 #include <QtAlgorithms>
+#include <QGraphicsScene>
 
 #include "commonfunctions.h"
 #include "abstractmodelitem.h"
@@ -20,11 +21,16 @@ namespace CDI
 	 * It also serves the function of factory class to create objects
 	 * This is the top-level container for all AbstractModelItem objects
 	 */
-	class Page : public QObject, public Item
+	class Page : public QObject //, public Item
 	{
 		Q_OBJECT
 
 	protected:
+		/**
+		 * @brief Scene which will be used for rendering and all other operations
+		 */
+		QGraphicsScene* _scene;
+
 		/**
 		 * @brief Pointer to root item of the model
 		 */
@@ -58,6 +64,8 @@ namespace CDI
 		 */
 		PhysicsManager* _physicsManager;
 
+		Component* _currentComponent;
+
 	public:
 		//-----------------------------------------------
 		// Constructors/Destructors
@@ -70,7 +78,7 @@ namespace CDI
 		// Query/Set functions(same order in derived class)
 		// Non-virtual
 		//-----------------------------------------------
-		QUuid id() const;
+		virtual QUuid id() const;
 
 		SearchManager* getSearchManager() const;
 
@@ -79,6 +87,14 @@ namespace CDI
 		QList<Assembly*> getAssemblies() const;
 
 		QList<Component*> getComponents() const;
+
+		QGraphicsScene* scene() const;
+
+		void setScene(QGraphicsScene* scene);
+
+		Component* currentComponent();
+
+		void setCurrentComponent(Component* currentComp);
 
 		/**
 		 * @brief getParent returns the immediate parent Component or
@@ -90,20 +106,11 @@ namespace CDI
 		 */
 //		AbstractModelItem* getParent(QUuid id);
 
-		AbstractModelItem* getItemPtrById(QUuid id);
+		QGraphicsItem* getItemPtrById(QUuid id);
 
-		Component* getComponentPtrById(QUuid id);
+		Component* getComponentPtrById(QUuid id);	// These are also QGraphicsItem objects
 
 		Assembly* getAssemblyPtrById(QUuid id);
-
-//		AbstractModelItem* getParent(AbstractModelItem* item);
-
-		/**
-		 * @brief Returns the item type based on QUuid
-		 * @param id QUuid
-		 * @return ItemType of object which owns the id. Returns NONE in case of no match
-		 */
-		ItemType getItemType(QUuid id);
 
 		/**
 		 * @brief Checks if the given item is contained in the Page
@@ -116,7 +123,7 @@ namespace CDI
 		//-----------------------------------------------
 		// Virtual functions (same order in derived class)
 		//-----------------------------------------------
-		ItemType type() const;
+		virtual ItemType type() const;
 
 		virtual Assembly* createAssembly();
 		virtual Component* createComponent();
@@ -124,7 +131,12 @@ namespace CDI
 		virtual void addComponent(Component* component);
 		virtual void addAssembly(Assembly* assembly);
 
-		// Merge a2 into a1
+		/**
+		 * @brief Merges all objects in a2 into a1 and deletes a2
+		 * @param a1
+		 * @param a2
+		 * @return
+		 */
 		virtual bool mergeAssembly(Assembly* a1, Assembly* a2);
 
 		/**
@@ -174,79 +186,34 @@ namespace CDI
 		 */
 		void deleteAll();
 
-//		friend QDataStream& operator<<(QDataStream& stream, const Page& page);
-//		friend QDataStream& operator>>(QDataStream& stream, Page& page);
+		// These do not have to friend function
+		friend QDataStream& operator<<(QDataStream& stream, const Page& page);
+		friend QDataStream& operator>>(QDataStream& stream, Page& page);
 
 		// These function are called on item updates
 		// Note that if a component or assembly does not exist in the hash list
 		// it's update signal will be discarded
 	public slots:
-		/**
-		 * @brief Called when a new Item is added to the page.
-		 * @param item
-		 */
-		void onItemAdd(AbstractModelItem* item);
-
-		/**
-		 * @brief Called when an item is either deleted or being
-		 * removed fromthe page
-		 * @param itemId QUuid of the item
-		 */
-		void onItemRemove(QUuid itemId);
-
-		/**
-		 * @brief Call when the component internals are updated
-		 * @param itemId
-		 */
-		void onItemUpdate(QUuid itemId);
-
-		void onItemDisplayUpdate(QUuid itemId);
-
-		/**
-		 * @brief Triggers redrawing of the object
-		 * @param itemId
-		 */
-		void onItemRedraw(QUuid itemId);
-
-		/**
-		 * @brief Emits signalItemTransformUpdate() with the given item ID
-		 * @param itemId Item ID
-		 */
-		void onItemTransformUpdate(QUuid itemId);
-
-		void onItemIdUpdate(QUuid oldID, QUuid newID);
+		void onItemAdd(QGraphicsItem* graphicsitem);
+		void onItemUpdate(QGraphicsItem* graphicsitem);
+		void onItemDelete(QGraphicsItem* graphicsitem);
+		void onItemTransformUpdate(QGraphicsItem* graphicsitem);
+		void onItemAdd(Item* item);
+		void onItemUpdate(Item* item);
+		void onItemDelete(Item* item);
+		void onItemTransformUpdate(Item* item);
 
 	signals:
-		// Page related signals
-		void signalDeleteAllItems(Page* page);
-
 		void signalReloadPage(Page* page);
 
-		void signalItemAdd(AbstractModelItem* item);
+		void signalItemAdd(QGraphicsItem* graphicsitem);
+		void signalItemUpdate(QGraphicsItem* graphicsitem);
+		void signalItemDelete(QGraphicsItem* graphicsitem);
+		void signalItemTransformUpdate(QGraphicsItem* graphicsitem);
 
-		void signalItemRemove(QUuid itemId);
-
-		void signalItemUpdate(QUuid itemId);
-
-		void signalItemDisplayUpdate(QUuid itemId);
-
-		void signalItemRedraw(QUuid itemId);
-
-		// For all type of Items
-		void signalItemTransformUpdate(QUuid itemId);
-
-		void signalItemIdUpdate(QUuid oldID, QUuid newID);
-
-		// Component and Assembly related signals
-		// Called only from within class
-		void signalComponentAdd(Component* component);
-		void signalAssemblyAdd(Assembly* assembly);
-
-		void signalComponentMerge(Component* a, Component* b);
-		void signalAssemblyMerge(Assembly* a, Assembly* b);
-
-		// Equivalent to deleting object
-		void signalAssemblyDelete(Assembly* assembly);
-		void signalComponentDelete(Component* component);
+		void signalItemAdd(Item* item);
+		void signalItemUpdate(Item* item);
+		void signalItemDelete(Item* item);
+		void signalItemTransformUpdate(Item* item);
 	};
 }

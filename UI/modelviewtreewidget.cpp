@@ -58,13 +58,11 @@ namespace CDI
 		QTreeWidgetItem* assemItem = new QTreeWidgetItem(parent);
 		assemItem->setText(0, "Assembly");
 		assemItem->setText(1, assembly->id().toString());
-		updateTransform(2, assemItem, assembly->transform());
-		assemItem->setText(3, getItemNameByType(assembly->type()));
-		QList<Item*> items = assembly->values();
-		foreach (Item* item, items)
+		updateTransform(2, assemItem, assembly);
+		QList<Component*> comps = assembly->components();
+		foreach (Component* component, comps)
 		{
-			if (item->type() == COMPONENT)
-				updateComponent(assemItem, static_cast<Component*>(item));
+			updateComponent(assemItem, component);
 		}
 	}
 
@@ -76,36 +74,37 @@ namespace CDI
 		QTreeWidgetItem* compItem = new QTreeWidgetItem(parent);
 		compItem->setText(0, "Component");
 		compItem->setText(1, component->id().toString());
-		updateTransform(2, compItem, component->transform());
+		updateTransform(2, compItem, component);
 
-		QList<AbstractModelItem*> modelItems = component->values();
-		foreach (AbstractModelItem* modelItem, modelItems)
+		QList<QGraphicsItem*> modelItems = component->values();
+		foreach (QGraphicsItem* modelItem, modelItems)
 		{
 			updateAbstractModelItem(compItem, modelItem);
 		}
 	}
 
-	void ModelViewTreeWidget::updateAbstractModelItem(QTreeWidgetItem* parent, AbstractModelItem* modelItem)
+	void ModelViewTreeWidget::updateAbstractModelItem(QTreeWidgetItem* parent, QGraphicsItem *modelItem)
 	{
 		QTreeWidgetItem* item = new QTreeWidgetItem(parent);
-		item->setText(0, getItemNameByType(modelItem->type()));
-		item->setText(1, modelItem->id().toString());
-		updateTransform(2,item, modelItem->transform());
-		item->setText(3, getItemNameByType(modelItem->type()));
-		if (modelItem->type() == STROKE)
+		updateTransform(2,item, modelItem);
+		if (modelItem->type() == Stroke::Type)
 		{
-			Stroke* s = static_cast<Stroke*>(modelItem);
+			Stroke* s = qgraphicsitem_cast<Stroke*>(modelItem);
 			QTreeWidgetItem* vectorChild = new QTreeWidgetItem(item);
-			vectorChild->setText(0, "QVector<Point2DPT>");
+			vectorChild->setText(0, "Stroke");
 			vectorChild->setText(1, QString::number(s->size()) + " Points");
 		}
 	}
 
-    void ModelViewTreeWidget::updateTransform(int column, QTreeWidgetItem* item, QTransform t)
+	void ModelViewTreeWidget::updateTransform(int column, QTreeWidgetItem* item, QGraphicsItem *t)
 	{
-		QPointF pos = t.map(QPointF(0,0));
-		QString msg = "(";
-		msg = msg + QString::number(pos.x()) + "," + QString::number(pos.y()) + ")";
+		QPointF pos = t->pos();
+		float rot = t->rotation();
+		float scale = t->scale();
+		QString msg = "POS:(";
+		msg = msg + QString::number(pos.x()) + ", " + QString::number(pos.y()) + ")";
+		msg = msg + QString(" ROT:") + QString::number(rot);
+		msg = msg + QString(" SCA:") + QString::number(scale);
 		item->setText(column, msg);
 	}
 }

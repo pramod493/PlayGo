@@ -5,6 +5,7 @@
 */
 #include <math.h>
 #include <algorithm>
+#include <QTime>
 #include "commonfunctions.h"
 #include "polygon2d.h"
 #include "ramerdouglaspeucker.h"
@@ -160,6 +161,15 @@ namespace CDI
         return dist;
     }
 
+	float diameterOfCircumcircle(float a, float b, float c)
+	{
+		if (qFuzzyCompare(a, 0) || qFuzzyCompare(b, 0) || qFuzzyCompare(c, 0))
+			return 0;
+		float den = (a+b+c)*(-a+b+c)*(a-b+c)*(a+b-c);
+		if (qFuzzyCompare(den,0)) return 0;
+		return 2*a*b*c / sqrt(den);
+	}
+
     bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance)
     {
         bool OnSegment = true;
@@ -253,7 +263,25 @@ namespace CDI
 		return QUuid::createUuid();
 	}
 
-	vector<p2t::Triangle*> triangularizeImage(QString imagePath, float deltaOutside, float deltaInside)
+	QTime *qtime = NULL;
+	int currentTime()
+	{
+		if (qtime == NULL)
+		{
+			qDebug() << "Init timer";
+			qtime = new QTime(0,0,0,0);
+			qtime->start();
+		}
+		return qtime->msec();
+	}
+
+	int local_getMinumumDimension(int xmin, int ymin, int xmax, int ymax)
+	{
+		if (xmin >= xmax || ymin >= ymax) return 0;
+		return (xmax-xmin) < (ymax-ymin) ? (xmax-xmin) : (ymax-ymin);
+	}
+
+	vector<p2t::Triangle*> triangularizeImage(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
 	{
 		vector<p2t::Triangle*> triangles;
 		vector<vector<cv::Point> > outerContours;
@@ -271,6 +299,9 @@ namespace CDI
 		// Initialize RDP object
 		CDI::RamerDouglas rdp = CDI::RamerDouglas();
 
+		// integers for bound checking
+		int x_min = 10000; int y_min = 10000;
+		int x_max = 0; int y_max = 0;
 		// Iterate for each outer contour
 		for (int i=0; i< outerContours.size(); i++)
 		{
@@ -285,10 +316,26 @@ namespace CDI
 
 			QLOG_INFO() << "Initial Points" << max_points;
 
+			x_min = 10000; y_min = 10000;
+			x_max = 0; y_max = 0;
 			for (size_t j=0; j< max_points ; j++)
 			{
 				cv::Point pt = outerContour[j];
 				tmp_contour.push_back(p2t::Point(pt.x, pt.y));
+
+				if (ignoreSmalls)
+				{
+					x_min = x_min < pt.x ? x_min : pt.x;
+					y_min = y_min < pt.y ? y_min : pt.y;
+
+					x_max = x_max > pt.x ? x_max : pt.x;
+					y_max = y_max > pt.y ? y_max : pt.y;
+				}
+			}
+			if (ignoreSmalls && local_getMinumumDimension(x_min, y_min, x_max, y_max) <= minPolygonSize)
+			{
+				QLOG_WARN() << "Polygon size smaller than threshold";
+				continue;
 			}
 
 			// 3. Simplify outer loop with RDp
@@ -367,24 +414,11 @@ namespace CDI
 		return triangles;
 	}
 
-	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside)
+	vector<p2t::Triangle*> generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
 	{
 		// Initialize the list
 		QList<Polygon2D*> polygons;
-		vector<p2t::Triangle*> triangles = triangularizeImage(imagePath, deltaOutside, deltaInside);
+		vector<p2t::Triangle*> triangles = triangularizeImage(imagePath, deltaOutside, deltaInside, minPolygonSize, ignoreSmalls);
 		return triangles;
-		/*for (int i=0; i <triangles.size(); i++)
-		{
-			p2t::Triangle* tria = triangles[i];
-
-			Polygon2D* polygon = new Polygon2D();
-			p2t::Point *pt = 0;
-			pt = tria->GetPoint(0);	polygon->push_back(Point2D(pt->x,pt->y));
-			pt = tria->GetPoint(1);	polygon->push_back(Point2D(pt->x,pt->y));
-			pt = tria->GetPoint(2);	polygon->push_back(Point2D(pt->x,pt->y));
-
-			polygons.push_back(polygon);
-		}
-		return polygons;*/
 	}
 }

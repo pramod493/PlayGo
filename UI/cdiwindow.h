@@ -43,7 +43,7 @@ namespace CDI
 		// actions
 
 		// File operations
-		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction;
+		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction, *closeAction;
 
 		// Sketching related operations
 		QAction *brushSelectAction, *eraseSelectAction, *marqueeAction, *searchAction;
@@ -117,6 +117,8 @@ namespace CDI
 		 * \todo Implement this feature
 		 */
 		void save();
+
+		void exit();
 
 		void setToDraw();
 

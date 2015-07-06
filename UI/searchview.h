@@ -2,7 +2,7 @@
 #include <QGraphicsView>
 #include "stroke.h"
 #include "searchresult.h"
-#include "graphicspathitem.h"
+#include "stroke.h"
 #include "graphicssearchitem.h"
 
 namespace CDI
@@ -17,7 +17,7 @@ namespace CDI
 	protected:
 		QList<GraphicsSearchItem*> _searchDispItems;
 
-		QList<GraphicsPathItem*> _selectedStrokes;
+		QList<Stroke*> _selectedStrokes;
 
 		// When one of the search results are selected,
 		// all the strokes are grouped into one Component
@@ -34,8 +34,10 @@ namespace CDI
 	protected:
 		void mousePressEvent(QMouseEvent *event);
 
+		bool viewportEvent(QEvent *event);
+
 	public slots:
-		void LoadSearchData(QList<GraphicsPathItem *>& selectedStrokes, QList<SearchResult*>& searchResults);
+		void LoadSearchData(QList<Stroke *>& selectedStrokes, QList<SearchResult*>& searchResults);
 
 		void onSearchResultSelect(SearchResult* result);
 	signals:

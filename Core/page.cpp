@@ -20,11 +20,19 @@ namespace CDI
 
 		PhysicsSettings settings = PhysicsSettings();
 		_physicsManager = new PhysicsManager(&settings, this);
+
+		_scene = NULL;
+
+		_currentComponent = NULL;
+
 	}
 
 	Page::~Page()
 	{
 		deleteAll();
+
+		if (_searchManager) delete _searchManager;
+		if (_physicsManager) delete _physicsManager;
 	}
 
 	QUuid Page::id() const
@@ -52,7 +60,55 @@ namespace CDI
 		return _components.values();
 	}
 
-	AbstractModelItem* Page::getItemPtrById(QUuid id)
+	QGraphicsScene* Page::scene() const
+	{
+		return _scene;
+	}
+
+	void Page::setScene(QGraphicsScene *scene)
+	{
+		_scene = scene;
+		if (_scene == NULL) return;
+
+		QHash<QUuid, Component*>::const_iterator componentiter;
+		for (componentiter = _components.constBegin();
+			 componentiter != _components.constEnd(); ++componentiter)
+		{
+			Component* component = componentiter.value();
+			_scene->addItem(component);
+		}
+		QHash<QUuid, Assembly*>::const_iterator assemiter;
+		for (assemiter = _assemblies.constBegin();
+			 assemiter != _assemblies.constEnd(); ++assemiter)
+		{
+			Assembly* assembly = assemiter.value();
+			_scene->addItem(assembly);
+		}
+	}
+
+	Component* Page::currentComponent()
+	{
+		return _currentComponent;
+	}
+
+	void Page::setCurrentComponent(Component *currentComp)
+	{
+		if (currentComp == NULL)
+		{
+			_currentComponent = NULL; return;
+		}
+
+		if (currentComp == _currentComponent) return;
+
+		if (_components.contains(currentComp->id()) == false)
+		{
+			addComponent(currentComp);
+		}
+
+		_currentComponent = currentComp;
+	}
+
+	QGraphicsItem* Page::getItemPtrById(QUuid id)
 	{
 		// NOTE - No check has been to verify if the item is of type
 		// Component or Assembly
@@ -62,8 +118,10 @@ namespace CDI
 			 componentiter != _components.constEnd(); ++componentiter)
 		{
 			Component* component = componentiter.value();
+			if (component->id() == id) return component;
+
 			if (component->containsItem(id))
-				return component->getItemPtrById(id);
+				return component->getItemById(id);
 		}
 		return NULL;
 	}
@@ -82,61 +140,12 @@ namespace CDI
 		return NULL;
 	}
 
-	ItemType Page::getItemType(QUuid id)
-	{
-		if (_assemblies.contains(id)) return ASSEMBLY;
-		if (_components.contains(id)) return COMPONENT;
-		AbstractModelItem* itemPtr = getItemPtrById(id);
-		if (itemPtr == NULL) return NONE;
-		return itemPtr->type();
-	}
-
-	/*AbstractModelItem* Page::getParent(AbstractModelItem *item)
-	{
-
-		if (item->type() == ASSEMBLY) return NULL;
-		if (item->type() == COMPONENT)
-		{
-			QHash<QUuid, Assembly*>::const_iterator assemiter;
-			for (assemiter = _assemblies.constBegin();
-				 assemiter != _assemblies.constEnd(); ++assemiter)
-			{
-				Assembly* assembly = assemiter.value();
-				if (assembly->contains(item->id()))
-				{
-					return assembly;
-				}
-			}
-		} else {
-			// Look into components
-			QHash<QUuid, Component*>::const_iterator componentiter;
-			for (componentiter = _components.constBegin();
-				 componentiter != _components.constEnd(); ++componentiter)
-			{
-				Component* component = componentiter.value();
-				if (component->containsItem(item, false))
-					return component;
-			}
-		}
-		return NULL;
-	}*/
-
 	bool Page::contains(QUuid id)
 	{
 		// Check immediate objects
 		if (_assemblies.contains(id)) return true;
 		if (_components.contains(id)) return true;
 
-		/*if (searchRecursive)
-		{
-			QHash<QUuid, Assembly*>::const_iterator assemiter;
-			for (assemiter = _assemblies.constBegin();
-				 assemiter != _assemblies.constEnd(); ++assemiter)
-			{
-				Assembly* assembly = assemiter.value();
-				if (assembly->contains(id)) return true;
-			}
-		}*/
 		QHash<QUuid, Component*>::const_iterator componentiter;
 		for (componentiter = _components.constBegin();
 			 componentiter != _components.constEnd(); ++componentiter)
@@ -145,6 +154,8 @@ namespace CDI
 			if (component->containsItem(id))
 				return true;
 		}
+
+		// TODO - Check within assembly first
 		return false;
 	}
 
@@ -155,42 +166,35 @@ namespace CDI
 
 	Assembly* Page::createAssembly()
 	{
-		Assembly* newAssembly = new Assembly(this);
-		_assemblies.insert(newAssembly->id(), newAssembly);
-
-		emit signalAssemblyAdd(newAssembly);
-
+		Assembly* newAssembly = new Assembly();
+		addAssembly(newAssembly);
 		return newAssembly;
 	}
 
 	Component* Page::createComponent()
 	{
-		Component* newComponent = new Component(this);
-		_components.insert(newComponent->id(), newComponent);
-
-		emit signalComponentAdd(newComponent);
-
+		Component* newComponent = new Component();
+		addComponent(newComponent);
 		return newComponent;
 	}
 
 	void Page::addComponent(Component *component)
 	{
-		if (_components.contains(component->id()) == false)
-		{
-			_components.insert(component->id(), component);
-			emit signalComponentAdd(component);
-		}
-
+		if (_components.contains(component->id())) return;
+		_components.insert(component->id(), component);
+		if (_scene) _scene->addItem(component);
+		emit signalItemAdd(component);
 	}
 
 	void Page::addAssembly(Assembly *assembly)
 	{
-		if (_assemblies.contains(assembly->id()) == false)
-		{
-			_assemblies.insert(assembly->id(), assembly);
-			emit signalAssemblyAdd(assembly);
-		}
+		if (_assemblies.contains(assembly->id())) return;
+		_assemblies.insert(assembly->id(), assembly);
+		if (_scene) _scene->addItem(assembly);
+		emit signalItemAdd(assembly);
 	}
+
+
 
 	bool Page::mergeAssembly(Assembly *a1, Assembly *a2)
 	{
@@ -205,21 +209,15 @@ namespace CDI
 		if (assembly == NULL) return false;
 		if (_assemblies.contains(assembly->id()))
 		{
+			QList<Component*> lis_components = assembly->components();
 
-			/*QHash<QUuid, Component*>*/ItemHash::const_iterator iter;
-			for(iter = assembly->constBegin(); iter != assembly->constEnd(); ++iter)
+			for (QList<Component*>::const_iterator iter = lis_components.constBegin();
+				 iter != lis_components.constEnd(); ++iter)
 			{
-				Item* item = iter.value();
-				// TODO - How to manage others?
-				// Also can we keep components in the same league as other <Item>
-				if (item->type() == COMPONENT)
-				{
-					Component* component = static_cast<Component*>(item);
-					_components.remove(component->id());
-					delete component;
-				} else {
-					delete item;
-				}
+				Component* component = (*iter);
+				_components.remove(component->id());
+				assembly->removeComponent(component);
+				delete component;
 			}
 			_assemblies.remove(assembly->id());
 			delete assembly;
@@ -232,11 +230,10 @@ namespace CDI
 	{
 		// Do not delete the component if it is not contained in the page
 		bool markForDelete = false;
-
 		if (component == NULL)
 		{
-			QLOG_INFO() << "Component is NULL";
-			return markForDelete;
+			QLOG_ERROR() << "Invalid component pointer";
+			return false;
 		}
 
 		// 0. Remove the component from component hash
@@ -251,16 +248,16 @@ namespace CDI
 			 assemiter != _assemblies.constEnd(); ++assemiter)
 		{
 			Assembly* assembly = assemiter.value();
-			if (assembly->contains(component->id()))
+			if (assembly->containsComponent(component->id()))
 			{
 				markForDelete = true;
-				assembly->removeItem(component->id());
+				assembly->removeComponent(component);
 				break;
 			}
 		}
 		if (markForDelete)
 		{
-			emit signalComponentDelete(component);
+			emit signalItemDelete(component);
 			delete component;
 		}
 		return markForDelete;
@@ -268,7 +265,7 @@ namespace CDI
 
 	bool Page::add(Page* page)
 	{
-		QLOG_INFO() << "Feature not implemented";
+		QLOG_TRACE() << "Feature not implemented";
 		if (page== NULL) QLOG_INFO() <<"Not cool. NULL Page pointer@Page::add()";
 		return false;
 	}
@@ -279,8 +276,10 @@ namespace CDI
 		// Make sure not to serialize components which have already been serialized by the assembly;
 		// Implement saving of component data only
 		int num_components = _components.size();
+		int num_assemblies = _assemblies.size();
 		stream << num_components;
-		if (num_components == 0) return stream;
+		stream << num_assemblies;
+		if (num_components == 0 && num_assemblies == 0) return stream;
 
 		QHash<QUuid, Component*>::const_iterator componentiter;
 		for (componentiter = _components.constBegin();
@@ -289,6 +288,7 @@ namespace CDI
 			Component* component = componentiter.value();
 			component->serialize(stream);
 		}
+
 		return stream;
 	}
 
@@ -296,16 +296,19 @@ namespace CDI
 	{
 		QUuid newId;
 		stream >> newId;
-		emit signalItemIdUpdate(_id, newId);
+
 		_id = newId;
 
 		int num_components = 0;
+		int num_assemblies = 0;
 		stream >> num_components;
+		stream >> num_assemblies;		// Do not write assembly info now.
+
 		if (num_components != 0)
 		{
 			for (int i=0; i<num_components; i++)
 			{
-				Component *component = new Component(this);
+				Component *component = new Component();
 				component->deserialize(stream);
 				addComponent(component);
 			}
@@ -317,48 +320,72 @@ namespace CDI
 
 	void Page::deleteAll()
 	{
-		emit signalDeleteAllItems(this);
-		// Destroys the relationship between components
-		qDeleteAll(_assemblies);
-		// Destroys all the components
-		qDeleteAll(_components);
-
-		_components.clear();
+		// Do not iterate over hash to delete items. get the list of objects and delete them
+		QList<Assembly*> assemblies = _assemblies.values();
+		for (int i=0; i < assemblies.size(); i++)
+		{
+			Assembly* assembly = assemblies[i];
+			destroyAssembly(assembly);
+		}
 		_assemblies.clear();
+
+		QList<Component*> components = _components.values();
+		for (int i=0; i < components.size(); i++)
+		{
+			Component* component  = components[i];
+			destroyComponent(component);
+		}
+		_components.clear();
 	}
 
-	void Page::onItemAdd(AbstractModelItem *item)
+	// Slots
+	void Page::onItemAdd(QGraphicsItem* graphicsitem)
+	{
+		emit signalItemAdd(graphicsitem);
+	}
+
+	void Page::onItemUpdate(QGraphicsItem* graphicsitem)
+	{
+		emit signalItemUpdate(graphicsitem);
+	}
+
+	void Page::onItemDelete(QGraphicsItem* graphicsitem)
+	{
+		emit signalItemDelete(graphicsitem);
+	}
+
+	void Page::onItemTransformUpdate(QGraphicsItem* graphicsitem)
+	{
+		emit signalItemTransformUpdate(graphicsitem);
+	}
+
+	void Page::onItemAdd(Item* item)
 	{
 		emit signalItemAdd(item);
 	}
 
-	void Page::onItemRemove(QUuid itemId)
+	void Page::onItemUpdate(Item* item)
 	{
-		emit signalItemRemove(itemId);
+		emit signalItemUpdate(item);
 	}
 
-	void Page::onItemUpdate(QUuid itemId)
+	void Page::onItemDelete(Item* item)
 	{
-		emit signalItemUpdate(itemId);
+		emit signalItemDelete(item);
 	}
 
-	void Page::onItemDisplayUpdate(QUuid itemId)
+	void Page::onItemTransformUpdate(Item* item)
 	{
-		emit signalItemDisplayUpdate(itemId);
+		emit signalItemTransformUpdate(item);
 	}
 
-	void Page::onItemRedraw(QUuid itemId)
+	QDataStream& operator<<(QDataStream& stream, const Page& page)
 	{
-		emit signalItemRedraw(itemId);
+		return page.serialize(stream);
 	}
 
-	void Page::onItemTransformUpdate(QUuid itemId)
+	QDataStream& operator>>(QDataStream& stream, Page& page)
 	{
-		emit signalItemTransformUpdate(itemId);
-	}
-
-	void Page::onItemIdUpdate(QUuid oldID, QUuid newID)
-	{
-		emit signalItemIdUpdate(oldID, newID);
+		return page.deserialize(stream);
 	}
 }

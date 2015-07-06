@@ -12,6 +12,13 @@ namespace CDI
 		QGraphicsScene* tmp = new QGraphicsScene(this);
 		setScene(tmp);
 
+		setAttribute(Qt::WA_AcceptTouchEvents, true);
+		viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
+
+		setRenderHint(QPainter::Antialiasing);
+		setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+		setTransformationAnchor(QGraphicsView::NoAnchor);
+
 		imgDim = 100;
 		margin = 10;
 	}
@@ -30,7 +37,6 @@ namespace CDI
 			qDeleteAll(_searchDispItems);
 		_searchDispItems.clear();
 
-		QMessageBox::about(this, "SearchView::clear()", "All items cleared");
 	}
 
 	void SearchView::mousePressEvent(QMouseEvent *event)
@@ -38,8 +44,47 @@ namespace CDI
 		//QMessageBox::about(this, QString("Search view"), QString("Search view"));
 	}
 
+	bool SearchView::viewportEvent(QEvent *event)
+	{
+		switch(event->type())
+		{
+		case QEvent::TouchBegin :
+		case QEvent::TouchUpdate :
+		case QEvent::TouchEnd :
+		case QEvent::TouchCancel :
+		{
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			if (touchEvent->touchPoints().count() == 2)
+			{
+				event->accept();
+				//			QList<QTouchEvent::TouchPoint> touchpoints = event->touchPoints();
+				const QTouchEvent::TouchPoint &tp1 = touchEvent->touchPoints()[0];
+				const QTouchEvent::TouchPoint &tp2 = touchEvent->touchPoints()[1];
+
+				// 1. Scaling by increase in radius
+				QPointF previousCenter = transform().map(0.5f* (tp1.lastPos() + tp2.lastPos()));
+				QPointF currentCenter = transform().map(0.5f* (tp1.pos() + tp2.pos()));
+
+				QPointF difference = currentCenter - previousCenter;
+				translate(difference.x(),difference.y());
+
+				QPointF p1 = tp1.lastScenePos() - tp2.lastScenePos();
+				QPointF p2 = tp1.scenePos() - tp2.scenePos();
+				float scaleFactor = magnitude(&p2)/magnitude(&p1);
+				if (qFuzzyIsNull(scaleFactor) == false && qFuzzyCompare(scaleFactor, 0))
+					scale(scaleFactor, scaleFactor);
+				// 2. Translate by motion of center
+				// 3. Rotate by mean of rotation of each point by center
+				return true;
+			}
+
+		}
+		}
+		return QGraphicsView::viewportEvent(event);
+	}
+
 	void SearchView::LoadSearchData
-	(QList<GraphicsPathItem *> &selectedStrokes, QList<SearchResult *> &searchResults)
+	(QList<Stroke *> &selectedStrokes, QList<SearchResult *> &searchResults)
 	{
 		clear();
 		_selectedStrokes = selectedStrokes;
@@ -62,12 +107,11 @@ namespace CDI
 						(i/5) * (imgDim+margin));
 
 		}
-		QLOG_INFO() << "Search view rect" << sceneRect;
 	}
 
 	void SearchView::onSearchResultSelect(SearchResult* result)
 	{
-		QMessageBox::about(this, "item click", result->resultFilePath);
+
 		emit signalOnSearchResultSelect(result);
 	}
 }

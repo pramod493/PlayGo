@@ -92,16 +92,13 @@ namespace CDI
 		virtual Page* getPageById(QUuid id);
 		virtual Page* getPageById(QString id);
 
-		QDataStream& serialize(QDataStream& stream) const;
-		QDataStream& deserialize(QDataStream& stream);
+		virtual QDataStream& serialize(QDataStream& stream) const;
+		virtual QDataStream& deserialize(QDataStream& stream);
 
-		bool SaveModel(QString filePath);
-		bool ReadModel(QString filePath);
+		virtual bool SaveModel(QString filePath);
+		virtual bool ReadModel(QString filePath);
 
 	signals:
 	public slots:
-
-//		friend QDataStream& operator<<(QDataStream& stream, const PlayGo& item);
-//		friend QDataStream& operator>>(QDataStream& stream, PlayGo& item);
 	};
 }

@@ -1,154 +1,86 @@
 #include "assembly.h"
-#include "page.h"
-#include "commonfunctions.h"
-#include <QDebug>
-#include "QsLog.h"
 
 namespace CDI
 {
-	Assembly::Assembly(Page *parent)
+	Assembly::Assembly(QGraphicsItem* parent)
+		: QGraphicsItemGroup(parent)
 	{
-		mask = 0;
 		_id = uniqueHash();
-		_pagePtr = parent;
+		_data = new AssemblyData;
 	}
 
-	// TODO - Implement Joint-Object mapping
 	Assembly::~Assembly()
 	{
-//		QHash<QUuid, Component*>::const_iterator iter;
-//		for(iter = constBegin(); iter != constEnd(); ++iter)
-//		{
-//			Component* component = iter.value();
-//			delete component;
-//		}
+		delete _data;
 	}
 
-	QUuid Assembly::id() const
+	void Assembly::addComponent(Component* component)
 	{
-		return _id;
-	}
-
-	ItemType Assembly::type() const
-	{
-		return ASSEMBLY;
-	}
-
-	QTransform Assembly::transform() const
-	{
-		return _transform;
-	}
-
-	void Assembly::setTransform(QTransform transform)
-	{
-		mask |= isTransformed;
-		_transform = transform;
-	}
-
-	void Assembly::addItem(Component *component)
-	{
-		if (contains(component->id())) return;
-		insert(component->id(), component);
-	}
-
-	void Assembly::removeItem(Component *component)
-	{
-		removeItem(component->id());
-	}
-
-	void Assembly::removeItem(QUuid uid)
-	{
-		if (contains(uid))
+		if (_data->components.contains(component->id()) == false)
 		{
-			remove(uid);
+			_data->components.insert(component->id(), component);
 		}
-		// TODO - also remove all the connection references as well
+		addToGroup(component);
 	}
 
-	bool Assembly::containsItem(AbstractModelItem* key, bool searchRecursive)
+	void Assembly::removeComponent(Component* component)
 	{
-		return containsItem(key->id(), searchRecursive);
-	}
-
-	bool Assembly::containsItem(QUuid key, bool searchRecursive)
-	{
-		if (contains(key)) return true;
-		if (searchRecursive)
+		if (_data->components.contains(component->id()))
 		{
-			/*QHash<QUuid, Component*>*/ItemHash::const_iterator iter;
-			for (iter = constBegin(); iter != constEnd(); ++iter)
-			{
-				Item* item = iter.value();
-				if (item->type() == COMPONENT)
-				{
-					Component* component = static_cast<Component*>(item);
-					if (component->containsItem(key, searchRecursive))
-						return true;
-				}
-			}
+			_data->components.remove(component->id());
 		}
+		removeFromGroup(component);
+	}
+
+	void Assembly::removeComponent(QUuid componentId)
+	{
+		if (_data->components.contains(componentId))
+		{
+			Component* component = _data->components.value(componentId);
+			_data->components.remove(componentId);
+			removeFromGroup(component);
+		}
+	}
+
+	bool Assembly::containsComponent(QUuid componentId)
+	{
+		return _data->components.contains(componentId);
+	}
+
+	QList<Component*> Assembly::components()
+	{
+		return _data->components.values();
+	}
+
+	bool Assembly::mergeAssembly(Assembly *a)
+	{
+		Q_UNUSED(a)
 		return false;
 	}
 
-	bool Assembly::containsItem(QString key, bool searchRecursive)
+	Component* Assembly::getComponentById(QUuid componentId)
 	{
-		QUuid uid = QUuid(key);
-		if (uid.isNull()) return false;
-		return containsItem(uid, searchRecursive);
+		if (_data->components.contains(componentId))
+			return _data->components.value(componentId);
+		return NULL;
 	}
 
-//	bool Assembly::readFromFile(QFile &file)
-//	{
-//		Q_UNUSED(file);
-//		// TODO - feature not implemented
-//		return false;
-//	}
-
-//	bool Assembly::writeToFile(QFile& file)
-//	{
-//		Q_UNUSED(file);
-//		// TODO - feature not implemented
-//		return false;
-//	}
+	void Assembly::addJoint(Component *c1, Component *c2)
+	{
+		Q_UNUSED(c1)
+		Q_UNUSED(c2)
+	}
 
 	QDataStream& Assembly::serialize(QDataStream& stream) const
 	{
-//		stream << size();
-//		if (!isEmpty())
-//		{
-//			QHash<QUuid, Component*>::const_iterator iter;
-//			for(iter = constBegin(); iter != constEnd(); ++iter)
-//			{
-//				Component* component = iter.value();
-//				stream << *component;
-//			}
-//		}
+		stream << _id;
 		return stream;
 	}
 
 	QDataStream& Assembly::deserialize(QDataStream& stream)
 	{
-//		int num_items;
-//		stream >> num_items;
-//		if (num_items != 0)
-//		{
-//			reserve(num_items);
-//			for (int i =0; i< num_items; i++)
-//			{
-//				Component* component = _pagePtr->createComponent();
-//				stream >> *component;
-//				insert(component->id(), component);
-//			}
-//		}
+		stream >> _id;
 		return stream;
 	}
 
-	bool Assembly::mergeAssembly(Assembly* assembly)
-	{
-		Q_UNUSED(assembly);
-		QLOG_INFO() << "@Assembly::mergeAssembly(assembly: Assembly*)"
-				 << "feature not implemented";
-		return false;
-	}
 }
-

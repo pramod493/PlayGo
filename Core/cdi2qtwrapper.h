@@ -20,6 +20,8 @@ namespace CDI
 		STROKEVIEW = 1,
 		POLYGONVIEW,
 		IMAGEVIEW,
+		SEARCHITEMVIEW,
+		JOINTVIEW,
 		COMPONENTVIEW,
 		ASSEMBLYVIEW
 	};
@@ -35,6 +37,13 @@ namespace CDI
 	struct PaintSettings {
 		QPen pen;
 		QBrush brush;
+
+		PaintSettings()
+		{
+			pen = QPen();
+			brush = QBrush();
+		}
+
 		PaintSettings(QPen penSetting, QBrush brushSetting)
 		{
 			pen = penSetting; brush = brushSetting;
@@ -50,6 +59,8 @@ namespace CDI
 
 	class CommonDrawFunctions
 	{
+	public:
+
 		PaintSettings arrowSettings;
 		PaintSettings springSettings;
 		PaintSettings jointSettings;
@@ -76,5 +87,11 @@ namespace CDI
 		void drawTriangulatedPolygons(QVector<QPolygonF*> polygons, QPainter *painter);
 
 		void drawTriangulatedPolygons(vector<p2t::Triangle*> triangles, QPainter* painter);
+
+		static CommonDrawFunctions* instance();
+
+	private:
+		CommonDrawFunctions();
+		static CommonDrawFunctions* _instance;
 	};
 }

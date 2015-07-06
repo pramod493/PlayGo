@@ -54,7 +54,7 @@ namespace CDI
 		/**
 		 * @brief refresh creates new instance of search engine based on the new param values
 		 */
-		void refresh();
+		void reload();
 
 		/**
 		 * @brief Searches based on the input image

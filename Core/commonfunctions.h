@@ -8,6 +8,8 @@
 #include <QVector>
 #include "FindContours.h"
 #include "poly2tri.h"
+#define _USE_NATH_DEFINES
+#include <math.h>
 
 #define MASK_BIT0	1
 #define MASK_BIT1	2
@@ -17,7 +19,7 @@
 #define MASK_BIT5	32
 #define MASK_BIT6	64
 #define MASK_BIT7	128
-#define _PI_ 3.14159265
+#define _PI_ 3.14159265358979323846
 
 namespace CDI
 {
@@ -88,6 +90,8 @@ namespace CDI
 
     float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd);
 
+	float diameterOfCircumcircle(float a, float b, float c);
+
     bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance);
 
 	bool extractTransformComponents(QTransform &t, float* rotation, float* scale, Point2D* translation);
@@ -97,6 +101,8 @@ namespace CDI
 	bool isConvexPolygon(Point2D* points, int numPoints);
 
 	QUuid uniqueHash();
+
+	int currentTime();
 
 	/**
 	 * @brief generatePolygonFromImage creates contour from given image, simplies using RDG
@@ -110,5 +116,6 @@ namespace CDI
 	 * @remarks - In the current implementation, all polygons are simply triangles.
 	 * @todo - Implement decomposition to generate convex polygons with num of vertices > 3
 	 */
-	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside);
+	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside,
+																		 float minPolygonSize = 5.0f, bool ignoreSmalls = false);
 }

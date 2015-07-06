@@ -91,17 +91,17 @@ namespace CDI
 			_currentscale = val;
 	}
 
-	PhysicsShape* PhysicsShape::createShapeFromImage(Image *image)
-	{
-		QString f = "tmp_physics.png";
-		image->pixmap()->save(f);
-		vector<p2t::Triangle*> p2tTrias = generatePolygonFromImage(f, 5, 5);
-		if (p2tTrias.size()== 0) return NULL;
-		PhysicsShape* physicsShape =
-				PhysicsShape::createShapeFromTriangles(p2tTrias);
+//	PhysicsShape* PhysicsShape::createShapeFromImage(Image *image)
+//	{
+//		QString f = "tmp_physics.png";
+//		image->pixmap()->save(f);
+//		vector<p2t::Triangle*> p2tTrias = generatePolygonFromImage(f, 5, 5);
+//		if (p2tTrias.size()== 0) return NULL;
+//		PhysicsShape* physicsShape =
+//				PhysicsShape::createShapeFromTriangles(p2tTrias);
 
-		return physicsShape;
-	}
+//		return physicsShape;
+//	}
 
 	PhysicsShape* PhysicsShape::createShapeFromPixmap(QPixmap &pixmap)
 	{

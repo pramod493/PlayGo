@@ -13,8 +13,8 @@ namespace CDI
 
 	PhysicsBody::~PhysicsBody()
 	{
-		if (parentItem()!= NULL)
-			parentItem()->removeItem(id());
+//		if (parentItem()!= NULL)
+//			parentItem()->removeItem(id());
 	}
 
 	b2Body* PhysicsBody::getBox2DBody()
@@ -43,7 +43,7 @@ namespace CDI
 	QTransform PhysicsBody::globalTransform() const
 	{
 		if (component != NULL)
-			return component->globalTransform();
+			return component->sceneTransform();
 		return QTransform();
 	}
 

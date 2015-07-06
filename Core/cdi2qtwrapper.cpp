@@ -78,4 +78,22 @@ namespace CDI
 
 	}
 
+	CommonDrawFunctions* CommonDrawFunctions::_instance = NULL;
+
+	CommonDrawFunctions* CommonDrawFunctions::instance()
+	{
+		if (!_instance)
+			_instance = new CommonDrawFunctions;
+		return _instance;
+	}
+
+	CommonDrawFunctions::CommonDrawFunctions()
+	{
+		arrowSettings = PaintSettings();
+		springSettings = PaintSettings();
+		jointSettings = PaintSettings();
+		forceSettings = PaintSettings();
+		touchPointSettings = PaintSettings();
+		polygonSettings = PaintSettings();
+	}
 }

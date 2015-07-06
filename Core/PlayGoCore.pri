@@ -4,50 +4,70 @@ include ($$PWD/../Physics/QBox2D.pri)
 include ($$PWD/../EdgeDetect/Edge Detect.pri)
 #include ($$PWD/../QsLog/QsLog.pri)
 
+#DEFINES += CDI_DEBUG_DRAW_SHAPE
+
 INCLUDEPATH += $$PWD
 
+HEADERS += $$PWD/clipper.hpp \
+    $$PWD/grabcut.h
+SOURCES += $$PWD/clipper.cpp \
+    $$PWD/grabcut.cpp
+
 HEADERS += \
-    $$PWD/commonfunctions.h \
-    $$PWD/point2dpt.h \
-    $$PWD/stroke.h \
-    $$PWD/image.h \
-    $$PWD/abstractmodelitem.h \
-    $$PWD/component.h \
-    $$PWD/assembly.h \
-    $$PWD/playgo.h \
-    $$PWD/fileio.h \
     $$PWD/ramerdouglaspeucker.h \
-    $$PWD/polygon2d.h \
     $$PWD/asmopencv.h \
-    $$PWD/physicsmanager.h \
-    $$PWD/searchmanager.h \
-    $$PWD/page.h \
+    $$PWD/commonfunctions.h \
+    $$PWD/abstractmodelitem.h \
+ 	 $$PWD/cdi2qtwrapper.h \
+    $$PWD/point2dpt.h 
+	
+SOURCES += \
+    $$PWD/ramerdouglaspeucker.cpp  \
+    $$PWD/commonfunctions.cpp  \
+    $$PWD/abstractmodelitem.cpp  \
+    $$PWD/cdi2qtwrapper.cpp  \
+    $$PWD/point2dpt.cpp  
+	
+HEADERS += \
     $$PWD/physicsbody.h \
     $$PWD/physicsjoint.h \
+    $$PWD/physicsshape.h \
+    $$PWD/searchresult.h 
+	
+SOURCES += \
+    $$PWD/physicsbody.cpp  \
+    $$PWD/physicsjoint.cpp  \
+    $$PWD/physicsshape.cpp  \
+    $$PWD/searchresult.cpp 
+	
+HEADERS += \
+    $$PWD/stroke.h \
+    $$PWD/pixmap.h \
+    $$PWD/polygon2d.h \
+    $$PWD/component.h \
+    $$PWD/assembly.h \
+    $$PWD/page.h \
+    $$PWD/playgo.h 
+	
+SOURCES += \
+    $$PWD/stroke.cpp  \
+    $$PWD/pixmap.cpp  \
+    $$PWD/polygon2d.cpp  \
+    $$PWD/component.cpp  \
+    $$PWD/assembly.cpp  \
+    $$PWD/page.cpp  \
+    $$PWD/playgo.cpp
+	
+HEADERS += \
+    $$PWD/fileio.h \
+    $$PWD/physicsmanager.h \
+    $$PWD/searchmanager.h \
     $$PWD/playgocore.h \
-    $$PWD/searchresult.h \
-    $$PWD/physicsshape.h
+    $$PWD/filesystemwatcher.h
 
 SOURCES += \
-    $$PWD/commonfunctions.cpp \
-    $$PWD/point2dpt.cpp \
-    $$PWD/stroke.cpp \
-    $$PWD/image.cpp \
-    $$PWD/abstractmodelitem.cpp \
-    $$PWD/component.cpp \
-    $$PWD/assembly.cpp \
-    $$PWD/playgo.cpp \
-    $$PWD/fileio.cpp \
-    $$PWD/ramerdouglaspeucker.cpp \
-    $$PWD/polygon2d.cpp \
-    $$PWD/physicsmanager.cpp \
+    $$PWD/fileio.cpp  \
+    $$PWD/physicsmanager.cpp  \
     $$PWD/searchmanager.cpp \
-    $$PWD/page.cpp \
-    $$PWD/physicsbody.cpp \
-    $$PWD/physicsjoint.cpp \
-    $$PWD/searchresult.cpp \
-    $$PWD/physicsshape.cpp
+    $$PWD/filesystemwatcher.cpp
 
-INCLUDEPATH += $$PWD/Clipper
-HEADERS += $$PWD/Clipper/clipper.hpp
-SOURCES += $$PWD/Clipper/clipper.cpp

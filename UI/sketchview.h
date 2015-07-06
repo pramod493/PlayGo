@@ -37,6 +37,17 @@ namespace CDI
 
 		void wheelEvent(QWheelEvent* event);
 
+		// QGraphicsView viewport receives the touch event
+		bool viewportEvent(QEvent *event);
+
+		void dragEnterEvent(QDragEnterEvent * event);
+
+		void dragLeaveEvent(QDragLeaveEvent * event);
+
+		void dragMoveEvent(QDragMoveEvent * event);
+
+		void dropEvent(QDropEvent *event);
+
 	signals:
 		void viewTabletEvent(QTabletEvent *tabletEvent, QGraphicsView *view);
 
@@ -50,5 +61,7 @@ namespace CDI
 		void viewDrawbackground(QPainter* painter, const QRectF & rect);
 
 		void viewDrawforeground(QPainter* painter, const QRectF & rect);
+
+		void viewImageDrop(QString imagepath);
 	};
 }

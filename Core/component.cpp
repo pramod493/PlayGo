@@ -1,444 +1,412 @@
 #include "component.h"
-#include "page.h"
-#include "polygon2d.h"
 #include "stroke.h"
-#include "image.h"
+#include "pixmap.h"
+#include "graphicssearchitem.h"
+#include "polygon2d.h"
+#include "assembly.h"
 #include "QsLog.h"
+#include <QMatrix4x4>
+#include <QTransform>
+#include <QGraphicsTransform>
+#include <QMessageBox>
+#include <QVector2D>
 namespace CDI
 {
-	Component::Component(Page *parent)
-		//: AbstractModelItem()
-	{
-		mask = 0;
+	Component::Component(QGraphicsItem *parent)
+		: QGraphicsObject(parent)
+    {
+		_highlighted = false;
 		_id = uniqueHash();
-		_pagePtr = parent;
-		_assemblyParent  = NULL;
-		_transform = QTransform();
-		_inverseTransform = QTransform();
 
-		_position = Point2D(0,0);
-		_scale = 1;
-		_rotation = 0.0f;
+		_physicsBody = NULL;
 
-		_transformModified = false;
-
-	}
+		setAcceptTouchEvents(true);
+		// Components will not be anchored to anything except themselves
+//		setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
+//		grabGesture(Qt::PinchGesture);
+//		grabGesture(Qt::SwipeGesture);
+//		grabGesture(Qt::PanGesture);
+    }
 
 	Component::~Component()
-	{
-		// Do not call directly. Rather call from Page::destroyComponent()
-		// delete all the contained components;
-		QHash<QUuid, AbstractModelItem*>::const_iterator iter;
-		for (iter = constBegin(); iter != constEnd(); ++iter)
+    {
+		// Deletes the children as well
+		if (parentItem()!= NULL)
 		{
-			AbstractModelItem* item = iter.value();
-			delete item;
-		}
-		clear();
-		if (_pagePtr != NULL)
-		{
-			_pagePtr->destroyComponent(this);
-		}
-	}
-
-	QUuid Component::id() const
-	{
-		return _id;
-	}
-
-	Assembly* Component::parentAssembly()
-	{
-		return _assemblyParent;
-	}
-
-	void Component::setParentAssembly(Assembly *assembly)
-	{
-		_assemblyParent = assembly;
-	}
-
-	ItemType Component::type() const
-	{
-		return COMPONENT;
-	}
-
-	Point2D Component::position()
-	{
-		return _position;
-	}
-
-	float Component::scale()
-	{
-		return _scale;
-	}
-
-	float Component::rotation()
-	{
-		return _rotation;
-	}
-
-	void Component::setPosition(float x, float y)
-	{
-		_position.setX(x);
-		_position.setY(y);
-
-		_transformModified = true;
-	}
-
-	void Component::translateBy(float x, float y)
-	{
-		_position += Point2D(x, y);
-
-		_transformModified = true;
-	}
-
-	void Component::translateTo(float x, float y)
-	{
-		translateBy(x - _position.x(), y - _position.y());
-	}
-
-	void Component::setRotation(float rot)
-	{
-		_rotation = rot;
-
-		_transformModified = true;
-	}
-
-	void Component::rotateBy(float deltaRot)
-	{
-		_rotation += deltaRot;
-
-		_transformModified = true;
-	}
-
-	void Component::scaleBy(float scaleFactor)
-	{
-		_scale *= scaleFactor;
-
-		_transformModified = true;
-		_componentScaled = true;
-	}
-
-	void Component::onIdUpdate(QUuid oldID, QUuid newID)
-	{
-		if (contains(oldID))
-		{
-			AbstractModelItem* item = value(oldID);
-			remove(oldID);
-			insert(newID, item);
-		}
-	}
-
-	QTransform Component::transform()
-	{
-		if (_transformModified || _componentScaled)
-		{
-			_transform = QTransform();
-			/*_transform = */_transform.rotate(_rotation);
-			/*_transform = */_transform.scale(_scale, _scale);
-			/*_transform = */_transform.translate
-					(_position.x(), _position.y());
-			_transformModified = false;
-			_componentScaled = false;
-		}
-		return _transform;
-	}
-
-	QTransform Component::globalTransform()
-	{
-		return transform();
-	}
-
-	QTransform Component::itemTransform(AbstractModelItem* item)
-	{
-		return transform() * (item->transform());
-	}
-
-	QTransform Component::itemTransform(QUuid itemId)
-	{
-		QTransform t = transform();
-		if (contains(itemId))
-		{
-			AbstractModelItem* item = value(itemId);
-			t = item->transform();
-		}
-		return t;
-	}
-
-	void Component::setTransform(QTransform& transform, bool combine)
-	{
-		// NOTE This does not check for difference inscaling along different axes as well as
-		// for
-		{
-			_transform = (combine ? _transform * transform : transform);
-			float *tmpRotation, *tmpScale;
-			tmpRotation = new float;
-			tmpScale = new float;
-			Point2D* tmpTranslation = new Point2D();
-			extractTransformComponents(_transform, tmpRotation, tmpScale, tmpTranslation);
-
-			_rotation = *tmpRotation;
-			_scale = *tmpScale;
-			_position = *tmpTranslation;
-
-			delete tmpRotation;
-			delete tmpScale;
-			delete tmpTranslation;
-		}
-
-		_inverseTransform = _transform.inverted();
-
-		if (_pagePtr != NULL) _pagePtr->onItemUpdate(id());
-	}
-
-	Stroke* Component::addStroke(QColor color, float thickness)
-	{
-		Stroke* stroke = new Stroke(this, color, thickness);
-		addItem(stroke);
-		return stroke;
-	}
-
-	Stroke* Component::addStroke(const QVector<Point2DPT> &points, QColor color, float thickness)
-	{
-		Stroke* stroke = new Stroke(this, points, color, thickness);
-		addItem(stroke);
-		return stroke;
-	}
-
-	Image* Component::addImage()
-	{
-		Image* image = new Image(this);
-		addItem(image);
-		return image;
-	}
-
-	Image* Component::addImage(const QString filename)
-	{
-		Image* image = new Image(this, filename);
-		addItem(image);
-		return image;
-	}
-
-	Image* Component::addImage(const QPixmap &pixmap, QString filename)
-	{
-		Image* image = new Image(this, pixmap, filename);
-		addItem(image);
-		return image;
-	}
-
-	void Component::addItem(AbstractModelItem* item)
-	{
-		if (contains(item->id()) == false)
-		{
-			insert(item->id(), item);
-		}
-	}
-
-	bool Component::removeItem(AbstractModelItem* item)
-	{
-		return removeItem(item->id());
-	}
-
-	bool Component::removeItem(QUuid itemId)
-	{
-		bool retval = (remove(itemId) != 0 ? true : false);
-		return retval;
-	}
-
-	bool Component::containsItem(AbstractModelItem *key, bool searchRecursive)
-	{
-		return containsItem(key->id(), searchRecursive);
-	}
-
-	bool Component::containsItem(QUuid key, bool searchRecurive)
-	{
-		if (contains(key)) return true;
-
-		/* NOTE - This will be useful in searching for items contained within
-		 * AbstractModelItem objects such as PhysicsShape and PhysicsJoint
-		 * if (searchRecurive)
-		{
-			// Search into member components if they are of relevant type
-			QHash<QUuid, AbstractModelItem*>::const_iterator iter;
-			for (iter = constBegin(); iter != constEnd(); ++iter)
+			QGraphicsItem* item = parentItem();
+			if (item->type() == Assembly::Type)
 			{
-				AbstractModelItem* item = iter.value();
-				if (item->type()== COMPONENT)
-				{
-					Component* component = static_cast<Component*>(item);
-					if (component->containsItem(key)) return true;
-				}
+				Assembly* parentAssembly = qgraphicsitem_cast<Assembly*>(item);
+				// On item delete, destroy reference from assembly.
+				parentAssembly->removeComponent(this);
 			}
-		}*/
+		}
+
+		QList<QGraphicsItem*> children = childItems();
+		for (int i=0; i < children.size(); i++)
+			delete children[i];
+
+		if (_physicsBody != NULL)
+		{
+			b2World* world = _physicsBody->GetWorld();
+			world->DestroyBody(_physicsBody);
+		}
+    }
+
+	QRectF Component::boundingRect() const
+	{
+		return itemBoundingRect;
+	}
+
+	void Component::recalculateBoundingRect()
+	{
+		itemBoundingRect = childrenBoundingRect();
+	}
+
+	void Component::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+	{
+		Q_UNUSED(widget);
+		// parent object does not need to manage children paint operations
+		if (option->state & QStyle::State_Selected) {
+			painter->setBrush(Qt::NoBrush);
+			painter->drawRect(itemBoundingRect);
+		}
+
+#ifdef CDI_DEBUG_DRAW_SHAPE
+		painter->setBrush(Qt::NoBrush);
+		painter->drawRect(itemBoundingRect);
+#endif //CDI_DEBUG_DRAW_SHAPE
+	}
+
+	bool Component::sceneEvent(QEvent *event)
+	{
+		switch (event->type())
+		{
+		case QEvent::TouchBegin :
+		case QEvent::TouchUpdate :
+		case QEvent::TouchEnd :
+		case QEvent::TouchCancel :
+			event->accept();
+			return touchEvent(static_cast<QTouchEvent*>(event));
+			break;
+		case QEvent::Gesture :
+//			qDebug() << "Gesture received component";
+//			gestureEvent(static_cast<QGestureEvent*>(event));
+//			event->accept();
+//			return true;
+			break;
+		}
+		return QGraphicsObject::sceneEvent(event);
+	}
+
+	bool Component::gestureEvent(QGestureEvent *gesture)
+	{
+		if (QGesture *swipe = gesture->gesture(Qt::SwipeGesture))
+		{
+
+		} else if (QGesture *pan = gesture->gesture(Qt::PanGesture))
+		{
+			QPanGesture* panGesture = static_cast<QPanGesture*>(pan);
+			setPos(pos() + panGesture->offset() - panGesture->lastOffset());
+		} else if (QGesture *pinch = gesture->gesture(Qt::PinchGesture))
+		{
+			float rotationDelta = 0;
+			float currentStepScaleFactor = 1;
+			QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
+			QPinchGesture::ChangeFlags changeFlags = pinchGesture->changeFlags();
+			setTransformOriginPoint(pinchGesture->centerPoint());
+			setPos(pos() + pinchGesture->centerPoint() - pinchGesture->lastCenterPoint());
+			if (changeFlags & QPinchGesture::RotationAngleChanged) {
+				rotationDelta = pinchGesture->rotationAngle() - pinchGesture->lastRotationAngle();
+				setRotation(rotationDelta + rotation());
+			}
+			if (changeFlags & QPinchGesture::ScaleFactorChanged) {
+				currentStepScaleFactor = scale() * pinchGesture->totalScaleFactor();
+				// Disable for extremely small and large objects
+				if (currentStepScaleFactor > 0.25f && currentStepScaleFactor < 5)
+					setScale(currentStepScaleFactor * scale());
+			}
+			if (pinchGesture->state() == Qt::GestureFinished) {
+//					scaleFactor *= currentStepScaleFactor;
+				currentStepScaleFactor = 1;
+			}
+		}
+		return true;
+	}
+
+	bool Component::touchEvent(QTouchEvent *event)
+	{
+		// Do not process when the touch event arrives
+		if (event->type()==QEvent::TouchBegin) return true;
+
+		if (event->touchPoints().count() == 1)
+		{
+			// Single finger. Drag
+			const QTouchEvent::TouchPoint &tp1 = event->touchPoints().first();
+			QPointF pan = tp1.scenePos() - tp1.lastScenePos();
+			moveBy(pan.x(), pan.y());
+
+		} else if (event->touchPoints().count() == 2 && event->type()==QEvent::TouchUpdate)
+		{
+			// Two finger
+			const QTouchEvent::TouchPoint &tp1 = event->touchPoints()[0];
+			const QTouchEvent::TouchPoint &tp2 = event->touchPoints()[1];
+			QPointF tp1_itemPos = mapFromScene(tp1.scenePos());
+			QPointF tp2_itemPos = mapFromScene(tp2.scenePos());
+			QPointF tp1_lastItemPos = mapFromScene(tp1.lastScenePos());
+			QPointF tp2_lastItemPos = mapFromScene(tp2.lastScenePos());
+			QPointF pan = QPointF(); float rot = 0; float scaleMul = 1;
+			{
+				pan = ( tp1.scenePos() + tp2.scenePos()
+						- tp1.lastScenePos() - tp2.lastScenePos()
+						) / 2.0f;
+				moveBy(pan.x(), pan.y());
+			}
+			QPointF tmpOrigin =(tp1.scenePos() + tp1.lastScenePos())/2.0f;
+			setTransformOriginPoint(mapFromScene(tmpOrigin));
+			{
+				float prevmag = euclideanDistance(&tp2_lastItemPos, &tp1_lastItemPos);
+				float currentmag = euclideanDistance(&tp2_itemPos, &tp1_itemPos);
+				scaleMul = scale() * currentmag / prevmag;
+				setScale(scaleMul);
+			}
+			{
+				// Offset previous event points
+				tp1_lastItemPos = tp1_lastItemPos + pan;
+				tp2_lastItemPos = tp2_lastItemPos + pan;
+				QVector2D v1 = QVector2D(tp1_itemPos - tp2_itemPos);
+				QVector2D v2 = QVector2D(tp1_lastItemPos - tp2_lastItemPos);
+				rot = atan2(v1.y(), v1.x()) - atan2(v2.y(), v2.x());
+				rot = rotation() + (rot * 180.0f) / _PI_;
+				setRotation(rot);
+			}
+
+			if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
+			{
+				setTransformOriginPoint(0,0);
+			}
+		}
+		return true;
+	}
+
+	void Component::addToComponent(QGraphicsItem *item)
+	{
+		// Do not use the object's add function
+		if (!item) {
+			QLOG_INFO() << "cannot add null item";
+			return;
+		}
+		if (item == this) {
+			QLOG_WARN() << "cannot add a group to itself";
+			return;
+		}
+
+		if (item->parentItem())
+		{
+			QGraphicsItem* parent = item->parentItem();
+			if (parent->type() == Component::Type)
+			{
+				Component* parentComponent = qgraphicsitem_cast<Component*>(parent);
+				parentComponent->removeFromComponent(item);
+			}
+		}
+
+		bool ok;
+		QTransform itemTransform = item->itemTransform(this, &ok);
+
+		if (!ok) {
+			QLOG_WARN() << "could not find a valid transformation from item to group coordinates";
+			return;
+		}
+
+		QTransform newItemTransform(itemTransform);
+		item->setPos(mapFromItem(item, 0, 0));
+		item->setParentItem(this);
+
+		// removing position from translation component of the new transform
+		if (!item->pos().isNull())
+			newItemTransform *= QTransform::fromTranslate(-item->x(), -item->y());
+
+		// removing additional transformations properties applied with itemTransform()
+		QPointF origin = item->transformOriginPoint();
+		QMatrix4x4 m;
+		QList<QGraphicsTransform*> transformList = item->transformations();
+		for (int i = 0; i < transformList.size(); ++i)
+			transformList.at(i)->applyTo(&m);
+		newItemTransform *= m.toTransform().inverted();
+		newItemTransform.translate(origin.x(), origin.y());
+		newItemTransform.rotate(-item->rotation());
+		newItemTransform.scale(1/item->scale(), 1/item->scale());
+		newItemTransform.translate(-origin.x(), -origin.y());
+
+		// ### Expensive, we could maybe use dirtySceneTransform bit for optimization
+
+		item->setTransform(newItemTransform);
+
+		itemBoundingRect |= itemTransform.mapRect(item->boundingRect() | item->childrenBoundingRect());
+
+		prepareGeometryChange();
+
+		switch (item->type())
+		{
+		case Stroke::Type :
+		{
+			Stroke* stroke = qgraphicsitem_cast<Stroke*>(item);
+			addToHash(stroke->id(), stroke);
+			break;
+		}
+		case Pixmap::Type :
+		{
+			Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(item);
+			addToHash(pixmap->id(), pixmap);
+			break;
+		}
+		case Polygon2D::Type :
+		{
+			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(item);
+			addToHash(polygon->id(), polygon);
+			break;
+		}
+		case Component::Type :
+		{
+			Component* component = qgraphicsitem_cast<Component*>(item);
+			addToHash(component->id(), component);
+			break;
+		}
+		}
+
+		update();
+	}
+
+	void Component::removeFromComponent(QGraphicsItem *item)
+	{
+		if (!item) {
+			QLOG_WARN() << "QGraphicsItemGroup::removeFromGroup: cannot remove null item";
+			return;
+		}
+
+		switch (item->type())
+		{
+		case Stroke::Type :
+		{
+			Stroke* stroke = qgraphicsitem_cast<Stroke*>(item);
+			removeFromHash(stroke->id());
+			break;
+		}
+		case Pixmap::Type :
+		{
+			Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(item);
+			removeFromHash(pixmap->id());
+			break;
+		}
+		case Polygon2D::Type :
+		{
+			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(item);
+			removeFromHash(polygon->id());
+			break;
+		}
+		case Component::Type :
+		{
+			Component* component = qgraphicsitem_cast<Component*>(item);
+			removeFromHash(component->id());
+			break;
+		}
+		}
+
+		QGraphicsItem *newParent = parentItem();
+
+		// COMBINE
+		bool ok;
+		QTransform itemTransform;
+		if (newParent)
+			itemTransform = item->itemTransform(newParent, &ok);
+		else
+			itemTransform = item->sceneTransform();
+
+		QPointF oldPos = item->mapToItem(newParent, 0, 0);
+		item->setParentItem(newParent);
+		item->setPos(oldPos);
+
+		// removing position from translation component of the new transform
+		if (!item->pos().isNull())
+			itemTransform *= QTransform::fromTranslate(-item->x(), -item->y());
+
+		// removing additional transformations properties applied
+		// with itemTransform() or sceneTransform()
+		QPointF origin = item->transformOriginPoint();
+		QMatrix4x4 m;
+		QList<QGraphicsTransform*> transformList = item->transformations();
+		for (int i = 0; i < transformList.size(); ++i)
+			transformList.at(i)->applyTo(&m);
+		itemTransform *= m.toTransform().inverted();
+		itemTransform.translate(origin.x(), origin.y());
+		itemTransform.rotate(-item->rotation());
+		itemTransform.scale(1 / item->scale(), 1 / item->scale());
+		itemTransform.translate(-origin.x(), -origin.y());
+
+		// ### Expensive, we could maybe use dirtySceneTransform bit for optimization
+
+		item->setTransform(itemTransform);
+		// ### Quite expensive. But removeFromGroup() isn't called very often.
+		prepareGeometryChange();
+
+		// Component object in itself does not contain any renderable item and therefore we need to pick only the children
+		itemBoundingRect = childrenBoundingRect();
+
+	}
+
+	void Component::removeFromComponent(QUuid uid)
+	{
+		if (QHash<QUuid, QGraphicsItem*>::contains(uid))
+		{
+			QGraphicsItem* item = QHash<QUuid, QGraphicsItem*>::value(uid);
+			removeFromComponent(item);
+		}
+	}
+
+	bool Component::containsItem(QUuid uid)
+	{
+		if (QHash<QUuid, QGraphicsItem*>::contains(uid))
+			return true;
 		return false;
 	}
 
-	bool Component::containsItem(QString key, bool searchRecursive)
+	QGraphicsItem* Component::getItemById(QUuid uid)
 	{
-		QUuid id = QUuid(key);
-		if (id.isNull()) return false;	// INVALID ID
-		return containsItem(id, searchRecursive);
+		if (QHash<QUuid, QGraphicsItem*>::contains(uid))
+			return QHash<QUuid, QGraphicsItem*>::value(uid);
+		return NULL;
 	}
 
-	AbstractModelItem* Component::getItemPtrById(QUuid id/*, bool searchRecursive*/)
+	void Component::regenerateInternals()
 	{
-		if (contains(id))
-			return value(id);
-		return NULL;
+		// Not sure what to do but mostly will need to update physics shape
+		if (_physicsBody != NULL)
+		{
+
+		}
 	}
 
 	QDataStream& Component::serialize(QDataStream& stream) const
 	{
-		stream << _transform;
-		stream << _inverseTransform;
-		stream << _position;
-		stream << _scale;
-		stream << _rotation;
-
-		stream << size();
-		if (!isEmpty())
-		{
-			// Just serialize the items for now
-			QHash<QUuid, AbstractModelItem*>::const_iterator iter;
-			for (iter = constBegin(); iter != constEnd(); ++iter)
-			{
-				AbstractModelItem* item = iter.value();
-				int j = item->type();
-				// Do not write items which are not supported by the component
-				if (isItemTypeSupported(item->type()))
-				{
-					stream << j;
-					item->serialize(stream);
-				}
-			}
-		}
+		stream << _id;
 		return stream;
 	}
 
 	QDataStream& Component::deserialize(QDataStream& stream)
 	{
-		stream >> _transform;
-		stream >> _inverseTransform;
-		stream >> _position;
-		stream >> _scale;
-		stream >> _rotation;
-
-		int num_items;
-		stream >> num_items;
-		if (num_items!= 0)
-		{
-			for (int i=0; i < num_items; i++)
-			{
-				int j;
-				stream >> j;
-				ItemType t = getItemType(j);
-				if (isItemTypeSupported(t))
-				{
-					AbstractModelItem* item = createEmptyItem(getItemType(j));
-					item->deserialize(stream);
-					addItem(item);
-				}
-			}
-		}
+		stream >> _id;
 		return stream;
 	}
 
-	AbstractModelItem* Component::createEmptyItem(ItemType itemType)
+	void Component::addToHash(QUuid uid, QGraphicsItem* item)
 	{
-		AbstractModelItem* ptr = NULL;
-		switch (itemType)
-		{
-		case STROKE :
-			ptr = addStroke();
-			break;
-		case IMAGE :
-			QLOG_INFO() << "Creating empty Image object";
-			ptr = addImage();
-			break;
-		case POLYGON2D :
-			ptr = new Polygon2D(this);
-			addItem(ptr);
-			break;
-		case COMPONENT :
-			QLOG_INFO() << "Components are not supposed to contain components"
-					 << "@Component::createEmptyItem(ItemType): AbstractModelItem*";
-			break;
-		default :
-			QLOG_INFO() << "@Component::createEmptyItem(itemType: ItemType)"
-					 << "Default constructor for given itemtype is not available. Returning NULL";
-		}
-		return ptr;
+		if (QHash<QUuid, QGraphicsItem*>::contains(uid)) return;
+		insert(uid, item);
 	}
 
-	bool Component::isItemTypeSupported(ItemType t) const
+	void Component::removeFromHash(QUuid uid)
 	{
-		switch (t)
-        {
-        case STROKE :
-        case IMAGE :
-        case POLYGON2D :
-            return true;
-        default:
-            return false;
-        }
-        return false;
-	}
-
-	void Component::updateTransform()
-	{
-		_transform = QTransform();
-		_transform = _transform.translate(_position.x(), _position.y());
-		_transform = _transform.scale(_scale, _scale);
-		_transform = _transform.rotate(_rotation);
-
-		_inverseTransform = _transform.inverted();
-	}
-
-	void Component::onItemDelete(AbstractModelItem* item)
-	{
-		onItemDelete(item->id());
-	}
-
-	void Component::onItemDelete(QUuid itemKey)
-	{
-		if (contains(itemKey))
-		{
-			remove(itemKey);
-			if (_pagePtr != NULL) _pagePtr->onItemRemove(itemKey);
-		}
-	}
-
-	void Component::onItemUpdate(AbstractModelItem* item)
-	{
-		onItemUpdate(item->id());
-	}
-
-	void Component::onItemUpdate(QUuid itemKey)
-	{
-		if (contains(itemKey) && _pagePtr != NULL)
-			_pagePtr->onItemUpdate(itemKey);
-	}
-
-	void Component::onItemDisplayUpdate(AbstractModelItem *item)
-	{
-		onItemDisplayUpdate(item->id());
-	}
-
-	void Component::onItemDisplayUpdate(QUuid itemKey)
-	{
-		if(contains(itemKey) && _pagePtr != NULL)
-			_pagePtr->onItemDisplayUpdate(itemKey);
-	}
-
-	void Component::onItemTransformUpdate(AbstractModelItem *item)
-	{
-		onItemTransformUpdate(item->id());
-	}
-
-	void Component::onItemTransformUpdate(QUuid itemKey)
-	{
-		if (contains(itemKey) && _pagePtr != NULL)
-		{
-			_pagePtr->onItemTransformUpdate(itemKey);
-		}
+		if (QHash<QUuid, QGraphicsItem*>::contains(uid)) remove(uid);
 	}
 }

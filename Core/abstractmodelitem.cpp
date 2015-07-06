@@ -19,7 +19,6 @@ namespace CDI
 	{
 		if (_parentComponent!= NULL)
 		{
-            _parentComponent->onItemDelete(this);
 		}
 	}
 
@@ -33,7 +32,7 @@ namespace CDI
 		if (parentItem()== NULL)
 			return transform();
 		else
-			return parentItem()->globalTransform() * transform();
+			return parentItem()->sceneTransform() * transform();
 	}
 
 	Component* AbstractModelItem::parentItem() const
@@ -44,11 +43,11 @@ namespace CDI
 	bool AbstractModelItem::setParentItem(Component *parentComponent)
 	{
 		// Prevent infinite loop in case of bad prog.
-		if (_parentComponent == parentComponent) return false;
-		if (_parentComponent!= NULL) _parentComponent->removeItem(this);
+//		if (_parentComponent == parentComponent) return false;
+//		if (_parentComponent!= NULL) _parentComponent->removeItem(this);
 
 		_parentComponent = parentComponent;
-		if (_parentComponent != NULL) _parentComponent->addItem(this);
+//		if (_parentComponent != NULL) _parentComponent->addItem(this);
 
 		return true;
 	}
@@ -64,8 +63,8 @@ namespace CDI
 		if (visible == isVisible()) return;	// No need to change the state of display
 		if (visible) mask &= ~isHidden;
 		else mask |= isHidden;
-		if(_parentComponent!= NULL)
-			_parentComponent->onItemDisplayUpdate(id());
+//		if(_parentComponent!= NULL)
+//			_parentComponent->onItemDisplayUpdate(id());
 	}
 
 	bool AbstractModelItem::isVisible() const
@@ -115,24 +114,24 @@ namespace CDI
 
 		AbstractModelItem* ptr = NULL;
 
-		switch (t)
-		{
-		case STROKE :
-			ptr = parentComponent->addStroke();
-			break;
-		case IMAGE :
-			ptr = parentComponent->addImage();
-			break;
-		case POLYGON2D :
-			ptr = new Polygon2D(parentComponent);
-			parentComponent->addItem(ptr);
-//		case COMPONENT :
-//			ptr = new Component();
-//		case ASSEMBLY :
-//			ptr = new Assembly();
-		default :
-			QLOG_INFO() << "Default constructor for given itemtype is not available. Returning NULL";
-		}
+//		switch (t)
+//		{
+//		case STROKE :
+//			ptr = parentComponent->addStroke();
+//			break;
+//		case IMAGE :
+//			ptr = parentComponent->addImage();
+//			break;
+//		case POLYGON2D :
+//			ptr = new Polygon2D(parentComponent);
+//			parentComponent->addItem(ptr);
+////		case COMPONENT :
+////			ptr = new Component();
+////		case ASSEMBLY :
+////			ptr = new Assembly();
+//		default :
+//			QLOG_INFO() << "Default constructor for given itemtype is not available. Returning NULL";
+//		}
 		return ptr;
 	}
 

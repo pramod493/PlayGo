@@ -13,18 +13,15 @@
 #include "commonfunctions.h"
 #include "abstractmodelitem.h"
 
-#include "cdisearchgraphicsitem.h"
-#include "graphicspathitem.h"
+#include "stroke.h"
 #include "searchmanager.h"
-#include "graphicsitemgroup.h"
+#include "component.h"
 
 #include "page.h"
+#include "graphicssearchitem.h"
 
 namespace CDI
 {
-	class GraphicsPathItem;
-	class GraphicsItemGroup;
-	class GraphicsPolygon2D;
 	/**
 	 * @brief The SketchScene class primarily handles the rendering of all the scene objects
 	 * and processes some of the events received
@@ -34,16 +31,9 @@ namespace CDI
 	{
 		Q_OBJECT
 	public:
-		QList<SearchGraphicsItem*> searchResults;
-
-		QList<GraphicsPathItem*> freeStrokes;
-
-		QHash<QUuid, QGraphicsItem*> item_key_hash;
 
 	protected:
 		Page* _page;
-
-		SearchManager* searchManager;
 
 	public:
 		SketchScene(Page* page, QObject* parent = 0);
@@ -52,22 +42,7 @@ namespace CDI
 
 		void clear();
 
-		void drawBackground(QPainter * painter, const QRectF & rect);
-
 		Page* page() { return _page; }
-
-		/**
-		 * @brief Creates a new component and adds stroke
-		 * @param stroke
-		 * @return
-		 */
-		GraphicsItemGroup* addComponent();
-		GraphicsPathItem* addStroke(GraphicsItemGroup* parentItem, QColor color = Qt::black, float thickness = 2);
-		GraphicsPolygon2D* addPolygon(GraphicsItemGroup* parentItem);
-
-		void insertItem(GraphicsItemGroup* child, GraphicsItemGroup* parent);
-		void insertItem(GraphicsPathItem *child, GraphicsItemGroup *parent);
-		void insertItem(GraphicsPolygon2D* child, GraphicsItemGroup* parent);
 
 		/**
 		 * @brief getSelectionImage retuns cropped image containing all the free
@@ -101,7 +76,7 @@ namespace CDI
 		 * @remark Finding the minimum distance from given point might be
 		 * expensinve and not implemented now
 		 */
-		QList<GraphicsPathItem*> getSelectedStrokes(Point2D pos, float margin);
+		QList<Stroke*> getSelectedStrokes(Point2D pos, float margin);
 
         /**
          * @brief Checks if a given stroke is contained within the given polygon
@@ -110,15 +85,27 @@ namespace CDI
          * be within the given polygon
          * @return List of strokes contained within the polygon region
          */
-        QList<GraphicsPathItem*> getSelectedStrokes(QPolygonF selectionPolygon, float minimalAllowedSelection);
+		QList<Stroke*> getSelectedStrokes(QPolygonF selectionPolygon, float minimalAllowedSelection);
 
 		/**
 		 * @brief Returns list of highlighted strokes
 		 * @return
 		 */
-		QList<GraphicsPathItem*> getHighlightedStrokes();
+		QList<Stroke*> getHighlightedStrokes();
 
-		void SelectSearchResult(SearchGraphicsItem* searchItem);
+		/**
+		 * @brief Get all the selected items
+		 * @return List of selected items
+		 */
+		QList<QGraphicsItem*> getSelectedItems() { return QList<QGraphicsItem*>(); }
+
+		/**
+		 * @brief Get all the highlighted items
+		 * @return List of highlighted items
+		 */
+		QList<QGraphicsItem*> getHighlightedItems() { return QList<QGraphicsItem*>(); }
+
+		QRectF getBoundingBox(QList<QGraphicsItem*> listOfItems);
 
 	protected:
 		void mousePressEvent(QGraphicsSceneMouseEvent* mouseEvent);
@@ -131,66 +118,6 @@ namespace CDI
 		void signalMouseEvent(QGraphicsSceneMouseEvent* mouseEvent, int status);
 
 	public slots:
-        void clearHighlight();
-
-		void OnSearchComplete();
-
-		void onDeleteAllItems(Page* page);
-
-		void onReloadPage(Page* page);
-
-		void onItemRemove(QUuid itemId);
-
-		void onItemUpdate(QUuid itemId);
-
-		void onItemRedraw(QUuid itemId);
-
-		void onItemDisplayUpdate(QUuid itemId);
-
-		void onItemTransformUpdate(QUuid itemId);
-
-		void onItemIdUpdate(QUuid oldID, QUuid newID);
-
-		void onItemAdd(AbstractModelItem* item);
-
-		// Called only from within class
-		void onComponentAdd(Component* component);
-		void onAssemblyAdd(Assembly* assembly);
-
-		void onComponentMerge(Component* a, Component* b);
-		void onAssemblyMerge(Assembly* a, Assembly* b);
-
-		/**
-		 * @brief Calls the update function corresponding to
-		 * the graphics object
-		 * @param assembly Assembly whose display needs to be updated
-		 * @remark It does not trigger an update of children components
-		 */
-		void onAssemblyUpdate(Assembly* assembly);
-
-		/**
-		 * @brief Calls the update function corresponding to
-		 * the graphics object
-		 * @param component Component whose display needs to be updated
-		 * @remark It does not trigger an update of children components
-		 */
-		void onComponentUpdate(Component* component);
-
-		/**
-		 * @brief Deletes a Assembly from the display
-		 * @param assembly Assembly to delete
-		 * @remark It removes the GraphicsItemGroup object
-		 * corresponding to given object. It also DOES NOT delete the children
-		 */
-		void onAssemblyDelete(Assembly* assembly);
-
-		/**
-		 * @brief Deletes a Component from the display
-		 * @param component Component to delete
-		 * @remark It removes the GraphicsItemGroup object
-		 * corresponding to given object. It also DOES NOT delete the children
-		 */
-		void onComponentDelete(Component* component);
-
+		void clearStrokeHighlight();
 	};
 }

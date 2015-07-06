@@ -17,8 +17,8 @@
 
 #include "commonfunctions.h"
 #include "point2dpt.h"
-#include "graphicspathitem.h"
-#include "graphicspolygon2d.h"
+#include "stroke.h"
+#include "polygon2d.h"
 
 #include "searchmanager.h"
 
@@ -33,7 +33,7 @@ namespace CDI
 	class CDIWindow;
     namespace UI
     {
-        enum MODE {None, Sketch, Erase, Transform,
+		enum MODE {None, Sketch, Shapes, Erase, Transform,
                    Edit, Select, Connect};
     }
 
@@ -51,9 +51,10 @@ namespace CDI
 		/**********************************************************
 		 * UI related variables
 		 ********************************************************/
-		SketchScene *_scene;
-		SketchView *_view;
-		CDIWindow *_toplevelWindow;
+		SketchScene*	_scene;
+		SketchView*		_view;
+		Page*			_page;
+		CDIWindow*		_toplevelWindow;
 
 		/*******************************************************
 		 * Tablet relatred operations
@@ -70,8 +71,7 @@ namespace CDI
 		QBrush _defaultBrush, _fillBrush, _lassoBrush, _highlightBrush;
 
 		bool _isDrawingNow;
-		GraphicsPathItem* _currentStroke;
-		GraphicsItemGroup* _currentComponent;
+		Stroke* _currentStroke;
 
 		/*********************************************************
 		 * Lasso related variables
@@ -139,10 +139,10 @@ namespace CDI
 		virtual void searchAction();
 
 	signals:
-		void strokeComplete(GraphicsPathItem* item);
-		void searchCompleted();
-		void searchTriggered();
-		void searchItemSelected();
+		void signalStrokeComplete(Stroke* item);
+		void signalSearchComplete();
+		void signalSearchBegin();
+		void signalSearchItemSelect();
 
 	public slots:
 		/**
@@ -160,7 +160,7 @@ namespace CDI
 		 * @brief onSearchTrigger is called when search is trigered. This object takes pixmap
 		 * as input and uses that to search
 		 */
-		void onSearchTrigger();
+		void onSearchBegin();
 		/**
 		 * @brief onSearchComplete is called when search operation is complete and manages the
 		 * results display
@@ -205,5 +205,9 @@ namespace CDI
 		// Experimental
 		void drawMenusOnView(QPainter * painter, const QRectF & rect);
 
+		// Dropbox sync for file change
+		void onExternalImageAdd(const QString& path);
+
+		void loadImage(QString imagePath);
 	};
 }

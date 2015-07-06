@@ -1,5 +1,5 @@
 INCLUDEPATH += $$PWD
-#DEFINES += QS_LOG_LINE_NUMBERS
+DEFINES += QS_LOG_LINE_NUMBERS
 SOURCES += $$PWD/QsLogDest.cpp \
     $$PWD/QsLog.cpp \
     $$PWD/QsDebugOutput.cpp

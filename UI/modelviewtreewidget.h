@@ -27,8 +27,8 @@ namespace CDI
 
 		void updateComponent(QTreeWidgetItem* parent, Component* component);
 
-		void updateAbstractModelItem(QTreeWidgetItem* parent, AbstractModelItem* modelItem);
+		void updateAbstractModelItem(QTreeWidgetItem* parent, QGraphicsItem* modelItem);
 
-        void updateTransform(int column, QTreeWidgetItem* item, QTransform t);
+		void updateTransform(int column, QTreeWidgetItem* item, QGraphicsItem* t);
 	};
 }

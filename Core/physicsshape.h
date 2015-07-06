@@ -122,13 +122,6 @@ namespace CDI
 
 	public:
 		/**
-		 * @brief Create Triangulated physics shape from Image
-		 * @param image
-		 * @return Pointer to PhysicsShape object created
-		 */
-		static PhysicsShape* createShapeFromImage(Image* image);
-
-		/**
 		 * @brief Create Triangulated physics shape from QPixmap
 		 * @param pixmap
 		 * @return

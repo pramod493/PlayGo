@@ -1,7 +1,9 @@
 #include "cdiwindow.h"
 #include <QDebug>
 #include "QsLog.h"
-
+#include "filesystemwatcher.h"
+#include <QMessageBox>
+#include <QApplication>
 namespace CDI
 {
 	CDIWindow::CDIWindow(QWidget *parent) : QMainWindow(parent)
@@ -51,6 +53,11 @@ namespace CDI
 		searchView = new SearchView(this);
 		searchScene = searchView->scene();
 		controller = new PlayGoController(sketchScene, sketchView, this);
+
+		FileSystemWatcher* watcher = new FileSystemWatcher();
+		watcher->setDirectory(QString("D:/Dropbox/Camera Uploads"));
+		QObject::connect(watcher, SIGNAL(fileAdded(QString)),
+						 controller, SLOT(onExternalImageAdd(QString)));
 
 //		QHBoxLayout* boxlayout = new QHBoxLayout;
 		splitter = new QSplitter;
@@ -102,6 +109,7 @@ namespace CDI
 		newAction = new QAction(QIcon(":/images/new.png"), tr("New"), this);
 		openPageAction = new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
 		saveImageAction = new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
+		closeAction = new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
 	}
 
 	void CDIWindow::setupToolbar()
@@ -112,6 +120,8 @@ namespace CDI
 		mainToolbar->addAction(newAction);
 		mainToolbar->addAction(openPageAction);
 		mainToolbar->addAction(saveImageAction);
+
+		mainToolbar->addAction(closeAction);
 
 		mainToolbar->addSeparator();
 
@@ -181,6 +191,8 @@ namespace CDI
 		connect(searchAction, SIGNAL(triggered()),
 				this, SLOT(onSearchTrigger()));
 
+		connect(closeAction, SIGNAL(triggered()),
+				this, SLOT(exit()));
 		brushWidthSlider->setValue(6);
 	}
 
@@ -205,6 +217,17 @@ namespace CDI
 		if(playgo!= NULL)
 		{
 			playgo->SaveModel("PlayGoData.dat");
+		}
+	}
+
+	void CDIWindow::exit()
+	{
+		QMessageBox::StandardButton reply;
+		reply  = QMessageBox::question(this, "Exit", "Exit?",
+									   QMessageBox::Yes | QMessageBox::No);
+		if (reply == QMessageBox::Yes)
+		{
+			QApplication::quit();
 		}
 	}
 
