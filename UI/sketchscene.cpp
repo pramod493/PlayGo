@@ -261,18 +261,21 @@ namespace CDI
 	{
 		mouseEvent->accept();
 		emit signalMouseEvent(mouseEvent, 0);
+//		QGraphicsScene::mousePressEvent(mouseEvent);
 	}
 
 	void SketchScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
 		mouseEvent->accept();
 		emit signalMouseEvent(mouseEvent, 1);
+//		QGraphicsScene::mouseMoveEvent(mouseEvent);
 	}
 
 	void SketchScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
 		mouseEvent->accept();
 		emit signalMouseEvent(mouseEvent, 2);
+//		QGraphicsScene::mouseReleaseEvent(mouseEvent);
 	}
 
 	void SketchScene::clearStrokeHighlight()

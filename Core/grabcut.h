@@ -18,7 +18,7 @@ void mouseHandler(int event, int x, int y, int flags, void* param);
 
 int grabcut_load_camera(string outputfile);
 
-Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile);
+Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile, vector<vector<Point> > &outerContours, vector<vector<vector<Point> > > &innerContours);
 
 int grabcut_process_image(Mat& image, string outputfile);
 

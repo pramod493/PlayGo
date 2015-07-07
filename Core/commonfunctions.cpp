@@ -341,9 +341,14 @@ namespace CDI
 			// 3. Simplify outer loop with RDp
 			vector<p2t::Point> simplied_outerContour = rdp.simplifyWithRDP(tmp_contour, deltaOutside);
 
-			QLOG_INFO() << "Simplied version" << simplied_outerContour.size();
+			if (simplied_outerContour.size() < 3)
+			{
+				QLOG_WARN() << "Polygon size < 3 after smoothing";
+				continue;
+			}
 
 			// prepare the smoothed polyline for poly2tri
+			// Just conversion going on here
 			vector<p2t::Point*> p2t_polyline;
 			p2t_polyline.reserve(simplied_outerContour.size());
 			max_points = simplied_outerContour.size();
@@ -353,14 +358,11 @@ namespace CDI
 				p2t_polyline.push_back(new p2t::Point(pt.x,pt.y));
 			}
 
-//			std::reverse(p2t_polyline.begin(), p2t_polyline.end());
-
-			QLOG_INFO() << "Adding simplied outer loop to polyline";
+			// In case polygon order is opposite of expected order
+			//std::reverse(p2t_polyline.begin(), p2t_polyline.end());
 
 			// Initialize CDT with simplified contour
 			p2t::CDT *cdt = new p2t::CDT(p2t_polyline);
-
-			QLOG_INFO() << "Added outer loop to p2t";
 
 			// Create a hole for each of the inner loop
 			size_t max_inner_loops = innerContours.size();
@@ -371,16 +373,41 @@ namespace CDI
 				vector<p2t::Point> tmp_contour;
 				tmp_contour.reserve(innerContour.size());
 				size_t max_points = innerContour.size();
+
+				x_min = 10000; y_min = 10000;
+				x_max = 0; y_max = 0;
+
 				for (size_t k=0; k< max_points ; k++)
 				{
 					cv::Point pt = innerContour[k];
 					tmp_contour.push_back(p2t::Point(pt.x, pt.y));
+
+					if (ignoreSmalls)
+					{
+						x_min = x_min < pt.x ? x_min : pt.x;
+						y_min = y_min < pt.y ? y_min : pt.y;
+
+						x_max = x_max > pt.x ? x_max : pt.x;
+						y_max = y_max > pt.y ? y_max : pt.y;
+					}
+				}
+
+				if (ignoreSmalls && local_getMinumumDimension(x_min, y_min, x_max, y_max) <= minPolygonSize)
+				{
+					QLOG_WARN() << "Inner polygon size smaller than threshold";
+					continue;
 				}
 
 				QLOG_INFO() << "Hole - Before RDP" << tmp_contour.size();
 				// Apply RDP on inner loop
 				vector<p2t::Point> simplified_innerContour = rdp.simplifyWithRDP(tmp_contour, deltaInside);
 				QLOG_INFO() << "Hole - After RDP" << simplified_innerContour.size();
+
+				if (simplified_innerContour.size() < 3)
+				{
+					QLOG_WARN() << "Inner polygon size < 3 after smoothing";
+					continue;
+				}
 
 				vector<p2t::Point*> p2t_hole;
 				p2t_hole.reserve(simplified_innerContour.size());
@@ -391,16 +418,11 @@ namespace CDI
 					p2t_hole.push_back(new p2t::Point(pt.x,pt.y));
 				}
 
-				QLOG_INFO() << "Adding hole" << p2t_hole.size();
 				cdt->AddHole(p2t_hole);
-
-				QLOG_INFO() << "Hole added " << p2t_hole.size();
 			}
 
 			QLOG_INFO() << "Triangulation start";
-			// Triangulate
 			cdt->Triangulate();
-
 			QLOG_INFO() << "Triangulation end";
 
 			// Append the traingulated results to the vector

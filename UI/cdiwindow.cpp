@@ -55,7 +55,7 @@ namespace CDI
 		controller = new PlayGoController(sketchScene, sketchView, this);
 
 		FileSystemWatcher* watcher = new FileSystemWatcher();
-		watcher->setDirectory(QString("D:/Dropbox/Camera Uploads"));
+		watcher->setDirectory(QString("E:/Dropbox/Camera Uploads"));
 		QObject::connect(watcher, SIGNAL(fileAdded(QString)),
 						 controller, SLOT(onExternalImageAdd(QString)));
 
@@ -109,6 +109,7 @@ namespace CDI
 		newAction = new QAction(QIcon(":/images/new.png"), tr("New"), this);
 		openPageAction = new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
 		saveImageAction = new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
+		cameraLoadAction = new QAction(QIcon(":/images/Camera.png"), tr("Import from camera"), this);
 		closeAction = new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
 	}
 
@@ -134,13 +135,17 @@ namespace CDI
 		mainToolbar->addAction(searchAction);
 
 		mainToolbar->addSeparator();
-
+		mainToolbar->addAction(cameraLoadAction);
+		mainToolbar->addSeparator();
 		mainToolbar->addAction(playAction);
 		mainToolbar->addAction(pauseAction);
-		mainToolbar->addAction(resetAction);
+//		mainToolbar->addAction(resetAction);	// Not sure what to make of the reset simulation
 
-        mainToolbar->setIconSize(QSize(32,32));
-
+#ifdef Q_OS_WIN
+		mainToolbar->setIconSize(QSize(48,48));
+#elif
+		mainToolbar->setIconSize(QSize(32,32));
+#endif // Q_OS_WIN
 		brushWidthSlider = new QSlider(Qt::Horizontal);
 		brushWidthSlider->setRange(2,20);
 		brushWidthSlider->setSingleStep(1);
@@ -194,6 +199,15 @@ namespace CDI
 		connect(closeAction, SIGNAL(triggered()),
 				this, SLOT(exit()));
 		brushWidthSlider->setValue(6);
+
+		connect(playAction, SIGNAL(triggered()),
+				this, SLOT(startSimulation()));
+
+		connect(pauseAction, SIGNAL(triggered()),
+				this, SLOT(pauseSimulation()));
+
+		connect(pauseAction, SIGNAL(triggered()),
+				this, SLOT(cameraLoad()));
 	}
 
 	void CDIWindow::closeEvent(QCloseEvent* event)
@@ -270,6 +284,24 @@ namespace CDI
 		tabletDevice = static_cast<QTabletEvent*>(event)->device();
 		if (tabletDevice == QTabletEvent::Stylus)
 			controller->enableMouse(false);
+	}
+
+	void CDIWindow::startSimulation()
+	{
+		if (controller)
+			controller->startSimulation();
+	}
+
+	void CDIWindow::pauseSimulation()
+	{
+		if (controller)
+			controller->pauseSimulation();
+	}
+
+	void CDIWindow::cameraLoad()
+	{
+		if (controller)
+			controller->loadCamera();
 	}
 }
 /*

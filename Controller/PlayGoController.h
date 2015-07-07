@@ -209,5 +209,12 @@ namespace CDI
 		void onExternalImageAdd(const QString& path);
 
 		void loadImage(QString imagePath);
+
+		void startSimulation();
+
+		void pauseSimulation();
+
+		void loadCamera();
+
 	};
 }

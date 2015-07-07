@@ -20,5 +20,6 @@
         <file>images/save.png</file>
         <file>images/search.png</file>
         <file>images/turn-off.png</file>
+        <file>images/Camera.png</file>
     </qresource>
 </RCC>

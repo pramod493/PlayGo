@@ -1,3 +1,4 @@
+#include <QMessageBox>
 #include <vector>
 #include <QStringList>
 #include <QList>
@@ -11,6 +12,11 @@
 #include "converttopolygons.h"
 #include "ui_batchpolygonize.h"
 #include <QApplication>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsPolygonItem>
+#include <QPixmap>
 
 using namespace std;
 using namespace CDI;
@@ -43,8 +49,17 @@ void BatchPolygonize::on_runButton_clicked()
 	float rdpExternalEpsilon = ui->rdpExternal->value();
 
 	convertImageToPolygon(inputDir, outputDir, ignoreSmallPolygons, minimumPolygonSize,
-						  rdpInternalEpsilon, rdpExternalEpsilon, true);
+						  rdpInternalEpsilon, rdpExternalEpsilon, false);
+
+	QMessageBox::about(this, "Polygonization complete", "All files saved. Please check output folder for details");
+
 }
+// Default settings
+// Ignore small = true
+// Min polygons size = 5	// Keep it larger to ignore smaller holes
+// rdp (holes) = 3
+// rdp (boundary) = 3
+//
 
 void convertImageToPolygon(QString inputDir, QString outputDir,
 						   bool ignoreSmallPolygons, float minimumPolygonSize,
@@ -60,6 +75,17 @@ void convertImageToPolygon(QString inputDir, QString outputDir,
 	QLOG_INFO() << "Minimum polygon size" << minimumPolygonSize;
 	QLOG_INFO() << "RDP Epsilon(holes)" << rdpInternalEpsilon;
 	QLOG_INFO() << "RDP Epsilon(exterior)" << edpExternalEpsilon;
+
+	QGraphicsView* view = 0;
+	QGraphicsScene* scene = 0;
+	if (displayErrorMessages)
+	{
+		view = new QGraphicsView;
+		scene = new QGraphicsScene(view);
+		view->setScene(scene);
+		view->showMaximized();
+//		view->show();
+	}
 
 	// Check directory existence
 	QDir inDir(inputDir); if (inDir.exists() == false) return;
@@ -78,9 +104,56 @@ void convertImageToPolygon(QString inputDir, QString outputDir,
 			QLOG_ERROR() << "File" << absoluteInputPath << "not found";
 			continue;
 		}
+		if (displayErrorMessages && scene)
+		{
+			qDeleteAll(scene->items());
+			QPixmap pixmap = QPixmap();
+			pixmap.load(absoluteInputPath);
+			QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
+			item->setOpacity(0.50);
+		}
 		QLOG_INFO() << "Start triangulation of "<< absoluteInputPath;
-		vector<p2t::Triangle*> trias = generatePolygonFromImage(absoluteInputPath, edpExternalEpsilon, rdpInternalEpsilon);
+		vector<p2t::Triangle*> trias = generatePolygonFromImage(absoluteInputPath,
+																edpExternalEpsilon, rdpInternalEpsilon,
+																minimumPolygonSize, ignoreSmallPolygons);
 
+		if (displayErrorMessages && scene)
+		{
+			for (int m=0; m< trias.size(); m++)
+			{
+				QPolygonF polygon = QPolygonF();
+				p2t::Point *pt = 0;
+				p2t::Triangle* tria = trias[m];
+
+				pt = tria->GetPoint(0);	polygon.push_back(Point2D(pt->x,pt->y));
+				pt = tria->GetPoint(1);	polygon.push_back(Point2D(pt->x,pt->y));
+				pt = tria->GetPoint(2);	polygon.push_back(Point2D(pt->x,pt->y));
+				//		pt = tria->GetPoint(0);	polygon.push_back(Point2D(pt->x,pt->y));
+
+				QGraphicsPolygonItem* item = new QGraphicsPolygonItem(polygon);
+				scene->addItem(item);
+			}
+			scene->update();
+		}
+
+		{
+			QLOG_INFO() << "Saving data";
+			PhysicsShape *physicsShape = new PhysicsShape(trias);
+			QString absoluteOutpath = outDir.absoluteFilePath(inputFilenameList[i] + ".meta");
+			QFile file(absoluteOutpath);
+			if (file.open(QIODevice::WriteOnly))
+			{
+				QDataStream stream(&file);
+				QString smallname = inputFilenameList[i];	// Ignore the size info since we can get that during run time
+				stream << smallname;
+				physicsShape->serialize(stream);
+				file.close();
+				QLOG_INFO() << "Writing complete";
+			}
+			delete physicsShape;
+		}
+
+		QLOG_INFO() << "Cleaning up memory";
 		for (int j=0; j< trias.size(); j++)
 		{
 			p2t::Triangle* tria = trias[j];
@@ -88,5 +161,7 @@ void convertImageToPolygon(QString inputDir, QString outputDir,
 			trias[j] = 0;
 		}
 		trias.clear();
+
+		if (view) view->deleteLater();
 	}
 }

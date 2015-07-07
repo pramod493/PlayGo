@@ -12,6 +12,9 @@
 #include "graphicssearchitem.h"
 #include <QMessageBox>
 #include "grabcut.h"
+#include <QCamera>
+#include <QCameraImageCapture>
+
 namespace CDI
 {
 
@@ -279,7 +282,6 @@ private:
 	{
 		_lassoPolygon.push_back(pos);
 		//_lasso->setPolygon(_lassoPolygon);
-		_lasso->setPolygon(QPolygonF());
 		_lasso->update(_lasso->boundingRect());
 
 		QList<Stroke*> selectedStrokes = _scene->getSelectedStrokes(_lassoPolygon, 1.0f);
@@ -288,6 +290,11 @@ private:
         {
             selectedStrokes[i]->highlight(true);
         }
+//		QRectF boundingBox = _lassoPolygon.boundingRect();
+//		QPointF center = boundingBox.center();
+//		_scene->addEllipse(center.x(), center.y(), 100.0f, 100.0f,
+//						   _lassoPen,_fillBrush);
+		_lasso->setPolygon(QPolygonF());
 		_isLassoDisplayed = false;
 	}
 
@@ -701,5 +708,22 @@ private:
 		Pixmap* pixmap = new Pixmap(_pixmap, imagePath);
 		Component* component = _page->createComponent();
 		component->addToComponent(pixmap);
+	}
+
+	void PlayGoController::startSimulation()
+	{
+		if (_page)
+			_page->getPhysicsManager()->start(200);
+	}
+
+	void PlayGoController::pauseSimulation()
+	{
+		if (_page)
+			_page->getPhysicsManager()->pause();
+	}
+
+	void PlayGoController::loadCamera()
+	{
+
 	}
 }

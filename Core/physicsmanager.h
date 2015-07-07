@@ -11,6 +11,7 @@
 namespace CDI
 {
 	class Page;
+	class Component;
 	// Use the b2BodyDef for setting the value of physics components
 	/**
 	 * @brief physicsBodyDef stores the definition of property of physics body
@@ -50,14 +51,36 @@ namespace CDI
 			timeStep=1.0f/60.0f;
 			velocityIterations = 6;
 			positionIterations = 4;
-			gravity = Point2D(0.0f,10.0f);
+			gravity = Point2D(0.0f,0.0f);
 			enableSleep = true;
+		}
+
+		QDataStream& serialize(QDataStream& stream) const
+		{
+			stream << timeStep;
+			stream << velocityIterations;
+			stream << positionIterations;
+			stream << gravity;
+			stream << enableSleep;
+			return stream;
+		}
+		// NOTE - Why does the return type have to be QDataStream. Can't it be void?
+		QDataStream& deserialize(QDataStream& stream)
+		{
+			stream >> timeStep;
+			stream >> velocityIterations;
+			stream >> positionIterations;
+			stream >> gravity;
+			stream >> enableSleep;
+			return stream;
 		}
 	};
 
 	class PhysicsManager : public QObject
 	{
 		Q_OBJECT
+
+		float defaultPhysicsScale;
 
 	protected:
 		QHash<QUuid, b2Body*> _box2DBodies;
@@ -68,6 +91,10 @@ namespace CDI
 		PhysicsSettings _settings;
 
 		QTimer* timer;
+
+		bool _internalLock;
+
+		bool _isRunning;
 	public:
 		explicit PhysicsManager(PhysicsSettings* settings, Page *parentPage);
 
@@ -75,7 +102,7 @@ namespace CDI
 
 		// Factory functions for creating joints. Keeping them here saves from
 		// creating multiple derived classes for joints
-		virtual PhysicsBody* createBody(Component* component, const physicsBodyDef* def);
+		virtual b2Body *createBody(const b2BodyDef& def);
 
 		virtual PhysicsJoint* createJoint();
 
@@ -109,6 +136,12 @@ namespace CDI
 		void step();
 
 		void updateComponentPosition();
+
+		void updateComponentPosition(Component* component);
+
+		void updateFromComponentPosition(Component* component);
+
+		void onItemAdd(QGraphicsItem* item);
 	};
 }
 

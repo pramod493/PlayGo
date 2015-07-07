@@ -2,7 +2,6 @@
 #include "playgo.h"
 #include <QtAlgorithms>
 #include "QsLog.h"
-
 namespace CDI
 {
 	// This cannot exist on its own. It must have a parent PlayGo. Though not sure
@@ -24,6 +23,11 @@ namespace CDI
 		_scene = NULL;
 
 		_currentComponent = NULL;
+
+		connect(this, SIGNAL(signalItemAdd(QGraphicsItem*)),
+				_physicsManager, SLOT(onItemAdd(QGraphicsItem*)));
+		connect(_physicsManager, SIGNAL(physicsStepComplete()),
+				this, SLOT(onSimulationStepComplete()));
 
 	}
 
@@ -183,6 +187,7 @@ namespace CDI
 		if (_components.contains(component->id())) return;
 		_components.insert(component->id(), component);
 		if (_scene) _scene->addItem(component);
+		initializeComponentConnections(component);
 		emit signalItemAdd(component);
 	}
 
@@ -193,8 +198,6 @@ namespace CDI
 		if (_scene) _scene->addItem(assembly);
 		emit signalItemAdd(assembly);
 	}
-
-
 
 	bool Page::mergeAssembly(Assembly *a1, Assembly *a2)
 	{
@@ -241,6 +244,7 @@ namespace CDI
 		{
 			markForDelete = true;
 			_components.remove(component->id());
+			removeComponentConnections(component);
 		}
 		// 1. Find the assembly which contains the components
 		QHash<QUuid, Assembly*>::const_iterator assemiter;
@@ -288,7 +292,6 @@ namespace CDI
 			Component* component = componentiter.value();
 			component->serialize(stream);
 		}
-
 		return stream;
 	}
 
@@ -338,6 +341,18 @@ namespace CDI
 		_components.clear();
 	}
 
+	void Page::initializeComponentConnections(Component *component)
+	{
+		// add other connections as well
+		connect(component, SIGNAL(onTransformChange(QGraphicsItem*)),
+				this, SLOT(onItemTransformUpdate(QGraphicsItem*)));
+	}
+
+	void Page::removeComponentConnections(Component *component)
+	{
+		// Right now nothing to do here
+	}
+
 	// Slots
 	void Page::onItemAdd(QGraphicsItem* graphicsitem)
 	{
@@ -356,6 +371,9 @@ namespace CDI
 
 	void Page::onItemTransformUpdate(QGraphicsItem* graphicsitem)
 	{
+		if (graphicsitem->type() == Component::Type)
+			onComponentTransformUpdate
+					(qgraphicsitem_cast<Component*>(graphicsitem));
 		emit signalItemTransformUpdate(graphicsitem);
 	}
 
@@ -377,6 +395,22 @@ namespace CDI
 	void Page::onItemTransformUpdate(Item* item)
 	{
 		emit signalItemTransformUpdate(item);
+	}
+
+	void Page::onSimulationStepComplete()
+	{
+		QList<Component*> lis_comps = _components.values();
+
+		foreach (Component* component, lis_comps)
+			_physicsManager->updateComponentPosition(component);
+
+		if (_scene) _scene->update();
+	}
+
+	void Page::onComponentTransformUpdate(Component *component)
+	{
+		if (_physicsManager)
+		_physicsManager->updateFromComponentPosition(component);
 	}
 
 	QDataStream& operator<<(QDataStream& stream, const Page& page)

@@ -1,5 +1,7 @@
 #pragma once
 #include <QFileSystemWatcher>
+#include <QStringList>
+#include <QString>
 
 namespace CDI
 {

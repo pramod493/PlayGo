@@ -1,3 +1,4 @@
+#include <iostream>
 #include "grabcut.h"
 #include <QGraphicsView>
 #include <QMouseEvent>
@@ -9,6 +10,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include "asmopencv.h"
+#include "QsLog.h"
 
 cv::Point pt1, pt2;
 bool draggin = false;
@@ -55,7 +57,9 @@ int grabcut_load_camera(string outputfile)
 	return grabcut_process_image(image, outputfile);
 }
 
-Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile)
+Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile,
+					  vector<vector<cv::Point> >& outerContours,
+					  vector<vector<vector<cv::Point> > >& innerContours)
 {
 	cvtColor(image, image, CV_RGBA2RGB);
 	imwrite("Initial.png", image);
@@ -72,6 +76,51 @@ Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile)
 	// Get the pixels marked as likely foreground
 
 	cv::compare(result, cv::GC_PR_FGD, result, cv::CMP_EQ);
+
+	vector<vector<cv::Point> > contours;
+	vector<cv::Vec4i> hierarchy;
+
+	// Find contours
+	cv::findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+	// Store them as required
+	// in hierarchy, the order is :
+	// 0 next, 1 previous, 2 first child, 3 parent
+	// negative if none exist
+	vector<vector<cv::Point> > temp;
+
+	int outerIndex = 0;
+	int innerIndex = 0;
+	while (outerIndex >= 0)
+	{
+		outerContours.push_back(contours[outerIndex]);
+
+		// Store it's inner holes
+		/*
+		// IMPORTANT, WE WORKING WITH THE CASE OF TWO LAYER HIERACHY ONLY HERE
+		*/
+
+		temp.clear();
+		innerIndex = hierarchy[outerIndex][2];
+		while (innerIndex >= 0)
+		{
+			// if there is no hole
+			// the while loop won't be executed
+			// and hence temp will be empty
+
+			temp.push_back(contours[innerIndex]);
+
+			// next inner hole
+			innerIndex = hierarchy[innerIndex][0];
+		}
+		innerContours.push_back(temp);
+
+		/*
+		// IMPORTANT, WE WORKING WITH THE CASE OF TWO LAYER HIERACHY ONLY HERE
+		*/
+
+		outerIndex = hierarchy[outerIndex][0];	// next outer contour
+	}
 
 	// Generate output image
 	cv::Mat foreground(image.size(), CV_8UC3, cv::Scalar(255, 255, 255));
@@ -90,35 +139,35 @@ int grabcut_process_image(Mat& image, string outputfile)
 {
 	// Select Roi
 
-	imshow("Camera", image);
-	for (;;)
-	{
-		Mat cln = image.clone();
+//	imshow("Camera", image);
+//	for (;;)
+//	{
+//		Mat cln = image.clone();
 
-		cvSetMouseCallback("Camera", mouseHandler, NULL);
-		if (draggin)
-		{
-			rectangle(cln, cv::Rect(pt1.x, pt1.y, pt2.x - pt1.x, pt2.y - pt1.y), CV_RGB(255, 0, 0), 3, 8, 0);
-			imshow("Camera", cln);
-		}
+//		cvSetMouseCallback("Camera", mouseHandler, NULL);
+//		if (draggin)
+//		{
+//			rectangle(cln, cv::Rect(pt1.x, pt1.y, pt2.x - pt1.x, pt2.y - pt1.y), CV_RGB(255, 0, 0), 3, 8, 0);
+//			imshow("Camera", cln);
+//		}
 
-		if (waitKey(30) >= 0)
-		{
-			break;
-		}
-	}
+//		if (waitKey(30) >= 0)
+//		{
+//			break;
+//		}
+//	}
 
-	// Initialization
-	cv::Rect rectangle(pt1.x, pt1.y, pt2.x-pt1.x, pt2.y-pt1.y);
-	cv::Mat foreground = grabCutBackground(rectangle, image, outputfile);
+//	// Initialization
+//	cv::Rect rectangle(pt1.x, pt1.y, pt2.x-pt1.x, pt2.y-pt1.y);
+//	cv::Mat foreground = grabCutBackground(rectangle, image, outputfile);
 
-	// display result
-	cv::namedWindow("Extracted Image");
-	cv::imshow("Extracted Image", foreground);
+//	// display result
+//	cv::namedWindow("Extracted Image");
+//	cv::imshow("Extracted Image", foreground);
 
 
 
-	waitKey();
+//	waitKey();
 	return 0;
 
 }
@@ -195,8 +244,12 @@ public:
 			QRect imageRect = graphicsitem->boundingRect().toRect();
 			if (imageRect.contains(intRect))
 			{
+				vector<vector<cv::Point> > outerContours;
+				vector<vector<vector<cv::Point> > > allInnerContours;
+
 				cv::Mat croppedmat = grabCutBackground(cv::Rect(intRect.x(), intRect.y(), intRect.width(), intRect.height()),
-													   ASM::QPixmapToCvMat(pixmapItem->pixmap(), true), _outpath.toStdString());
+													   ASM::QPixmapToCvMat(pixmapItem->pixmap(), true), _outpath.toStdString(),
+													   outerContours, allInnerContours);
 				QPixmap pixmap = QPixmap();
 				pixmap.load(_outpath);
 				QPixmap tmp = pixmapItem->pixmap();
@@ -213,8 +266,9 @@ public:
 					deleteLater();
 				} else
 				{
-					pixmapItem->setPixmap(tmp);
-					resize(tmp.width(), tmp.height());
+					// Show image edit options
+//					pixmapItem->setPixmap(tmp);
+//					resize(tmp.width(), tmp.height());
 				}
 			} else
 			{

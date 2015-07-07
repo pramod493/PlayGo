@@ -67,7 +67,6 @@ namespace CDI
 
 	void GraphicsSearchItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	{
-		QLOG_INFO() << "Search result selected" << _parentResult->resultFilePath;
 		if (_searchView != NULL)
 		{
 			_searchView->onSearchResultSelect(_parentResult);

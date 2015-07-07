@@ -43,7 +43,7 @@ namespace CDI
 		// actions
 
 		// File operations
-		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction, *closeAction;
+		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction, *closeAction, *cameraLoadAction;
 
 		// Sketching related operations
 		QAction *brushSelectAction, *eraseSelectAction, *marqueeAction, *searchAction;
@@ -137,5 +137,11 @@ namespace CDI
 		 * @param event Proximity event
 		 */
 		void onStylusProximity(QEvent* event);
+
+		void startSimulation();
+
+		void pauseSimulation();
+
+		void cameraLoad();
 	};
 }

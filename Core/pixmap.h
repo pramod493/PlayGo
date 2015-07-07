@@ -3,6 +3,7 @@
 #include "cdi2qtwrapper.h"
 #include "commonfunctions.h"
 #include <QFile>
+#include "physicsshape.h"
 
 namespace CDI
 {
@@ -15,6 +16,8 @@ namespace CDI
         bool _highlighted;
 		QUuid _id;
 		QString _filename;
+
+		PhysicsShape* _physicsShape;
 
     public:
 		Pixmap(QGraphicsItem* parent = 0);
@@ -29,6 +32,10 @@ namespace CDI
 			if (isVisible()== false) return QRectF();
 			return QGraphicsPixmapItem::boundingRect();
 		}
+
+		PhysicsShape* physicsShape() const;
+
+		void resetPhysicsShape();
 
 		int type() const { return Type; }
 
@@ -45,5 +52,8 @@ namespace CDI
 		QDataStream& serialize(QDataStream& stream) const;
 
 		QDataStream& deserialize(QDataStream& stream);
+
+	protected:
+		void initializePhysicsShape();
 	};
 }

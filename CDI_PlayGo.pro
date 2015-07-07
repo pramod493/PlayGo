@@ -2,7 +2,7 @@
 # Pramod Kumar
 # Purdue University
 #----------------------------------------------------------------------
-QT       += core gui widgets svg
+QT       += core gui widgets svg multimedia
 
 TARGET = PlayGo
 
@@ -32,6 +32,9 @@ HEADERS += \
 
 CONFIG += c++11
 
+QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
+
+RC_FILE = PlayGoIcon.rc
+
 FORMS += \
     $$PWD/batchpolygonize.ui
-

@@ -14,22 +14,39 @@ namespace CDI
 {
 	Component::Component(QGraphicsItem *parent)
 		: QGraphicsObject(parent)
-    {
+	{
 		_highlighted = false;
 		_id = uniqueHash();
 
 		_physicsBody = NULL;
 
 		setAcceptTouchEvents(true);
-		// Components will not be anchored to anything except themselves
-//		setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
-//		grabGesture(Qt::PinchGesture);
-//		grabGesture(Qt::SwipeGesture);
-//		grabGesture(Qt::PanGesture);
-    }
+		//setFlag(QGraphicsItem::ItemIsMovable);
+
+		// We can also use signals to find positionUpdates
+		// component->update signal to Page->update signal to Physics Manager
+		pendingPositionUpdate = false;
+		pendingScalingUpdate = false;
+		previousScale = 1.0f;
+
+
+		//		setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
+		//		grabGesture(Qt::PinchGesture);
+		//		grabGesture(Qt::SwipeGesture);
+		//		grabGesture(Qt::PanGesture);
+
+		connect(this, SIGNAL(xChanged()),
+				this, SLOT(internalTransformChanged()));
+
+		connect(this, SIGNAL(yChanged()),
+				this, SLOT(internalTransformChanged()));
+
+		connect(this, SIGNAL(rotationChanged()),
+				this, SLOT(internalTransformChanged()));
+	}
 
 	Component::~Component()
-    {
+	{
 		// Deletes the children as well
 		if (parentItem()!= NULL)
 		{
@@ -51,7 +68,7 @@ namespace CDI
 			b2World* world = _physicsBody->GetWorld();
 			world->DestroyBody(_physicsBody);
 		}
-    }
+	}
 
 	QRectF Component::boundingRect() const
 	{
@@ -90,10 +107,10 @@ namespace CDI
 			return touchEvent(static_cast<QTouchEvent*>(event));
 			break;
 		case QEvent::Gesture :
-//			qDebug() << "Gesture received component";
-//			gestureEvent(static_cast<QGestureEvent*>(event));
-//			event->accept();
-//			return true;
+			//			qDebug() << "Gesture received component";
+			//			gestureEvent(static_cast<QGestureEvent*>(event));
+			//			event->accept();
+			//			return true;
 			break;
 		}
 		return QGraphicsObject::sceneEvent(event);
@@ -127,7 +144,7 @@ namespace CDI
 					setScale(currentStepScaleFactor * scale());
 			}
 			if (pinchGesture->state() == Qt::GestureFinished) {
-//					scaleFactor *= currentStepScaleFactor;
+				//					scaleFactor *= currentStepScaleFactor;
 				currentStepScaleFactor = 1;
 			}
 		}
@@ -137,25 +154,72 @@ namespace CDI
 	bool Component::touchEvent(QTouchEvent *event)
 	{
 		// Do not process when the touch event arrives
-		if (event->type()==QEvent::TouchBegin) return true;
-
-		if (event->touchPoints().count() == 1)
+		if (event->type()==QEvent::TouchBegin)
 		{
+			// Marks the start of touch event to the object
+			// Must accept this event to receive further events
+			return true;
+		}
+		if (event->touchPointStates() & Qt::TouchPointPressed)
+		{
+			return false;
+		}
+		//		if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
+		//		{
+		//			setTransformOriginPoint(0,0);
+		//			return true;
+		//		}
+
+		//		if ((event->touchPointStates() & Qt::TouchPointPressed) ||		// Start of input
+		//			(event->touchPointStates() & Qt::TouchPointReleased))		// Touch leaving
+		//		{
+		//			// Ignore begninning/end of touch
+		//			return false;	// Nothing to do if point does not move
+		//		}
+
+		if (event->touchPoints().count() == 1 &&
+				(event->touchPointStates() & Qt::TouchPointMoved))
+		{
+			qDebug() << "Pan";
 			// Single finger. Drag
 			const QTouchEvent::TouchPoint &tp1 = event->touchPoints().first();
+
+			if (QGraphicsItem::contains(mapFromScene(tp1.scenePos())) == false)
+				return false;	// Point outside object
+
 			QPointF pan = tp1.scenePos() - tp1.lastScenePos();
 			moveBy(pan.x(), pan.y());
 
-		} else if (event->touchPoints().count() == 2 && event->type()==QEvent::TouchUpdate)
+			emit onTransformChange(this);
+
+		}
+		if (event->touchPoints().count() == 2)
+			qDebug() << "2 touch points";
+		if (event->touchPoints().count() == 2 &&
+				(event->touchPointStates() & Qt::TouchPointMoved))
 		{
 			// Two finger
 			const QTouchEvent::TouchPoint &tp1 = event->touchPoints()[0];
 			const QTouchEvent::TouchPoint &tp2 = event->touchPoints()[1];
 			QPointF tp1_itemPos = mapFromScene(tp1.scenePos());
 			QPointF tp2_itemPos = mapFromScene(tp2.scenePos());
+
+			//			if ((tp1.state() == Qt::TouchPointPressed) || (tp2.state() == Qt::TouchPointPressed))
+			//			{
+			//				// qDebug() << "At least one of points begins here. Ignore";
+			//				return false;
+			//			}
+
+			if (!(QGraphicsItem::contains(tp1_itemPos) || QGraphicsItem::contains(tp2_itemPos)))
+			{
+				qDebug() << "Touch point lies outside shape";
+				return false;	// Touch point does not lie on the object. Do nothing
+			}
+
 			QPointF tp1_lastItemPos = mapFromScene(tp1.lastScenePos());
 			QPointF tp2_lastItemPos = mapFromScene(tp2.lastScenePos());
 			QPointF pan = QPointF(); float rot = 0; float scaleMul = 1;
+			// // Keep pan as single finger event only
 			{
 				pan = ( tp1.scenePos() + tp2.scenePos()
 						- tp1.lastScenePos() - tp2.lastScenePos()
@@ -167,8 +231,10 @@ namespace CDI
 			{
 				float prevmag = euclideanDistance(&tp2_lastItemPos, &tp1_lastItemPos);
 				float currentmag = euclideanDistance(&tp2_itemPos, &tp1_itemPos);
-				scaleMul = scale() * currentmag / prevmag;
-				setScale(scaleMul);
+				float currentScale = scale();
+				scaleMul = currentScale* currentmag / prevmag;
+				if (scaleMul > 0.25f && scaleMul < 5.0f)
+					setScale(scaleMul);
 			}
 			{
 				// Offset previous event points
@@ -180,11 +246,8 @@ namespace CDI
 				rot = rotation() + (rot * 180.0f) / _PI_;
 				setRotation(rot);
 			}
-
-			if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
-			{
-				setTransformOriginPoint(0,0);
-			}
+			setTransformOriginPoint(QPointF(0,0));
+			emit onTransformChange(this);
 		}
 		return true;
 	}
@@ -383,7 +446,17 @@ namespace CDI
 		// Not sure what to do but mostly will need to update physics shape
 		if (_physicsBody != NULL)
 		{
-
+			// Get children
+			QList<QGraphicsItem*> itemList = childItems();
+			foreach (QGraphicsItem* graphicsitem, itemList)
+			{
+				if (graphicsitem->type() == Pixmap::Type)
+				{
+					Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
+					PhysicsShape* physicsShape = pixmap->physicsShape();
+					//					QTransform relativeTransform = pixmap->itemTransform()
+				}
+			}
 		}
 	}
 

@@ -1,3 +1,6 @@
+// To convert to visual studio, see http://doc.qt.io/qt-5/winrt-support.html
+// qmake -tp vc <your project>.pro "CONFIG+=windeployqt"
+
 #include <iostream>
 #include <QDebug>
 #include <QDir>
@@ -43,7 +46,8 @@ int main(int argc, char *argv[])
 	logger.addDestination(fileDestination.get());
 	/* Example on how to use QsLog*/
 
-	{
+	if (false) {
+		// This initiates the batch conversion of polygons
 		BatchPolygonize* batchpolygonize = new BatchPolygonize;
 		batchpolygonize->show();
 		return app.exec();

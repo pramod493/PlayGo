@@ -59,7 +59,6 @@ namespace CDI
 
 		QDataStream& serialize(QDataStream& stream) const
 		{
-			Point2D tmp;
 			for (int i=0; i< 3; i++)
 			{
 				stream << points[i];
@@ -101,6 +100,8 @@ namespace CDI
 		 * @brief Create object to store shape of physics objects
 		 */
 		PhysicsShape();
+
+		PhysicsShape(vector<p2t::Triangle*> p2tTrias);
 
 		virtual ~PhysicsShape();
 

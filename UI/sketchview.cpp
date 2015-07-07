@@ -111,34 +111,6 @@ namespace CDI
             case QEvent::TouchUpdate :
             case QEvent::TouchBegin :
             {
-				/*
-				QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
-				emit viewTouchEvent(touchEvent, this);
-				event->setAccepted(true);
-				return true;
-
-				qDebug() << "Touch:Pre:Points" << touchEvent->touchPoints().count() << "Pre-send";
-				bool eventStatus = QGraphicsView::event(event);
-				bool isAccepted = event->isAccepted();
-				event->setAccepted(false);
-				qDebug()  << "Touch:Pre:Points" << touchEvent->touchPoints().count() <<
-							 "return:" << eventStatus << "accept:" << isAccepted;
-				return false;
-
-				if (touchEvent->touchPoints().count() == 2 && scene() != NULL)
-				{
-					const QTouchEvent::TouchPoint &touchPoint1 = touchEvent->touchPoints().first();
-					const QTouchEvent::TouchPoint &touchPoint2 = touchEvent->touchPoints().last();
-					QLineF line1(touchPoint1.lastScenePos(), touchPoint2.lastScenePos());
-					QLineF line2(touchPoint1.scenePos(), touchPoint2.scenePos());
-					qreal p_scale = line2.length()/line1.length();
-					scale(p_scale,p_scale);
-					qDebug() << "View scaling" << p_scale;
-					// We did it. not sure how it's going to go down
-				}
-				return true;
-				break;
-				*/
             }
         }
         return QGraphicsView::event(event);

@@ -31,11 +31,11 @@ void Polygonize::openFile()
 	QBrush brush = QBrush(Qt::DiagCrossPattern);
 	brush.setColor(Qt::cyan);
 
-	for (int i=0; i< trias.size(); i++)
+	for (int m=0; m< trias.size(); m++)
 	{
 		QPolygonF polygon = QPolygonF();
 		p2t::Point *pt = 0;
-		p2t::Triangle* tria = trias[i];
+		p2t::Triangle* tria = trias[m];
 
 		pt = tria->GetPoint(0);	polygon.push_back(Point2D(pt->x,pt->y));
 		pt = tria->GetPoint(1);	polygon.push_back(Point2D(pt->x,pt->y));

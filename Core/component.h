@@ -12,8 +12,7 @@
 #include "physicsshape.h"
 
 #include "box2dworld.h"
-
-#include <QDebug>
+#include "QsLog.h"
 
 namespace CDI
 {
@@ -28,6 +27,9 @@ namespace CDI
 	public:
         enum { Type = UserType + COMPONENTVIEW };
 
+		bool pendingPositionUpdate;
+		bool pendingScalingUpdate;
+		float previousScale;
 	protected:
 		QRectF itemBoundingRect;
 
@@ -50,6 +52,13 @@ namespace CDI
 		int type () const { return Type; }
 
 		QUuid id() const { return _id; }
+
+		b2Body* physicsBody() const { return _physicsBody; }
+
+		void setPhysicsBody(b2Body* body)
+		{
+			if (body != _physicsBody) _physicsBody = body;
+		}
 
 		bool sceneEvent(QEvent *event);
 
@@ -79,5 +88,18 @@ namespace CDI
 		virtual void addToHash(QUuid uid, QGraphicsItem* item);
 
 		virtual void removeFromHash(QUuid id);
+
+	signals:
+		void onItemAdd(QGraphicsItem* item);
+
+		void onShapeUpdate(Component* component);
+
+		void onTransformChange(QGraphicsItem* component);
+
+	protected slots:
+		void internalTransformChanged()
+		{
+			emit onTransformChange(this);
+		}
     };
 }

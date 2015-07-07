@@ -190,6 +190,11 @@ namespace CDI
 		friend QDataStream& operator<<(QDataStream& stream, const Page& page);
 		friend QDataStream& operator>>(QDataStream& stream, Page& page);
 
+	protected:
+		void initializeComponentConnections(Component* component);
+
+		void removeComponentConnections(Component* component);
+
 		// These function are called on item updates
 		// Note that if a component or assembly does not exist in the hash list
 		// it's update signal will be discarded
@@ -202,6 +207,10 @@ namespace CDI
 		void onItemUpdate(Item* item);
 		void onItemDelete(Item* item);
 		void onItemTransformUpdate(Item* item);
+
+		void onSimulationStepComplete();
+
+		void onComponentTransformUpdate(Component* component);
 
 	signals:
 		void signalReloadPage(Page* page);

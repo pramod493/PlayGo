@@ -8,6 +8,21 @@ namespace CDI
 	{
 		_id = uniqueHash();
 		_currentscale = 1.0f;
+		scaledToPhysics = false;
+	}
+
+	PhysicsShape::PhysicsShape(vector<p2t::Triangle *> p2tTrias)
+	{
+		_id = uniqueHash();
+		_currentscale = 1.0f;
+		scaledToPhysics = false;
+
+		int num_trias = p2tTrias.size();
+		for (int i=0; i < num_trias; i++)
+		{
+			Triangle* tria = new Triangle(p2tTrias[i]);
+			trias.push_back(tria);
+		}
 	}
 
 	PhysicsShape::~PhysicsShape()
@@ -15,6 +30,7 @@ namespace CDI
 		for (int i=0; i< trias.size(); i++)
 		{
 			delete trias[i];
+			trias[i] = 0;
 		}
 	}
 

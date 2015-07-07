@@ -8,6 +8,8 @@ namespace CDI
 		_id = uniqueHash();
         _highlighted = false;
         setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+
+		initializePhysicsShape();
     }
 
 	Pixmap::Pixmap(QString filepath, QGraphicsItem* parent)
@@ -26,6 +28,8 @@ namespace CDI
 		}
 
 		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+
+		initializePhysicsShape();
 	}
 
 	Pixmap::Pixmap(const QPixmap &pixmap, QString filepath, QGraphicsItem* parent)
@@ -36,6 +40,8 @@ namespace CDI
 
 		_filename = filepath;
 		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+
+		initializePhysicsShape();
 	}
 
 	void Pixmap::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -44,6 +50,17 @@ namespace CDI
 		painter->drawRect(boundingRect());
 #endif
 		QGraphicsPixmapItem::paint(painter, option, widget);
+	}
+
+	PhysicsShape* Pixmap::physicsShape() const
+	{
+		return _physicsShape;
+	}
+
+	void Pixmap::resetPhysicsShape()
+	{
+		if (_physicsShape) delete _physicsShape;
+
 	}
 
 	bool Pixmap::isHighlighted() const
@@ -67,5 +84,10 @@ namespace CDI
 	{
 		stream >> _id;
 		return stream;
+	}
+
+	void Pixmap::initializePhysicsShape()
+	{
+		_physicsShape == NULL;
 	}
 }
