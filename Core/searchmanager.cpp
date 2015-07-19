@@ -9,30 +9,30 @@
 #include <QDir>
 
 using namespace std;
-
+using namespace CDI;
 vector<string> getDummyResults()
 {
 	vector<string> ret;
-	ret.push_back("C:\\Database\\images\\REV_SHAFT_15.png"                );
-	ret.push_back("C:\\Database\\images\\BEARING_SHAFT_57_08.png"         );
-	ret.push_back("C:\\Database\\images\\SINUSOID.png"                    );
-	ret.push_back("C:\\Database\\images\\0_1875_BALL_CUTTER_14.png"       );
-	ret.push_back("C:\\Database\\images\\ASHAFT_PRT_06.png"               );
-	ret.push_back("C:\\Database\\images\\ARIES63_01.png"                  );
-	ret.push_back("C:\\Database\\images\\32T_4D_05W_14.png"               );
-	ret.push_back("C:\\Database\\images\\SHAFT_62_08.png"                 );
-	ret.push_back("C:\\Database\\images\\NUT_244_BACK_SHORTS_INNER_04.png");
-	ret.push_back("C:\\Database\\images\\84TEETH2_14.png"                 );
-	ret.push_back("C:\\Database\\images\\GEAR32_15.png"                   );
-	ret.push_back("C:\\Database\\images\\8MM_FLATHEAD_SCREWDRIVER_03.png" );
-	ret.push_back("C:\\Database\\images\\88T_106D_05W_02.png"             );
-	ret.push_back("C:\\Database\\images\\PIVOT_PIN.png"                   );
-	ret.push_back("C:\\Database\\images\\TRACK_01.png"                    );
-	ret.push_back("C:\\Database\\images\\1250195_02.png"                  );
-	ret.push_back("C:\\Database\\images\\54TEETH2_16.png"                 );
-	ret.push_back("C:\\Database\\images\\0_1875_BALL_CUTTER_PRT_14.png"   );
-	ret.push_back("C:\\Database\\images\\BEARING_SHAFT_57_05.png"         );
-	ret.push_back("C:\\Database\\images\\CLUSTER_COUNTERSHAFT_PRT_14.png" );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/REV_SHAFT_15.png"                );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/BEARING_SHAFT_57_08.png"         );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/SINUSOID.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/0_1875_BALL_CUTTER_14.png"       );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/ASHAFT_PRT_06.png"               );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/ARIES63_01.png"                  );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/32T_4D_05W_14.png"               );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/SHAFT_62_08.png"                 );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/NUT_244_BACK_SHORTS_INNER_04.png");
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/84TEETH2_14.png"                 );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/GEAR32_15.png"                   );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/8MM_FLATHEAD_SCREWDRIVER_03.png" );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/88T_106D_05W_02.png"             );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/PIVOT_PIN.png"                   );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/TRACK_01.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/1250195_02.png"                  );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/54TEETH2_16.png"                 );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/0_1875_BALL_CUTTER_PRT_14.png"   );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/BEARING_SHAFT_57_05.png"         );
+	ret.push_back(getHomeDirectory().toStdString() + "/trans/CLUSTER_COUNTERSHAFT_PRT_14.png" );
 	return ret;
 }
 

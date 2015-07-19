@@ -13,9 +13,18 @@
 #include "searchmanager.h"
 #include "physicsmanager.h"
 
+#include <algorithm>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+
+using namespace boost::graph;
+
 namespace CDI
 {
 	class PlayGo;
+
+
 	/**
 	 * @brief The Page class is the top level item which contains self sufficient information regarding a scene.
 	 * It also serves the function of factory class to create objects
@@ -65,6 +74,8 @@ namespace CDI
 		PhysicsManager* _physicsManager;
 
 		Component* _currentComponent;
+
+		QList<Component*> transformedComponents;
 
 	public:
 		//-----------------------------------------------
@@ -208,6 +219,7 @@ namespace CDI
 		void onItemDelete(Item* item);
 		void onItemTransformUpdate(Item* item);
 
+		void onSimulationStepStart();
 		void onSimulationStepComplete();
 
 		void onComponentTransformUpdate(Component* component);

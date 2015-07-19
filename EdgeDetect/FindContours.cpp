@@ -5,6 +5,8 @@ void gbFindContours(string imgDir,
 	vector<vector<vector<cv::Point> > >& innerContours,
 	bool SaveForDebug )
 {
+
+	SaveForDebug = false;
 	outerContours.clear();
 	innerContours.clear();
 
@@ -135,7 +137,6 @@ void gbFindContours(string imgDir,
 			Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 			drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
 		}
-
 		imwrite("Contours.png", drawing);
 	}
 	/* For Testing */

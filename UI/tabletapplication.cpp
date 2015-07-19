@@ -8,13 +8,13 @@ namespace CDI
 {
 	bool TabletApplication::event(QEvent *event)
 	{
-		if (event->type() == QEvent::TabletEnterProximity ||
+		/*if (event->type() == QEvent::TabletEnterProximity ||
 				event->type() == QEvent::TabletLeaveProximity) {
 			_device = static_cast<QTabletEvent *>(event)->device();
 
 			emit OnStylusProximity(event);
 			return true;
-		}
+		}*/
 		return QApplication::event(event);
 	}
 

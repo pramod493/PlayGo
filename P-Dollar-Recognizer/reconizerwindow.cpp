@@ -49,12 +49,17 @@ void ReconizerWindow::on_addButon_clicked()
 {
     // It should response only if add gesture mode selected
 
-
     // Save the current stroke as template
     // it's just a file containing 32 normalized points
     QString gestureClass =  ui->lineEdit->text();
-	QString tmpDir = "C:/Database/gestures/" + QUuid::createUuid().toString()+ ".dat";
+#ifdef Q_OS_LINUX
+	QString tmpDir = "/home/pramod/Junks/database/gestures/";
+#else
+	QString tmpDir = "C:/Database/gestures/";
+#endif //Q_OS_LINUX
 
+	tmpDir = tmpDir +gestureClass + "_" + QUuid::createUuid().toString() + ".dat";
+	qDebug() << "Adding gestures to " << tmpDir;
     if( gestureClass != "" )
     {
         GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());

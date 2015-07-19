@@ -25,6 +25,8 @@
 #include "searchview.h"
 #include "playgocore.h"
 
+class QDockWidget;
+
 namespace CDI
 {
 	class CDIWindow : public QMainWindow
@@ -32,24 +34,25 @@ namespace CDI
 		Q_OBJECT
 
 	public:
-        //// datastructure components
-        PlayGo *playgo;
+		//// datastructure components
+		PlayGo *playgo;
 
-        //// Datastructure components end
+		//// Datastructure components end
 		QSize windowSize;
 
 		QString title;
-		// TODO - Create action groups in order to simplify interactions as well as menus
-		// actions
+		// TODO - Create action groups in order to simplify interactions as well
+		//as menus actions
 
 		// File operations
-		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction, *closeAction, *cameraLoadAction;
+		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction,
+				*closeAction, *cameraLoadAction;
 
 		// Sketching related operations
-		QAction *brushSelectAction, *eraseSelectAction, *marqueeAction, *searchAction;
+		QAction *brushSelectAction, *eraseSelectAction, *marqueeAction,						*searchAction,*connectModeAction;
 
-        //QAction* selectorAction;        // Enable selection of components.
-        //QAction* marqueeEnableAction;   // Enable the marquee widget
+		//QAction* selectorAction;        // Enable selection of components.
+		//QAction* marqueeEnableAction;   // Enable the marquee widget
 
 		// Simulation managed actions
 		QAction *playAction, *pauseAction, *resetAction;
@@ -66,8 +69,11 @@ namespace CDI
 
 		QSplitter *splitter;
 
+		QDockWidget* searchDock;
+
 		// Sketching related widgets
-		SketchView* sketchView;          // Primarily use this one. Skip the other ones...
+		SketchView* sketchView;			// Primarily use this one. Skip the
+										// other ones...
 		SketchScene* sketchScene;
 
 		SearchView* searchView;
@@ -75,9 +81,6 @@ namespace CDI
 
 //		QGraphicsView* gestureView;
 //		QGraphicsScene* gestureScene;
-
-		// Status bar displaye hints and user actions
-		QStatusBar* statusBar;
 
 		PlayGoController* controller;
 
@@ -121,6 +124,8 @@ namespace CDI
 		void exit();
 
 		void setToDraw();
+
+		void setToConnectorMode();
 
 		void setToErase();
 

@@ -6,6 +6,10 @@
 #include "stroke.h"
 #include "polygon2d.h"
 #include "pixmap.h"
+#include <QGraphicsWebView>
+#include <QUrl>
+
+#define CDI_USE_MOUSE_TO_MOVE
 
 namespace CDI
 {
@@ -16,24 +20,25 @@ namespace CDI
 		// Do not set up any connections when _page is null
 
 		if (_page != NULL) _page->setScene(this);
+
 	}
 
 	SketchScene::~SketchScene()
 	{
-		QLOG_INFO() << "Deleting SketchScene";
+		// Since sketch scene does not create these items,
+		// we should simply remove them from scene
 		clear();
 	}
 
 	void SketchScene::clear()
 	{
-		QLOG_INFO() << "Deleting all items in scene";
+		QLOG_INFO() << "Removing all items from the scene";
 		QList<QGraphicsItem*> allitems = items();
 		for (int i=0; i < allitems.size(); i++)
 		{
 			QGraphicsItem* graphicsitem = allitems[i];
-			delete graphicsitem;
+			removeItem(graphicsitem);
 		}
-		update();
 	}
 
 	QImage SketchScene::getSelectionImage(QPolygonF selectionPolygon)
@@ -142,7 +147,7 @@ namespace CDI
 
 	QImage SketchScene::getSelectionImage()
 	{
-//		if (freeStrokes.size() == 0 ) return QImage();
+		//		if (freeStrokes.size() == 0 ) return QImage();
 		QRectF rect = sceneRect();
 		int x_min = 0;  int y_min = 0;
 		int x_max = rect.x() + rect.width();
@@ -251,7 +256,7 @@ namespace CDI
 		for (int i=1; i < listOfItems.size(); i++)
 		{
 			baseRect = baseRect.united(
-					listOfItems[i]->sceneTransform().inverted().mapRect
+						listOfItems[i]->sceneTransform().inverted().mapRect
 						(listOfItems[i]->boundingRect()));
 		}
 		return baseRect;
@@ -260,22 +265,37 @@ namespace CDI
 	void SketchScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
 		mouseEvent->accept();
-		emit signalMouseEvent(mouseEvent, 0);
-//		QGraphicsScene::mousePressEvent(mouseEvent);
+		if (mouseEvent->button() != Qt::NoButton)
+		{
+			emit signalMouseEvent(mouseEvent, 0);
+		}
+#ifdef CDI_USE_MOUSE_TO_MOVE
+		QGraphicsScene::mousePressEvent(mouseEvent);
+#endif //CDI_USE_MOUSE_TO_MOVE
 	}
 
 	void SketchScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
 		mouseEvent->accept();
-		emit signalMouseEvent(mouseEvent, 1);
-//		QGraphicsScene::mouseMoveEvent(mouseEvent);
+		if (mouseEvent->button() != Qt::NoButton)
+		{
+			emit signalMouseEvent(mouseEvent, 1);
+		}
+#ifdef CDI_USE_MOUSE_TO_MOVE
+		QGraphicsScene::mouseMoveEvent(mouseEvent);
+#endif //CDI_USE_MOUSE_TO_MOVE
 	}
 
 	void SketchScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
 		mouseEvent->accept();
-		emit signalMouseEvent(mouseEvent, 2);
-//		QGraphicsScene::mouseReleaseEvent(mouseEvent);
+		if (mouseEvent->button() != Qt::NoButton)
+		{
+			emit signalMouseEvent(mouseEvent, 2);
+		}
+#ifdef CDI_USE_MOUSE_TO_MOVE
+		QGraphicsScene::mouseReleaseEvent(mouseEvent);
+#endif //CDI_USE_MOUSE_TO_MOVE
 	}
 
 	void SketchScene::clearStrokeHighlight()

@@ -4,6 +4,8 @@
 #include "filesystemwatcher.h"
 #include <QMessageBox>
 #include <QApplication>
+#include <QDockWidget>
+
 namespace CDI
 {
 	CDIWindow::CDIWindow(QWidget *parent) : QMainWindow(parent)
@@ -17,7 +19,6 @@ namespace CDI
 			newPage = playgo->currentPage();
 		} else
 		{
-			playgo->addNewPage();
 			newPage = playgo->addNewPage();
 		}
 		playgo->setCurrentPage(newPage);
@@ -45,27 +46,44 @@ namespace CDI
 		sizePolicy.setVerticalStretch(0);
 		setSizePolicy(sizePolicy);
 
+		// Create toolbars and related actions
 		createActions();
 		setupToolbar();
+		connectActions();	// All actions are connected to internal function
 
+		// Views and scene
 		sketchView = new SketchView(playgo->currentPage(), this);
 		sketchScene = sketchView->getSketchScene();
 		searchView = new SearchView(this);
 		searchScene = searchView->scene();
+
+		// Controller to handle touch, tablet and mouse events
+		// and possibly synchronize with Box2D and Indexer
 		controller = new PlayGoController(sketchScene, sketchView, this);
 
 		FileSystemWatcher* watcher = new FileSystemWatcher();
-		watcher->setDirectory(QString("E:/Dropbox/Camera Uploads"));
+#ifdef Q_OS_WIN
+        watcher->setDirectory(QString("C:/Users/Pramod/Dropbox/Camera Uploads"));
+#endif
+#ifdef Q_OS_LINUX
+//		watcher->setDirectory(QString("~/Dropbox/Camera Uploads"));
+#endif
 		QObject::connect(watcher, SIGNAL(fileAdded(QString)),
 						 controller, SLOT(onExternalImageAdd(QString)));
 
-//		QHBoxLayout* boxlayout = new QHBoxLayout;
+		// Layout setup
+		// Sketch scene and search view are laid out
+		// next to each other and separated by a splitter
 		splitter = new QSplitter;
 		splitter->addWidget(sketchView);
-		splitter->addWidget(searchView);
+//		splitter->addWidget(searchView);
 
-		connectActions();
-//		setCentralWidget(sketchView);
+		searchDock = new QDockWidget(tr("Search results"), this);
+		searchDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
+							  Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		searchDock->setWidget(searchView);
+		addDockWidget(Qt::RightDockWidgetArea, searchDock);
+
 		setCentralWidget(splitter);
 	}
 
@@ -86,6 +104,10 @@ namespace CDI
 		marqueeAction = new QAction(QIcon(":/images/marquee.png"), tr("Select"), sketchActions);
 		marqueeAction->setCheckable(true);
 		marqueeAction->setChecked(false);
+
+		connectModeAction = new QAction(QIcon(":/images/connect.png"), tr("Create joints"), sketchActions);
+		connectModeAction->setCheckable(true);
+		connectModeAction->setChecked(false);
 
 		// Physics simulation related actions
 		QActionGroup *playActions = new QActionGroup(this);
@@ -127,6 +149,7 @@ namespace CDI
 		mainToolbar->addSeparator();
 
 		mainToolbar->addAction(brushSelectAction);
+		mainToolbar->addAction(connectModeAction);
 		mainToolbar->addAction(eraseSelectAction);
 		mainToolbar->addAction(marqueeAction);
 
@@ -136,14 +159,17 @@ namespace CDI
 
 		mainToolbar->addSeparator();
 		mainToolbar->addAction(cameraLoadAction);
+
 		mainToolbar->addSeparator();
+
 		mainToolbar->addAction(playAction);
 		mainToolbar->addAction(pauseAction);
-//		mainToolbar->addAction(resetAction);	// Not sure what to make of the reset simulation
+		//mainToolbar->addAction(resetAction);	// Not sure what to make of the reset simulation
 
 #ifdef Q_OS_WIN
 		mainToolbar->setIconSize(QSize(48,48));
-#elif
+#endif
+#ifdef Q_OS_LINUX
 		mainToolbar->setIconSize(QSize(32,32));
 #endif // Q_OS_WIN
 		brushWidthSlider = new QSlider(Qt::Horizontal);
@@ -172,7 +198,7 @@ namespace CDI
 	void CDIWindow::connectActions()
 	{
 		// New
-        connect(newAction, SIGNAL(triggered()),
+		connect(newAction, SIGNAL(triggered()),
 				this, SLOT(clear()));
 		// Save
 		connect(saveImageAction, SIGNAL(triggered()),
@@ -180,6 +206,11 @@ namespace CDI
 		// Draw
 		connect(brushSelectAction, SIGNAL(triggered()),
 				this,SLOT(setToDraw()));
+
+		// Connector Mode
+		connect(connectModeAction, SIGNAL(triggered()),
+				this, SLOT(setToConnectorMode()));
+
 		// Erase
 		connect(eraseSelectAction, SIGNAL(triggered()),
 				this,SLOT(setToErase()));
@@ -196,17 +227,20 @@ namespace CDI
 		connect(searchAction, SIGNAL(triggered()),
 				this, SLOT(onSearchTrigger()));
 
+		// Exit program
 		connect(closeAction, SIGNAL(triggered()),
 				this, SLOT(exit()));
-		brushWidthSlider->setValue(6);
 
+		// Step through simulation
 		connect(playAction, SIGNAL(triggered()),
 				this, SLOT(startSimulation()));
 
+		// Pause simulation
 		connect(pauseAction, SIGNAL(triggered()),
 				this, SLOT(pauseSimulation()));
 
-		connect(pauseAction, SIGNAL(triggered()),
+		// Loads the camera widget
+		connect(cameraLoadAction, SIGNAL(triggered()),
 				this, SLOT(cameraLoad()));
 	}
 
@@ -250,6 +284,11 @@ namespace CDI
 		controller->setToDraw();
 	}
 
+	void CDIWindow::setToConnectorMode()
+	{
+		controller->setToConnectorMode();
+	}
+
 	void CDIWindow::setToErase()
 	{
 		controller->setToErase();
@@ -272,9 +311,11 @@ namespace CDI
 
 	void CDIWindow::onSearchTrigger()
 	{
-		QLOG_INFO() << "Search selection";
 		if (controller!= NULL)
 		{
+			if (searchDock)
+				searchDock->setVisible(true);
+			QLOG_INFO() << "Search selection";
 			controller->searchAction();
 		}
 	}

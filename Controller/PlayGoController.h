@@ -14,6 +14,10 @@
 #include <QRectF>
 #include <QTouchDevice>
 #include <QTouchEvent>
+#include <QLineEdit>
+#include <QValidator>
+#include <QIntValidator>
+#include <QCheckBox>
 
 #include "commonfunctions.h"
 #include "point2dpt.h"
@@ -26,11 +30,21 @@
 #include "sketchview.h"
 #include "searchview.h"
 #include "modelviewtreewidget.h"
+
+#include <QToolBar>
+#include "penstroke.h"
+#include <QGraphicsLineItem>
+#include "forceitem.h"
+#include <QMessageBox>
+#include <box2dworld.h>
+#include "pdollarrecognizer.h"
+
 #include <QDebug>
 
 namespace CDI
 {
 	class CDIWindow;
+	class ConnectController;
     namespace UI
     {
 		enum MODE {None, Sketch, Shapes, Erase, Transform,
@@ -48,11 +62,16 @@ namespace CDI
 		Q_OBJECT
 
 	protected:
+        enum ConnectionMode {GestureSketch, HingeJoint, SliderJoint, FixedJoint/*Sets body as static*/,
+							 SpringJoint, ApplyForce};	// Leave it to be private
+
+	protected:
 		/**********************************************************
 		 * UI related variables
 		 ********************************************************/
 		SketchScene*	_scene;
 		SketchView*		_view;
+		QWidget*		_viewport;
 		Page*			_page;
 		CDIWindow*		_toplevelWindow;
 
@@ -88,6 +107,37 @@ namespace CDI
          ********************************************************/
 		SearchView* searchView;
 
+		/*********************************************************
+		 * Search related variables
+		 ********************************************************/
+		QToolBar* connectionOptionsToolbar;
+
+		ConnectionMode _currentMode;
+
+		QList<PenStroke*> _tmpStrokes;
+
+		PenStroke* _currentConnectStroke;
+
+		PDollarRecognizer *sketchRecognizer;
+
+		QCheckBox* enableMotorCheckbox;
+		QLineEdit* motorSpeed;
+		QLineEdit* motorTorque;
+
+		/*********************************************************
+		 * Slider joint settings
+		 ********************************************************/
+		Component* _sliderComponentA;
+		Component* _sliderComponentB;
+		QGraphicsLineItem* _sliderLineItem;
+		QPointF _sliderStartPos;
+		QPointF _sliderEndPos;
+
+		// Limit the slider to startPos and endPos
+
+	private:
+		ForceGraphicsItem* forceLine;
+
 	public:
 		PlayGoController(SketchScene* scene, SketchView* view, CDIWindow *parent = NULL);
 
@@ -95,6 +145,10 @@ namespace CDI
 		{
 			if (tree != NULL) delete tree;
 		}
+
+		SketchScene* scene() const { return _scene; }
+		SketchView* view() const { return _view; }
+		Page* page() const { return _page; }
 
 	protected:
 
@@ -124,18 +178,31 @@ namespace CDI
 		virtual void lassoMove(Point2DPT pos);
 		virtual void lassoRelease(Point2DPT pos);
 
+		virtual void connectPress(QPointF scenePos);
+		virtual void connectMove(QPointF scenePos);
+		virtual void connectRelease(QPointF scenePos);
+
+		void createConnectionsToolbar();
+		void showConnectionsToolbar();
+		void hideConnectionsToolbar();
+
         /**
          * @brief Handles updates whenever MODE is changed.
          * Note that this function does not actually change the mode
          * @param oldmode Current mode of the controller
          * @param newmode New mode of the controller
          */
-        virtual void onModeChange(UI::MODE oldmode, UI::MODE newmode);
+        virtual bool onModeChange(UI::MODE oldmode, UI::MODE newmode);
+
+		bool eventFilter(QObject* obj, QEvent* event);
+
+		QList<Component*> getSelectableComponentsByPhysics(QPointF scenePos);
 
 	public:
 		virtual void sketchAction(QTabletEvent *event);
 		virtual void eraseAction(QTabletEvent *event);
 		virtual void selectAction(QTabletEvent *event);
+		virtual void connectAction(QTabletEvent *event);
 		virtual void searchAction();
 
 	signals:
@@ -188,12 +255,21 @@ namespace CDI
          * @param event QTouchEvent
          * @param view QGraphicsView from where event originiated
          */
-		void onTouchEventFromView(QTouchEvent* event, QGraphicsView *view);
+		bool onTouchEventFromView(QTouchEvent* event);
+
+		void connectionModeReset();
 
 		void setToDraw();
 		void setToErase();
+		void setToConnectorMode();
 		void setToSelect();
 		void setToEdit();
+
+		void setModeScribble();
+		void setModeHingeJoint();
+		void setModeSliderJoint();
+		void setModeSpringJoint();
+		void setModeForce();
 
         void setMode(UI::MODE newMode);
 
@@ -210,11 +286,14 @@ namespace CDI
 
 		void loadImage(QString imagePath);
 
+		void loadImage(QString imagePath, QObject* obj, QDropEvent *event);
+
 		void startSimulation();
 
 		void pauseSimulation();
 
 		void loadCamera();
 
+		friend class ConnectController;
 	};
 }

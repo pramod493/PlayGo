@@ -1,5 +1,5 @@
 #include "pixmap.h"
-
+#include <QsLog.h>
 namespace CDI
 {
 	Pixmap::Pixmap(QGraphicsItem *parent)
@@ -7,9 +7,19 @@ namespace CDI
 	{
 		_id = uniqueHash();
         _highlighted = false;
-        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		_physicsShape = NULL;
 
-		initializePhysicsShape();
+//        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		setShapeMode(QGraphicsPixmapItem::MaskShape);
+
+#ifdef CDI_DEBUG_DRAW_SHAPE
+		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
+		ellipse->setPen(QPen(Qt::blue));
+		ellipse->setBrush(QBrush(Qt::green, Qt::SolidPattern));
+		ellipse->setRect(QRectF(-10,-10,20,20));
+		ellipse->setTransform(QTransform());
+		ellipse->setZValue(1.0f);
+#endif //CDI_DEBUG_DRAW_SHAPE
     }
 
 	Pixmap::Pixmap(QString filepath, QGraphicsItem* parent)
@@ -17,6 +27,7 @@ namespace CDI
 	{
 		_id = uniqueHash();
 		_highlighted = false;
+		_physicsShape = NULL;
 
 		_filename = filepath;
 		QFile f(_filename);
@@ -25,11 +36,21 @@ namespace CDI
 			QPixmap p = QPixmap();
 			p.load(_filename);
 			setPixmap(p);
+//			initializePhysicsShape();
 		}
 
-		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		// TODO - Set shape mode to AABB again if it hinders performance
+//		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		setShapeMode(QGraphicsPixmapItem::MaskShape);
 
-		initializePhysicsShape();
+#ifdef CDI_DEBUG_DRAW_SHAPE
+		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
+		ellipse->setPen(QPen(Qt::blue));
+		ellipse->setBrush(QBrush(Qt::green, Qt::SolidPattern));
+		ellipse->setRect(QRectF(-10,-10,20,20));
+		ellipse->setTransform(QTransform());
+		ellipse->setZValue(1.0f);
+#endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
 	Pixmap::Pixmap(const QPixmap &pixmap, QString filepath, QGraphicsItem* parent)
@@ -37,19 +58,30 @@ namespace CDI
 	{
 		_id = uniqueHash();
 		_highlighted = false;
+		_physicsShape = NULL;
 
 		_filename = filepath;
-		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+//		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		setShapeMode(QGraphicsPixmapItem::MaskShape);
 
-		initializePhysicsShape();
+#ifdef CDI_DEBUG_DRAW_SHAPE
+		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
+		ellipse->setPen(QPen(Qt::blue));
+		ellipse->setBrush(QBrush(Qt::green, Qt::SolidPattern));
+		ellipse->setRect(QRectF(-10,-10,20,20));
+		ellipse->setTransform(QTransform());
+		ellipse->setZValue(1.0f);
+#endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
 	void Pixmap::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 	{
+		QGraphicsPixmapItem::paint(painter, option, widget);
+
 #ifdef CDI_DEBUG_DRAW_SHAPE
+		painter->setPen(QPen(Qt::red));
 		painter->drawRect(boundingRect());
 #endif
-		QGraphicsPixmapItem::paint(painter, option, widget);
 	}
 
 	PhysicsShape* Pixmap::physicsShape() const
@@ -59,8 +91,7 @@ namespace CDI
 
 	void Pixmap::resetPhysicsShape()
 	{
-		if (_physicsShape) delete _physicsShape;
-
+        initializePhysicsShape();
 	}
 
 	bool Pixmap::isHighlighted() const
@@ -88,6 +119,22 @@ namespace CDI
 
 	void Pixmap::initializePhysicsShape()
 	{
-		_physicsShape == NULL;
+		// Recreate physics shapes
+		if(_physicsShape) delete _physicsShape;
+		_physicsShape = NULL;
+
+		QPixmap tmpPixmap =	pixmap();
+		if (tmpPixmap.isNull()) return;
+		QString filepath = getHomeDirectory() + "/tmp.png";
+		tmpPixmap.save(filepath);
+		vector<p2t::Triangle*> p2tTrias = generatePolygonFromImage(filepath);
+		_physicsShape  = new PhysicsShape(p2tTrias);
+		for (int i=0; i < p2tTrias.size(); i++)
+		{
+			p2t::Triangle* tria = p2tTrias[i];
+			if (tria) delete tria;
+			p2tTrias[i] = 0;
+		}
+		QLOG_INFO() << "Regenerated physics shape";
 	}
 }

@@ -13,23 +13,25 @@
 
 #include "box2dworld.h"
 #include "QsLog.h"
-
+#include <QPair>
 namespace CDI
 {
+	class PhysicsJoint;
 	/**
 	 * @brief It is equivalent of Component in visualization size. This stores references to the all the children
 	 * Also, note that all the children take care of their transform and therefore need not implement the
 	 * boundingRect() function in this as well as component class.
 	 */
 	class Component : public QGraphicsObject/*QGraphicsItemGroup*/, protected QHash<QUuid, QGraphicsItem*>
-    {
+	{
 		Q_OBJECT
 	public:
-        enum { Type = UserType + COMPONENTVIEW };
+		enum { Type = UserType + COMPONENTVIEW };
 
+		bool requiresRegeneration;
 		bool pendingPositionUpdate;
-		bool pendingScalingUpdate;
 		float previousScale;
+
 	protected:
 		QRectF itemBoundingRect;
 
@@ -38,7 +40,12 @@ namespace CDI
 
 		b2Body* _physicsBody;
 
-    public:
+		QList<b2Fixture*> _fixtures;
+
+		// Store the joint as well as its position w.r.t. unscaled component
+		QList<PhysicsJoint*> _jointlist;
+
+	public:
 		Component(QGraphicsItem* parent = 0);
 
 		virtual ~Component();
@@ -55,10 +62,7 @@ namespace CDI
 
 		b2Body* physicsBody() const { return _physicsBody; }
 
-		void setPhysicsBody(b2Body* body)
-		{
-			if (body != _physicsBody) _physicsBody = body;
-		}
+		void setPhysicsBody(b2Body* body);
 
 		bool sceneEvent(QEvent *event);
 
@@ -71,6 +75,12 @@ namespace CDI
 		virtual void addToComponent(QGraphicsItem* itemToAdd);
 
 		virtual void removeFromComponent(QGraphicsItem* itemToRemove);
+
+		virtual void addJoint(PhysicsJoint* physicsJoint);
+
+		virtual void removeJoint(PhysicsJoint* physicsJoint);
+
+		virtual void removeJoint(b2Joint* joint);
 
 		virtual void removeFromComponent(QUuid uid);
 
@@ -89,6 +99,13 @@ namespace CDI
 
 		virtual void removeFromHash(QUuid id);
 
+		/**
+		 * @brief Adds the relevant fixture to physics object when a new
+		 * child is added to the component
+		 * @param graphicsitem
+		 */
+		virtual void addFixture(QGraphicsItem* graphicsitem);
+
 	signals:
 		void onItemAdd(QGraphicsItem* item);
 
@@ -99,7 +116,8 @@ namespace CDI
 	protected slots:
 		void internalTransformChanged()
 		{
+			pendingPositionUpdate = true;
 			emit onTransformChange(this);
 		}
-    };
+	};
 }

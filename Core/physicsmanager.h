@@ -8,6 +8,7 @@
 #include "physicsjoint.h"
 #include <QTimer>
 
+class BoxDebugScene;
 namespace CDI
 {
 	class Page;
@@ -22,21 +23,6 @@ namespace CDI
 	 * 4. Gavity scale and other props
 	 */
 	typedef struct b2BodyDef physicsBodyDef;
-	/**
-	 * @brief physicsFixtureDef contains shape data, friction, restitution and density info
-	 */
-	typedef struct b2FixtureDef physicsFixtureDef;
-	/**
-	 * @brief physicsFixture attaches physicsFixtureDef to the physics body
-	 */
-	typedef b2Fixture physicsFixture;
-
-	/**
-	 * @brief physicsJointDef contains joint type info as well as reference to connected
-	 * physics bodies.
-	 * Also checks whether connectd objects are allowed to collide or not
-	 */
-	typedef struct b2JointDef physicsJointDef;
 
 	class PhysicsSettings {
 	public:
@@ -51,7 +37,7 @@ namespace CDI
 			timeStep=1.0f/60.0f;
 			velocityIterations = 6;
 			positionIterations = 4;
-			gravity = Point2D(0.0f,0.0f);
+			gravity = Point2D(0.0f,10.0f);
 			enableSleep = true;
 		}
 
@@ -86,8 +72,6 @@ namespace CDI
 		QHash<QUuid, b2Body*> _box2DBodies;
 		QHash<QUuid, PhysicsBody*> _physicsBodies;
 
-		b2World* _b2World;
-
 		PhysicsSettings _settings;
 
 		QTimer* timer;
@@ -95,6 +79,11 @@ namespace CDI
 		bool _internalLock;
 
 		bool _isRunning;
+
+		BoxDebugScene* debugView;
+
+		b2World* _b2World;
+
 	public:
 		explicit PhysicsManager(PhysicsSettings* settings, Page *parentPage);
 
@@ -104,26 +93,34 @@ namespace CDI
 		// creating multiple derived classes for joints
 		virtual b2Body *createBody(const b2BodyDef& def);
 
-		virtual PhysicsJoint* createJoint();
+		virtual PhysicsJoint* createPinJoint(Component *c1, Component *c2, QPointF scenePos,
+										bool enableMotor, bool enableLimits,
+										float motorSpeed, float motorTorque,
+										float lowerLimit, float upperLimit);
 
-		virtual PhysicsJoint* createRevoluteJoint(PhysicsBody* c1, PhysicsBody* c2,
-												  b2RevoluteJointDef *def);
+		virtual bool updateJoint(PhysicsJoint* joint);
 
-		virtual PhysicsJoint* createWheelJoint(PhysicsBody* c1, PhysicsBody* c2,
-											   b2WheelJointDef* def);
-		virtual PhysicsJoint* createGearJoint(PhysicsJoint* j1, PhysicsJoint* j2,
-											  b2GearJointDef* def);
-		virtual PhysicsJoint* createGearJoint(PhysicsJoint* j1, PhysicsJoint* j2,
+		/*virtual b2Joint* createWheelJoint(Component* c1, Component* c2,
+											   b2WheelJointDef& def);
+		virtual b2Joint* createGearJoint(Component* j1, Component* j2,
+											  b2GearJointDef& def);
+		virtual b2Joint* createGearJoint(Component* j1, Component* j2,
 											  float gearRatio);
-		virtual PhysicsJoint* createWeldJOint(PhysicsBody* c1, PhysicsBody* c2,
+		virtual b2Joint* createWeldJOint(Component* c1, Component* c2,
 											  b2WeldJointDef* def);
+											  */
 		/**
 		 * @brief updateSettings updates the settings of b2World object and applies to them
 		 * @param newSettings
 		 */
 		void updateSettings(PhysicsSettings* newSettings);
 
+	protected:
+		virtual b2Joint* createJoint(b2JointDef& jointDef);
+
 	signals:
+		void physicsStepStart();
+
 		void physicsStepComplete();
 
 		void physicsPartUpdate();
@@ -135,9 +132,11 @@ namespace CDI
 
 		void step();
 
-		void updateComponentPosition();
+		void updateComponentPosition(QList<Component*>& components);
 
 		void updateComponentPosition(Component* component);
+
+		void updateFromComponentPosition(QList<Component*>& components);
 
 		void updateFromComponentPosition(Component* component);
 

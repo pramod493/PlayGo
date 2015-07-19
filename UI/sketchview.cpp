@@ -5,6 +5,9 @@
 #include <QMimeData>
 #include <QFileInfo>
 #include <QUrl>
+
+#include "QsLog.h"
+
 namespace CDI
 {
 	SketchView::SketchView(Page *page, QWidget* parent)
@@ -14,21 +17,24 @@ namespace CDI
 		qDebug() << "SketchView created";
 
 		{	// Gesture stuff
-			setAttribute(Qt::WA_AcceptTouchEvents, true);
-			viewport()->setAttribute(Qt::WA_AcceptTouchEvents);
+//			setAttribute(Qt::WA_AcceptTouchEvents, true);
+			viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
 //			grabGesture(Qt::PinchGesture);
 //			viewport()->grabGesture(Qt::PinchGesture);
 		}
 
+		// Keep the scrollbar hidden
 		setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+		// Define the background gradient
         QLinearGradient gradient = QLinearGradient(0,0,0,1000);
         gradient.setColorAt(0.0,Qt::white);
 		gradient.setColorAt(1.0, QColor(255,200,200,255));
 
 		setBackgroundBrush(QBrush(gradient));
 
+		// Create scene to contain _page
 		_scene = new SketchScene(_page, this);
 		setScene(_scene);
 		setSceneRect(0,0,5000,5000);
@@ -102,65 +108,10 @@ namespace CDI
         QGraphicsView::resizeEvent(event);
     }
 
-    bool SketchView::event(QEvent *event)
-    {
-		// We are grabbing gesture at viewport and therefore no need to capture events here
-        switch (event->type())
-        {
-            case QEvent::TouchEnd :
-            case QEvent::TouchUpdate :
-            case QEvent::TouchBegin :
-            {
-            }
-        }
-        return QGraphicsView::event(event);
-    }
-
-    void SketchView::tabletEvent(QTabletEvent *event)
-    {
-        event->accept();
-        switch (event->type())
-        {
-            case QEvent::TabletPress :
-            case QEvent::TabletMove :
-            case QEvent::TabletRelease :
-            {
-				emit viewTabletEvent(event, this);
-                break;
-            }
-        }
-    }
-
 	void SketchView::wheelEvent(QWheelEvent* event)
 	{
-		event->setAccepted(true);
+		event->setAccepted(true);// Accept to ignore
 	}
-
-	bool SketchView::viewportEvent(QEvent *event)
-	{
-		// Send the events to children first and then check is accpeted
-		bool retval = QGraphicsView::viewportEvent(event);
-		switch (event->type())
-		{
-		case QEvent::TouchBegin :
-		case QEvent::TouchUpdate :
-		case QEvent::TouchEnd :
-		case QEvent::TouchCancel :
-			if (event->isAccepted() == false)
-			{
-				emit viewTouchEvent(static_cast<QTouchEvent*>(event), this);
-				event->accept();
-			}
-			break;
-		case QEvent::Gesture :
-//			Do not use gestures at the moment but they can be used later on
-//			qDebug() << "Gesture received";
-//			return true;
-			break;
-		}
-		return retval;
-	}
-
 
 	void SketchView::dragEnterEvent(QDragEnterEvent *event)
 	{
@@ -187,12 +138,11 @@ namespace CDI
 		foreach(QUrl url, event->mimeData()->urls())
 				{
 					QString filename = url.toLocalFile();
-					QString suffix = QFileInfo(filename).suffix().toUpper();
-					if(suffix=="PNG")
-					{
-						event->acceptProposedAction();
-						emit viewImageDrop(filename);
-					}
+//					QString suffix = QFileInfo(filename).suffix().toUpper();
+
+					event->acceptProposedAction();
+					emit viewImageDrop(filename, this, event);
+					// Check is done before itself
 				}
 	}
 

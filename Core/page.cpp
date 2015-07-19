@@ -18,16 +18,22 @@ namespace CDI
 		_searchManager = new SearchManager(this);
 
 		PhysicsSettings settings = PhysicsSettings();
+		settings.gravity = Point2D(0,0);
+		settings.timeStep = 1.0f/60.0f;
 		_physicsManager = new PhysicsManager(&settings, this);
 
 		_scene = NULL;
 
 		_currentComponent = NULL;
 
+		transformedComponents = QList<Component*>();
+
 		connect(this, SIGNAL(signalItemAdd(QGraphicsItem*)),
 				_physicsManager, SLOT(onItemAdd(QGraphicsItem*)));
 		connect(_physicsManager, SIGNAL(physicsStepComplete()),
 				this, SLOT(onSimulationStepComplete()));
+		connect(_physicsManager, SIGNAL(physicsStepStart()),
+				this, SLOT(onSimulationStepStart()));
 
 	}
 
@@ -397,20 +403,26 @@ namespace CDI
 		emit signalItemTransformUpdate(item);
 	}
 
+	void Page::onSimulationStepStart()
+	{
+		if (_physicsManager)
+			_physicsManager->updateFromComponentPosition(transformedComponents);
+	}
+
 	void Page::onSimulationStepComplete()
 	{
 		QList<Component*> lis_comps = _components.values();
-
-		foreach (Component* component, lis_comps)
-			_physicsManager->updateComponentPosition(component);
-
-		if (_scene) _scene->update();
+		if (_physicsManager)
+			_physicsManager->updateComponentPosition(lis_comps);
+		if (_scene)	_scene->update();
 	}
 
 	void Page::onComponentTransformUpdate(Component *component)
 	{
-		if (_physicsManager)
-		_physicsManager->updateFromComponentPosition(component);
+		// Batches the transformation behavior which updates the
+		// box2d prior to step()
+		if (transformedComponents.contains(component) == false)
+			transformedComponents.push_back(component);
 	}
 
 	QDataStream& operator<<(QDataStream& stream, const Page& page)

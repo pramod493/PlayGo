@@ -16,11 +16,10 @@ public:
 	~ReconizerWindow();
 
 
-private slots:
+public slots:
 	void on_pushButton_clicked();
 
 	void on_detectGestureSelection_clicked();
-
 
     void on_addgestureSelection_clicked();
 

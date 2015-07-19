@@ -65,7 +65,6 @@ namespace CDI {
                 }
                 break;
         }
-
 		return true;
 	}
 }

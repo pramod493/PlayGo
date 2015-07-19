@@ -97,8 +97,9 @@ namespace CDI
     {
 #ifdef Q_OS_LINUX
         return QString("/home/pramod/Junks/database/");
-#else
-		return QString("C:\\Database\\");
+#endif
+#ifdef Q_OS_WIN
+		return QString("C:/Database/");
 #endif
     }
 
@@ -254,6 +255,11 @@ namespace CDI
 		return true;
 	}
 
+	float getPhysicsScale()
+	{
+		return 10.0f;
+	}
+
 	/**
 	 * @brief uniqueHash returns a QUuid for identification. Assumed to be unique
 	 * @return Unique QUuid identifier
@@ -292,7 +298,7 @@ namespace CDI
 		// Sanity check
 		if (outerContours.size()!= allInnerContours.size())
 		{
-			QLOG_INFO() << "Mismatch in the number of loops @generatePolygonFromImage";
+//			QLOG_INFO() << "Mismatch in the number of loops @generatePolygonFromImage";
 			return triangles;
 		}
 
@@ -314,7 +320,7 @@ namespace CDI
 			tmp_contour.reserve(outerContour.size());
 			size_t max_points = outerContour.size();
 
-			QLOG_INFO() << "Initial Points" << max_points;
+//			QLOG_INFO() << "Initial Points" << max_points;
 
 			x_min = 10000; y_min = 10000;
 			x_max = 0; y_max = 0;
@@ -334,7 +340,7 @@ namespace CDI
 			}
 			if (ignoreSmalls && local_getMinumumDimension(x_min, y_min, x_max, y_max) <= minPolygonSize)
 			{
-				QLOG_WARN() << "Polygon size smaller than threshold";
+//				QLOG_WARN() << "Polygon size smaller than threshold";
 				continue;
 			}
 
@@ -343,7 +349,7 @@ namespace CDI
 
 			if (simplied_outerContour.size() < 3)
 			{
-				QLOG_WARN() << "Polygon size < 3 after smoothing";
+//				QLOG_WARN() << "Polygon size < 3 after smoothing";
 				continue;
 			}
 
@@ -394,18 +400,18 @@ namespace CDI
 
 				if (ignoreSmalls && local_getMinumumDimension(x_min, y_min, x_max, y_max) <= minPolygonSize)
 				{
-					QLOG_WARN() << "Inner polygon size smaller than threshold";
+//					QLOG_WARN() << "Inner polygon size smaller than threshold";
 					continue;
 				}
 
-				QLOG_INFO() << "Hole - Before RDP" << tmp_contour.size();
+//				QLOG_INFO() << "Hole - Before RDP" << tmp_contour.size();
 				// Apply RDP on inner loop
 				vector<p2t::Point> simplified_innerContour = rdp.simplifyWithRDP(tmp_contour, deltaInside);
-				QLOG_INFO() << "Hole - After RDP" << simplified_innerContour.size();
+//				QLOG_INFO() << "Hole - After RDP" << simplified_innerContour.size();
 
 				if (simplified_innerContour.size() < 3)
 				{
-					QLOG_WARN() << "Inner polygon size < 3 after smoothing";
+					//QLOG_WARN() << "Inner polygon size < 3 after smoothing";
 					continue;
 				}
 
@@ -421,9 +427,7 @@ namespace CDI
 				cdt->AddHole(p2t_hole);
 			}
 
-			QLOG_INFO() << "Triangulation start";
 			cdt->Triangulate();
-			QLOG_INFO() << "Triangulation end";
 
 			// Append the traingulated results to the vector
 			vector<p2t::Triangle*> tmp_trias = cdt->GetTriangles();

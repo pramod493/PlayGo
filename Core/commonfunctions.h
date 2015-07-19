@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __CDI__COMMONFUNCTIONS__
+#define __CDI__COMMONFUNCTIONS__
+
 #include <QString>
 #include <QColor>
 #include <QPointF>
@@ -35,6 +37,8 @@ namespace CDI
 	const unsigned int isShared			= MASK_BIT2;
 	const unsigned int isTransformed	= MASK_BIT3;
 	const unsigned int isLocked			= MASK_BIT4;
+
+	const float cdPrecision = 0.00001f;
 	// Add as per requirement
 
 	// IMPORTANT - Do not change from CAPS. It creates conflict with class name
@@ -49,6 +53,7 @@ namespace CDI
 		PHYSICSSHAPE,
 		COMPONENT,		// core components
 		ASSEMBLY,
+		FORCEITEM,
 		PAGE,
 		ROOT,
 		NONE
@@ -70,10 +75,13 @@ namespace CDI
 
 	typedef QPointF Point2D;
 
+	inline bool cdCompare(float f1, float f2)
+	{return (abs(f1-f2) < cdPrecision) ? true : false;}
+
 	float dotProduct(Point2D* p1, Point2D* p2);
 
     // Though cross product is a vector, it will result in only along z- direction.
-    // So return type is a scalar
+	// So return type is a scalar
 	float crossProduct(Point2D* p1, Point2D* p2);
 
 	float angleBetweenPoints(Point2D* p1, Point2D* p2);
@@ -100,6 +108,8 @@ namespace CDI
 
 	bool isConvexPolygon(Point2D* points, int numPoints);
 
+	float getPhysicsScale();
+
 	QUuid uniqueHash();
 
 	int currentTime();
@@ -116,6 +126,8 @@ namespace CDI
 	 * @remarks - In the current implementation, all polygons are simply triangles.
 	 * @todo - Implement decomposition to generate convex polygons with num of vertices > 3
 	 */
-	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside,
-																		 float minPolygonSize = 5.0f, bool ignoreSmalls = false);
+	vector<p2t::Triangle*>/*QList<Polygon2D*>*/ generatePolygonFromImage(QString imagePath, float deltaOutside = 2, float deltaInside = 2,
+																		 float minPolygonSize = 4.0f, bool ignoreSmalls = true);
+
 }
+#endif //__CDI__COMMONFUNCTIONS__

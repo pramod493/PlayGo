@@ -4,14 +4,21 @@ include ($$PWD/../Physics/QBox2D.pri)
 include ($$PWD/../EdgeDetect/Edge Detect.pri)
 #include ($$PWD/../QsLog/QsLog.pri)
 
-#DEFINES += CDI_DEBUG_DRAW_SHAPE
+DEFINES += CDI_DEBUG_DRAW_SHAPE
 
 INCLUDEPATH += $$PWD
 
 HEADERS += $$PWD/clipper.hpp \
-    $$PWD/grabcut.h
+    $$PWD/grabcut.h \
+    $$PWD/cdiboxdebugdraw.h \
+    $$PWD/forceitem.h \
+    $$PWD/penstroke.h \
+    $$PWD/scenebutton.h
 SOURCES += $$PWD/clipper.cpp \
-    $$PWD/grabcut.cpp
+    $$PWD/grabcut.cpp \
+    $$PWD/forceitem.cpp \
+    $$PWD/penstroke.cpp \
+    $$PWD/scenebutton.cpp
 
 HEADERS += \
     $$PWD/ramerdouglaspeucker.h \

@@ -3,81 +3,46 @@
 
 namespace CDI
 {
+	/*
 	// Some of the functions which need to be used locally.
 	// Do not add these as class member because we want to
 	// reduce dependency on physics engine in this part
-	JointType getTypeByJointDef(b2JointDef* def)
-	{
-		switch (def->type)
-		{
-        case e_revoluteJoint :
-            return REVOLUTE;
-		case e_prismaticJoint :
-            return PRISMATIC;
-        case e_distanceJoint :
-            return DISTANCE;
-        case e_pulleyJoint :
-            return PULLEY;
-        case e_mouseJoint :
-            return MOUSE;
-        case e_gearJoint :
-            return GEAR;
-        case e_wheelJoint :
-            return WHEEL;
-        case e_weldJoint :
-            return WELD;
-        case e_frictionJoint :
-            return FRICTION;
-        case e_ropeJoint :
-            return ROPE;
-        case e_motorJoint :
-            return MOTOR;
-		}
-        return NO_JOINT;
-	}
+	*/
 
-	PhysicsJoint::PhysicsJoint(b2JointDef* jointDefinition, b2World* world)
+	PhysicsJoint::PhysicsJoint(PhysicsManager* physicsmanager)
 	{
-//		_jointType = CDI::getTypeByJointDef(jointDefinition);
+		_physicsManager = physicsmanager;
+		_box2dJointType = e_unknownJoint;
+
+		_joint		= NULL;
+		_jointDef	= NULL;
+
+		_jointID = uniqueHash();
+
+		componentA = NULL;
+		componentB = NULL;
+
+		relPosA = Point2D(0,0);
+		relPosB = Point2D(0,0);
 	}
 
 	PhysicsJoint::~PhysicsJoint()
 	{
+		if (_joint)
+		{
+			// How to delete this one?
+		}
+
+		if (_jointDef) delete _jointDef;
 
 	}
 
 	void PhysicsJoint::createJointByType()
 	{
-		if (_joint != NULL) QLOG_INFO() << "NO mechanism exists to delete joint"
-									<< "@PhysicsJoint::createJointByType()";
+		if (_joint != NULL)
+			QLOG_INFO() << "No mechanism exists to delete joint"
+						<< "@PhysicsJoint::createJointByType()";
 
-//		switch (_jointType)
-//		{
-//		case DISTANCE :
-
-//			break;
-//		case FRICTION :
-//			break;
-//		case GEAR :
-//			break;
-//		case MOTOR :
-//			break;
-//		case MOUSE :
-//			break;
-//		case PRISMATIC :
-//			break;
-//		case PULLEY :
-//			break;
-//		case REVOLUTE :
-//			break;
-//		case ROPE :
-//			break;
-//		case WELD :
-//			break;
-//		case WHEEL :
-//			break;
-
-//		}
 	}
 
 	QUuid PhysicsJoint::id() const
@@ -85,7 +50,6 @@ namespace CDI
 		return _jointID;
 	}
 
-	// TODO
 	QDataStream& PhysicsJoint::serialize(QDataStream &stream) const
 	{
 		return stream;

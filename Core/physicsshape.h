@@ -4,6 +4,8 @@
 #include "commonfunctions.h"
 #include "poly2tri.h"
 #include <vector>
+#include <QPainter>
+#include <QPolygonF>
 
 namespace CDI
 {
@@ -74,6 +76,13 @@ namespace CDI
 			}
 			return stream;
 		}
+
+		void paint(QPainter* painter)
+		{
+			painter->drawLine(points[0],points[1]);
+			painter->drawLine(points[1],points[2]);
+			painter->drawLine(points[2],points[0]);
+		}
 	};
 
 	/**
@@ -89,6 +98,8 @@ namespace CDI
 		bool scaledToPhysics;
 
 		vector<Triangle*> trias;
+
+		vector<QPolygonF*> polygons;
 
 	protected:
 		QUuid _id;

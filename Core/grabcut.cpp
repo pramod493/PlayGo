@@ -34,27 +34,28 @@ void mouseHandler(int event, int x, int y, int flags, void* param)
 
 int grabcut_load_camera(string outputfile)
 {
-	// Open Camera
-	VideoCapture cap(0); // open the default camera
-	if (!cap.isOpened())  // check if we succeeded
-		return -1;
+//	// Open Camera
+//	VideoCapture cap(0); // open the default camera
+//	if (!cap.isOpened())  // check if we succeeded
+//		return -1;
 
-	// Snap Photo
-	Mat image;
-	namedWindow("Camera", 1);
-	for (;;)
-	{
-		Mat frame;
-		cap >> frame; // get a new frame from camera
-		imshow("Camera", frame);
-		if (waitKey(30) >= 0)
-		{
-			image = frame;
-			break;
-		}
-	}
+//	// Snap Photo
+//	Mat image;
+//	namedWindow("Camera", 1);
+//	for (;;)
+//	{
+//		Mat frame;
+//		cap >> frame; // get a new frame from camera
+//		imshow("Camera", frame);
+//		if (waitKey(30) >= 0)
+//		{
+//			image = frame;
+//			break;
+//		}
+//	}
 
-	return grabcut_process_image(image, outputfile);
+//	return grabcut_process_image(image, outputfile);
+	return 0;
 }
 
 Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile,
@@ -247,8 +248,9 @@ public:
 				vector<vector<cv::Point> > outerContours;
 				vector<vector<vector<cv::Point> > > allInnerContours;
 
+				cv::Mat pix = ASM::QPixmapToCvMat(pixmapItem->pixmap(), true);
 				cv::Mat croppedmat = grabCutBackground(cv::Rect(intRect.x(), intRect.y(), intRect.width(), intRect.height()),
-													   ASM::QPixmapToCvMat(pixmapItem->pixmap(), true), _outpath.toStdString(),
+													   pix, _outpath.toStdString(),
 													   outerContours, allInnerContours);
 				QPixmap pixmap = QPixmap();
 				pixmap.load(_outpath);

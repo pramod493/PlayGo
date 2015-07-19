@@ -18,6 +18,8 @@ namespace CDI
 		bool _highlighted;
 		QUuid _id;
 
+		bool applyCustomRenderSettings;
+
 	public:
 		Polygon2D(QGraphicsItem* parent = 0);
 

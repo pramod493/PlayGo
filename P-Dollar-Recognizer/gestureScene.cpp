@@ -10,9 +10,12 @@ GestureScene::GestureScene()
     pdRecognizer = new PDollarRecognizer();
 
     // loadTemplate
+#ifdef Q_OS_LINUX
+	QString dataDir = "/home/pramod/Junks/database/gestures/";
+#else
 	QString dataDir = "C:/Database/gestures/";
+#endif //Q_OS_LINUX
 	pdRecognizer->loadPDRTemplates(dataDir);
-
 }
 
 void GestureScene::addStroke(GraphicsPathItem *item)
@@ -66,7 +69,7 @@ void GestureScene::SaveCurrentStrokeToPDR()
     int strokeNumber = pdRecognizer->toBeRecognize.n + 1;
     pdRecognizer->toBeRecognize.n = strokeNumber;
 
-    int x,y;    // coordinate of points
+	float x,y;    // coordinate of points
     pdrPoint tmp;   // Temporary Holder
     for(int i=0;i<numPoints;i++)
     {

@@ -31,14 +31,11 @@ namespace CDI
 	protected:
 		void resizeEvent(QResizeEvent *event);
 
-		bool event(QEvent* event);
+		//bool event(QEvent* event);
 
-		void tabletEvent(QTabletEvent *event);
+		//void tabletEvent(QTabletEvent *event);
 
 		void wheelEvent(QWheelEvent* event);
-
-		// QGraphicsView viewport receives the touch event
-		bool viewportEvent(QEvent *event);
 
 		void dragEnterEvent(QDragEnterEvent * event);
 
@@ -49,10 +46,6 @@ namespace CDI
 		void dropEvent(QDropEvent *event);
 
 	signals:
-		void viewTabletEvent(QTabletEvent *tabletEvent, QGraphicsView *view);
-
-		void viewTouchEvent(QTouchEvent *touchEvent, QGraphicsView *view);
-
 		/**
 		 * @brief Connect with appropriate function in order to draw on background
 		 * @param painter
@@ -62,6 +55,6 @@ namespace CDI
 
 		void viewDrawforeground(QPainter* painter, const QRectF & rect);
 
-		void viewImageDrop(QString imagepath);
+		void viewImageDrop(QString imagepath, QObject* view, QDropEvent* event);
 	};
 }

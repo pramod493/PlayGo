@@ -112,8 +112,9 @@ static b2Vec2 ComputeCentroid(const b2Vec2* vs, int32 count)
 	}
 
 	// Centroid
-	b2Assert(area > b2_epsilon);
-	c *= 1.0f / area;
+	//b2Assert(area > b2_epsilon);
+	if (area > b2_epsilon)
+		c *= 1.0f / area;
 	return c;
 }
 
@@ -419,7 +420,9 @@ void b2PolygonShape::ComputeMass(b2MassData* massData, float32 density) const
 	massData->mass = density * area;
 
 	// Center of mass
-	b2Assert(area > b2_epsilon);
+	//b2Assert(area > b2_epsilon);
+	// TODO - Ignore warning by Pramod
+	if (area < b2_epsilon) area = 2*b2_epsilon;
 	center *= 1.0f / area;
 	massData->center = center + s;
 

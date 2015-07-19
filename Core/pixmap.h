@@ -53,7 +53,10 @@ namespace CDI
 
 		QDataStream& deserialize(QDataStream& stream);
 
-	protected:
+		/**
+		 * @brief Gets the image data and re-creates the physics shape from it
+		 * @remarks Call this when setting pixmap using setPixmap() function
+		 */
 		void initializePhysicsShape();
 	};
 }

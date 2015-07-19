@@ -13,6 +13,7 @@ namespace CDI
 	{
 		_highlighted = false;
 		_id = uniqueHash();
+		applyCustomRenderSettings = false;
 	}
 
 	Polygon2D::Polygon2D(const QPolygonF& polygon, QGraphicsItem* parent)
@@ -20,6 +21,7 @@ namespace CDI
 	{
 		_highlighted = false;
 		_id = uniqueHash();
+		applyCustomRenderSettings = false;
 	}
 
 	Polygon2D::~Polygon2D()

@@ -4,12 +4,16 @@
 #include "graphicssearchitem.h"
 #include "polygon2d.h"
 #include "assembly.h"
+#include "physicsjoint.h"
 #include "QsLog.h"
+#include "physicsmanager.h"
+#include <QImage>
 #include <QMatrix4x4>
 #include <QTransform>
 #include <QGraphicsTransform>
 #include <QMessageBox>
 #include <QVector2D>
+#include "physicsjoint.h"
 namespace CDI
 {
 	Component::Component(QGraphicsItem *parent)
@@ -18,22 +22,20 @@ namespace CDI
 		_highlighted = false;
 		_id = uniqueHash();
 
-		_physicsBody = NULL;
+		_physicsBody = NULL;		// Creation is done outside but deletion is performed internally
+		_fixtures	= QList<b2Fixture*>();
+		_jointlist = QList<PhysicsJoint*>();
 
 		setAcceptTouchEvents(true);
-		//setFlag(QGraphicsItem::ItemIsMovable);
+		// TODO - Check if we really need this option set up. We can avoid this by
+		// gettting rid of all event to the component so its not a big issue
+		setFlag(QGraphicsItem::ItemIsMovable);
 
 		// We can also use signals to find positionUpdates
 		// component->update signal to Page->update signal to Physics Manager
+		requiresRegeneration = false;
 		pendingPositionUpdate = false;
-		pendingScalingUpdate = false;
 		previousScale = 1.0f;
-
-
-		//		setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
-		//		grabGesture(Qt::PinchGesture);
-		//		grabGesture(Qt::SwipeGesture);
-		//		grabGesture(Qt::PanGesture);
 
 		connect(this, SIGNAL(xChanged()),
 				this, SLOT(internalTransformChanged()));
@@ -41,8 +43,18 @@ namespace CDI
 		connect(this, SIGNAL(yChanged()),
 				this, SLOT(internalTransformChanged()));
 
+		connect(this, SIGNAL(scaleChanged()),
+				this, SLOT(internalTransformChanged()));
+
 		connect(this, SIGNAL(rotationChanged()),
 				this, SLOT(internalTransformChanged()));
+
+#ifdef CDI_DEBUG_DRAW_SHAPE
+        QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
+		addToComponent(ellipse);
+		ellipse->setRect(QRectF(-10,-10,20,20));
+		ellipse->setTransform(QTransform());
+#endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
 	Component::~Component()
@@ -84,15 +96,28 @@ namespace CDI
 	{
 		Q_UNUSED(widget);
 		// parent object does not need to manage children paint operations
-		if (option->state & QStyle::State_Selected) {
+		if (option->state & QStyle::State_Selected)
+		{
 			painter->setBrush(Qt::NoBrush);
 			painter->drawRect(itemBoundingRect);
 		}
 
 #ifdef CDI_DEBUG_DRAW_SHAPE
-		painter->setBrush(Qt::NoBrush);
+		painter->setPen(QPen(Qt::blue));
+        painter->setBrush(QBrush(Qt::NoBrush));
 		painter->drawRect(itemBoundingRect);
 #endif //CDI_DEBUG_DRAW_SHAPE
+	}
+
+	void Component::setPhysicsBody(b2Body *body)
+	{
+		if (body != _physicsBody)
+		{
+			if(_physicsBody)
+				foreach(b2Fixture* fixture, _fixtures)
+					_physicsBody->DestroyFixture(fixture);
+			_physicsBody = body;
+		}
 	}
 
 	bool Component::sceneEvent(QEvent *event)
@@ -180,21 +205,22 @@ namespace CDI
 		if (event->touchPoints().count() == 1 &&
 				(event->touchPointStates() & Qt::TouchPointMoved))
 		{
-			qDebug() << "Pan";
 			// Single finger. Drag
 			const QTouchEvent::TouchPoint &tp1 = event->touchPoints().first();
 
-			if (QGraphicsItem::contains(mapFromScene(tp1.scenePos())) == false)
-				return false;	// Point outside object
+			qDebug() << "Rect " << sceneBoundingRect() << "Pos" << tp1.scenePos();
 
+			if (QGraphicsItem::contains(mapFromScene(tp1.scenePos())) == false)
+			{
+				// TODO - This seems to not work with TUIO. Disbaling till further info is available
+				//return false;
+			}
 			QPointF pan = tp1.scenePos() - tp1.lastScenePos();
 			moveBy(pan.x(), pan.y());
-
+			pendingPositionUpdate = true;
 			emit onTransformChange(this);
 
 		}
-		if (event->touchPoints().count() == 2)
-			qDebug() << "2 touch points";
 		if (event->touchPoints().count() == 2 &&
 				(event->touchPointStates() & Qt::TouchPointMoved))
 		{
@@ -204,16 +230,16 @@ namespace CDI
 			QPointF tp1_itemPos = mapFromScene(tp1.scenePos());
 			QPointF tp2_itemPos = mapFromScene(tp2.scenePos());
 
-			//			if ((tp1.state() == Qt::TouchPointPressed) || (tp2.state() == Qt::TouchPointPressed))
-			//			{
-			//				// qDebug() << "At least one of points begins here. Ignore";
-			//				return false;
-			//			}
+			/*if ((tp1.state() == Qt::TouchPointPressed) || (tp2.state() == Qt::TouchPointPressed))
+			{
+				// qDebug() << "At least one of points begins here. Ignore";
+				return false;
+			}*/
 
 			if (!(QGraphicsItem::contains(tp1_itemPos) || QGraphicsItem::contains(tp2_itemPos)))
 			{
-				qDebug() << "Touch point lies outside shape";
-				return false;	// Touch point does not lie on the object. Do nothing
+				// Does not work properly with TUIO. Disabling till further diagnosis
+				//return false;	// Touch point does not lie on the object. Do nothing
 			}
 
 			QPointF tp1_lastItemPos = mapFromScene(tp1.lastScenePos());
@@ -233,6 +259,7 @@ namespace CDI
 				float currentmag = euclideanDistance(&tp2_itemPos, &tp1_itemPos);
 				float currentScale = scale();
 				scaleMul = currentScale* currentmag / prevmag;
+
 				if (scaleMul > 0.25f && scaleMul < 5.0f)
 					setScale(scaleMul);
 			}
@@ -244,9 +271,11 @@ namespace CDI
 				QVector2D v2 = QVector2D(tp1_lastItemPos - tp2_lastItemPos);
 				rot = atan2(v1.y(), v1.x()) - atan2(v2.y(), v2.x());
 				rot = rotation() + (rot * 180.0f) / _PI_;
+
 				setRotation(rot);
 			}
 			setTransformOriginPoint(QPointF(0,0));
+			pendingPositionUpdate = true;
 			emit onTransformChange(this);
 		}
 		return true;
@@ -282,6 +311,7 @@ namespace CDI
 			return;
 		}
 
+		// Begin geometry change.
 		QTransform newItemTransform(itemTransform);
 		item->setPos(mapFromItem(item, 0, 0));
 		item->setParentItem(this);
@@ -309,6 +339,11 @@ namespace CDI
 		itemBoundingRect |= itemTransform.mapRect(item->boundingRect() | item->childrenBoundingRect());
 
 		prepareGeometryChange();
+		// End geometry change
+
+		/*******************************************************************************
+		 * MUST UPDATE THE ITEM SHAPE BECAUSE THE TRANSFORM HAS UPDATED
+		 * ****************************************************************************/
 
 		switch (item->type())
 		{
@@ -321,6 +356,7 @@ namespace CDI
 		case Pixmap::Type :
 		{
 			Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(item);
+			pixmap->initializePhysicsShape();
 			addToHash(pixmap->id(), pixmap);
 			break;
 		}
@@ -337,7 +373,7 @@ namespace CDI
 			break;
 		}
 		}
-
+		addFixture(item);
 		update();
 	}
 
@@ -354,24 +390,28 @@ namespace CDI
 		{
 			Stroke* stroke = qgraphicsitem_cast<Stroke*>(item);
 			removeFromHash(stroke->id());
+			// Does not require regeneration of items
 			break;
 		}
 		case Pixmap::Type :
 		{
 			Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(item);
 			removeFromHash(pixmap->id());
+			requiresRegeneration = true;
 			break;
 		}
 		case Polygon2D::Type :
 		{
 			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(item);
 			removeFromHash(polygon->id());
+			requiresRegeneration = true;
 			break;
 		}
 		case Component::Type :
 		{
 			Component* component = qgraphicsitem_cast<Component*>(item);
 			removeFromHash(component->id());
+			requiresRegeneration = true;
 			break;
 		}
 		}
@@ -415,7 +455,28 @@ namespace CDI
 
 		// Component object in itself does not contain any renderable item and therefore we need to pick only the children
 		itemBoundingRect = childrenBoundingRect();
+	}
 
+	void Component::addJoint(PhysicsJoint *physicsJoint)
+	{
+		if (_jointlist.contains(physicsJoint) == false)
+			_jointlist.push_back(physicsJoint);
+	}
+
+	void Component::removeJoint(PhysicsJoint *physicsJoint)
+	{
+		if (_jointlist.contains(physicsJoint))
+		_jointlist.removeOne(physicsJoint);
+	}
+
+	void Component::removeJoint(b2Joint *joint)
+	{
+		// TODO - Shouldn't we delete the joint as well?
+		PhysicsJoint* physicsjoint = 0;
+		foreach (PhysicsJoint* tmp, _jointlist)
+			if (tmp->joint() == joint)
+				physicsjoint = tmp;
+		if (physicsjoint) _jointlist.removeOne(physicsjoint);
 	}
 
 	void Component::removeFromComponent(QUuid uid)
@@ -443,21 +504,30 @@ namespace CDI
 
 	void Component::regenerateInternals()
 	{
-		// Not sure what to do but mostly will need to update physics shape
+
 		if (_physicsBody != NULL)
 		{
+			foreach(b2Fixture* fixture, _fixtures)
+				_physicsBody->DestroyFixture(fixture);	// Remove all fixtures
+			_fixtures.clear();
 			// Get children
 			QList<QGraphicsItem*> itemList = childItems();
 			foreach (QGraphicsItem* graphicsitem, itemList)
 			{
-				if (graphicsitem->type() == Pixmap::Type)
-				{
-					Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
-					PhysicsShape* physicsShape = pixmap->physicsShape();
-					//					QTransform relativeTransform = pixmap->itemTransform()
-				}
+				addFixture(graphicsitem);
+			}
+
+			// Update joint positions
+			foreach (PhysicsJoint* tmpJoint, _jointlist)
+			{
+				tmpJoint->physicsManager()->updateJoint(tmpJoint);
 			}
 		}
+		// Reset the flags which requires regeneration
+		requiresRegeneration = false;
+		previousScale = scale();
+
+
 	}
 
 	QDataStream& Component::serialize(QDataStream& stream) const
@@ -481,5 +551,103 @@ namespace CDI
 	void Component::removeFromHash(QUuid uid)
 	{
 		if (QHash<QUuid, QGraphicsItem*>::contains(uid)) remove(uid);
+	}
+
+	void Component::addFixture(QGraphicsItem *graphicsitem)
+	{
+		// Note: this one is called internally and therefore does
+		// not require regeneration. Regeneration is required on
+		// removal of components form the component because we do not
+		// b2Fixture and item mapping
+
+		if (graphicsitem->isVisible() == false)  return;	// Hidden components do not contribute to the generation of components
+		PhysicsShape* shape = 0;
+		QSize r;
+		if (graphicsitem->type() == Pixmap::Type)
+		{
+			Pixmap* pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
+			shape = pixmap->physicsShape();
+			r = pixmap->pixmap().size();
+		}
+		if (graphicsitem->type() == Polygon2D::Type)
+		{
+			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(graphicsitem);
+			QLOG_ERROR() << "Feature not implemented. You shouldn't be here";
+		}
+
+		if (shape && _physicsBody)
+		{
+#ifdef CDI_DEBUG_DRAW_SHAPE
+			QString f(QString("SaveShape")+uniqueHash().toString()+QString(".png"));
+			//QRectF r = graphicsitem->boundingRect().toRect();
+			QImage image = QImage(r.width(), r.height(),
+								  QImage::Format_ARGB32_Premultiplied);
+			image.fill(Qt::transparent);
+			QPainter painter(&image);
+			painter.setPen(QPen(Qt::black));
+#endif // CDI_DEBUG_DRAW_SHAPE
+			float mainScale = scale();
+
+			float multiplier = getPhysicsScale() / mainScale;
+			QTransform t = graphicsitem->transform().inverted();
+			for (int i=0; i< shape->trias.size(); i++)
+			{
+				Triangle* tria = shape->trias[i];
+				b2Vec2 vertices[3];
+				for (int j=0; j < 3; j++) // Iterate over each vertex
+				{
+					Point2D newPos = t.map(tria->points[j]);
+					vertices[j].Set(newPos.x() / multiplier, newPos.y() / multiplier);
+				}
+				int tempCount = 0;
+				{
+					// Not needed mostly
+					int32 n = 3;
+					b2Vec2 ps[b2_maxPolygonVertices];
+
+					// Check if vertices don't overlap/ collinear
+					for (int k=0; k< n; k++)
+					{
+						b2Vec2 v = vertices[k];
+
+						bool unique = true;
+						for (int l = 0; l < tempCount; ++l)
+						{
+							if (b2DistanceSquared(v, ps[l]) < 0.5f * b2_linearSlop)
+							{
+								unique = false;
+								break;
+							}
+						}
+						if (unique)
+						{
+							ps[tempCount++] = v;
+						}
+					}
+				}
+				if (tempCount >= 3)		// not enough unique vertices
+				{
+					#ifdef CDI_DEBUG_DRAW_SHAPE
+						painter.drawLine(QPointF(vertices[0].x * multiplier, vertices[0].y * multiplier),
+									QPointF(vertices[1].x * multiplier, vertices[1].y * multiplier));
+						painter.drawLine(QPointF(vertices[2].x * multiplier, vertices[2].y * multiplier),
+									QPointF(vertices[1].x * multiplier, vertices[1].y * multiplier));
+						painter.drawLine(QPointF(vertices[2].x * multiplier, vertices[2].y * multiplier),
+									QPointF(vertices[0].x * multiplier, vertices[0].y * multiplier));
+					#endif // CDI_DEBUG_DRAW_SHAPE
+
+					b2PolygonShape b2TriaShape;
+					b2TriaShape.Set(vertices, 3);
+					b2FixtureDef fixtureDef;
+					fixtureDef.shape = &b2TriaShape;
+					fixtureDef.density = 1.0f;
+					b2Fixture* fixture = _physicsBody->CreateFixture(&fixtureDef);
+					_fixtures.push_back(fixture);
+				}
+			}
+#ifdef CDI_DEBUG_DRAW_SHAPE
+			image.save(f);
+#endif //CDI_DEBUG_DRAW_SHAPE
+		}
 	}
 }

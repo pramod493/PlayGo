@@ -2,16 +2,14 @@
 #include <limits>
 #include "pdollarrecognizer.h"
 #include <QDebug>
+#include <QVector>
+#include <QPointF>
 
-PDollarRecognizer::PDollarRecognizer()
+PDollarRecognizer::PDollarRecognizer(QObject *parent)
+	:QObject(parent)
 {
-    // Empty toBeRecognize
     clean();
-
     currentTemplates.clear();
-
-
-    // load the templates probably
 }
 
 void PDollarRecognizer::clean()
@@ -20,7 +18,6 @@ void PDollarRecognizer::clean()
     toBeRecognize.n = 0;
     toBeRecognize.gestureClass = "";
     toBeRecognize.points.clear();
-
 }
 
 void PDollarRecognizer::loadPDRTemplates(QString tmpDir)
@@ -28,7 +25,6 @@ void PDollarRecognizer::loadPDRTemplates(QString tmpDir)
     currentTemplates.clear();
 
     // Load all .dat files in this folder
-    // like tmpDir = "TemplateData//"
     QString path = tmpDir;
     QDir dir(path);
     QStringList filters;
@@ -86,7 +82,6 @@ void PDollarRecognizer::loadPDRTemplates(QString tmpDir)
             currentTemplates.push_back(tmp);
         }
     }
-    qDebug()<<currentTemplates.size() <<"templates are loaded";
 }
 
 void PDollarRecognizer::addPDRTemplate(QString gestureClass)
@@ -134,7 +129,30 @@ void PDollarRecognizer::savePDRTemplate(QString tmpDir, QString gestureClass)
     qDebug() << "Template Type " << gestureClass <<" added";
 
     // Add to current program
-    addPDRTemplate(gestureClass);
+	addPDRTemplate(gestureClass);
+}
+
+void PDollarRecognizer::addStroke(QVector<QPointF> points)
+{
+	int numPoints = points.size();
+	int strokeNumber = toBeRecognize.n + 1;
+	toBeRecognize.n = strokeNumber;
+
+	float x, y;
+	pdrPoint tmp;
+	for (QVector<QPointF>::const_iterator iter = points.constBegin();
+		 iter != points.constEnd(); ++iter)
+	{
+		QPointF tmp_point = (*iter);
+		x = tmp_point.x();
+		y = tmp_point.y();
+
+		tmp.strokeID = strokeNumber;
+		tmp.x = x;
+		tmp.y = y;
+
+		toBeRecognize.points.push_back(tmp);
+	}
 }
 
 QString PDollarRecognizer::gbRecognize()
@@ -168,8 +186,7 @@ QString PDollarRecognizer::gbRecognize()
 
     // Some Display for debug
     qDebug() << "Gesture class is " << result << "with a score of" << score;
-
-
+	emit onGestureDetect(result, score);
     return result;
 }
 

@@ -5,6 +5,7 @@
 #include "abstractmodelitem.h"
 #include "point2dpt.h"
 #include "stroke.h"
+#include "penstroke.h"
 #include "image.h"
 #include "polygon2d.h"
 #include "component.h"

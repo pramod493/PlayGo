@@ -18,6 +18,7 @@ namespace CDI
 	// identify the item type
 	enum GraphicsItemType {
 		STROKEVIEW = 1,
+		PENSTROKEVIEW,
 		POLYGONVIEW,
 		IMAGEVIEW,
 		SEARCHITEMVIEW,
