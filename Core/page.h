@@ -77,11 +77,16 @@ namespace CDI
 
 		QList<Component*> transformedComponents;
 
+	protected :
+		void setScene(QGraphicsScene* scene);	// Do not allow changing of scene
+
 	public:
 		//-----------------------------------------------
 		// Constructors/Destructors
 		//-----------------------------------------------
-		Page(PlayGo* parent);
+		Page(PlayGo* parent = NULL);
+
+		Page(const Page& page);
 
 		virtual ~Page();
 
@@ -100,8 +105,6 @@ namespace CDI
 		QList<Component*> getComponents() const;
 
 		QGraphicsScene* scene() const;
-
-		void setScene(QGraphicsScene* scene);
 
 		Component* currentComponent();
 
@@ -175,6 +178,89 @@ namespace CDI
 		 */
 		virtual bool add(Page* page);
 
+		/*---------------------------------------------------------------------------------
+		 * Scene query and paint related functions
+		 * BEGIN
+		 * -------------------------------------------------------------------------------*/
+		/**
+		 * @brief getSelectionImage retuns cropped image containing all the free
+		 * strokes contained within the given polygon
+		 * @param polygon: Masking polygon. Everything outside this will be removed
+		 * @return Snapshot of selection
+		 */
+		QImage getSelectionImage(QPolygonF polygon);
+
+		/**
+		 * @brief getSelectionImage returns the cropped image containing all
+		 * the free strokes in the component
+		 * @return QImage of all the free strokes
+		 */
+		QImage getSelectionImage();
+
+		/**
+		 * @brief Create Image based on strokes which are highlighted
+		 * @return Image containing selected strokes
+		 * @todo Allow Images to be selected as well.
+		 */
+		QImage getSelectionImageFromHighlight();
+
+		/**
+		 * @brief getSelectedStrokes returns a list of strokes near a
+		 * the given point pos within margin
+		 * @param pos point coordinates
+		 * @param margin distance from point
+		 * @return list of strokes which fall within the range
+		 * \todo Order the list in increasing order of distance
+		 * @remark Finding the minimum distance from given point might be
+		 * expensinve and not implemented now
+		 */
+		QList<Stroke*> getSelectedStrokes(Point2D pos, float margin);
+
+		/**
+		 * @brief Checks if a given stroke is contained within the given polygon
+		 * @param selectionPolygon Envelope polygon
+		 * @param minimalAllowedSelection Sets the minimum length of strokes which need to \
+		 * be within the given polygon
+		 * @return List of strokes contained within the polygon region
+		 */
+		QList<Stroke*> getSelectedStrokes(QPolygonF selectionPolygon, float minimalAllowedSelection);
+
+		/**
+		 * @brief Returns list of highlighted strokes
+		 * @return
+		 */
+		QList<Stroke*> getHighlightedStrokes();
+
+		/**
+		 * @brief Find the components at given position. Note that this checks against visible polygons
+		 * as well as images and strokes to select components
+		 * @param pos
+		 * @param margin
+		 * @return
+		 */
+		QList<QGraphicsItem *> getSelectedItems(Point2D pos, float margin = 0);
+
+		/**
+		 * @brief Get all the selected items
+		 * @return List of selected items
+		 */
+		QList<QGraphicsItem*> getSelectedItems() { return QList<QGraphicsItem*>(); }
+
+		/**
+		 * @brief Get all the highlighted items
+		 * @return List of highlighted items
+		 */
+		QList<QGraphicsItem*> getHighlightedItems() { return QList<QGraphicsItem*>(); }
+
+		QRectF getBoundingBox(QList<QGraphicsItem*> listOfItems);
+
+		void clearStrokeHighlight();
+
+		/*---------------------------------------------------------------------------------
+		 * Scene query and paint related functions
+		 * END
+		 * -------------------------------------------------------------------------------*/
+
 		/**
 		 * @brief Serializes page and its component
 		 * @param stream
@@ -238,3 +324,5 @@ namespace CDI
 		void signalItemTransformUpdate(Item* item);
 	};
 }
+
+Q_DECLARE_METATYPE(CDI::Page)

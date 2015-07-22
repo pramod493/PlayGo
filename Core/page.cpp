@@ -2,6 +2,8 @@
 #include "playgo.h"
 #include <QtAlgorithms>
 #include "QsLog.h"
+#include "sketchscene.h"
+
 namespace CDI
 {
 	// This cannot exist on its own. It must have a parent PlayGo. Though not sure
@@ -22,7 +24,7 @@ namespace CDI
 		settings.timeStep = 1.0f/60.0f;
 		_physicsManager = new PhysicsManager(&settings, this);
 
-		_scene = NULL;
+		_scene = new SketchScene(this);
 
 		_currentComponent = NULL;
 
@@ -35,6 +37,36 @@ namespace CDI
 		connect(_physicsManager, SIGNAL(physicsStepStart()),
 				this, SLOT(onSimulationStepStart()));
 
+	}
+
+	Page::Page(const Page &page)
+		:QObject(page.parent())
+	{
+		_id = uniqueHash();
+		_playgo = NULL;
+
+		_assemblies = QHash<QUuid, Assembly*>();
+		_components = QHash<QUuid, Component*>();
+
+		_searchManager = new SearchManager(this);
+
+		PhysicsSettings settings = PhysicsSettings();
+		settings.gravity = Point2D(0,0);
+		settings.timeStep = 1.0f/60.0f;
+		_physicsManager = new PhysicsManager(&settings, this);
+
+		_scene = new SketchScene(this);
+
+		_currentComponent = NULL;
+
+		transformedComponents = QList<Component*>();
+
+		connect(this, SIGNAL(signalItemAdd(QGraphicsItem*)),
+				_physicsManager, SLOT(onItemAdd(QGraphicsItem*)));
+		connect(_physicsManager, SIGNAL(physicsStepComplete()),
+				this, SLOT(onSimulationStepComplete()));
+		connect(_physicsManager, SIGNAL(physicsStepStart()),
+				this, SLOT(onSimulationStepStart()));
 	}
 
 	Page::~Page()
@@ -313,6 +345,306 @@ namespace CDI
 		if (page== NULL) QLOG_INFO() <<"Not cool. NULL Page pointer@Page::add()";
 		return false;
 	}
+
+	/*---------------------------------------------------------------------------------
+	 * Scene query and paint related functions
+	 * BEGIN
+	 * -------------------------------------------------------------------------------*/
+	QImage Page::getSelectionImage(QPolygonF selectionPolygon)
+	{
+		// Selection polygon should consist of at least 2 vertices
+		if (selectionPolygon.size() < 3) return QImage();
+
+		_scene->clearSelection();
+
+		// Get the AABB of selection
+		QRectF boundingBox = selectionPolygon.boundingRect();
+		_scene->setSceneRect(_scene->itemsBoundingRect());
+
+		// Create emmpty image extending from origin of scene to the edge of AABB
+		QImage image(boundingBox.x() + boundingBox.width(),
+					 boundingBox.y() + boundingBox.height(),
+					 QImage::Format_ARGB32_Premultiplied);
+		image.fill(Qt::transparent);
+
+		// Create region mask based on the selection polygon
+		QRegion region = QRegion(selectionPolygon.toPolygon());
+
+		// Set up painter as well as clipping region
+		QPainter painter(&image);
+		painter.setClipping(true);
+		painter.setClipRegion(region);
+		painter.setRenderHint(QPainter::Antialiasing, true);
+
+		// NOTE - Rendering this creates a top left area filled with black
+		// Therefore render each graphics item individually instead
+		QList<QGraphicsItem*> allitems = _scene->items();
+		for (int i=0; i < allitems.size(); i++)
+		{
+			QGraphicsItem* graphicsitem = allitems[i];
+			// TODO Check if the selection polygon and AABB intersect
+			if (graphicsitem->type() == Stroke::Type && graphicsitem->isVisible())
+			{
+				painter.setTransform(graphicsitem->sceneTransform());
+				graphicsitem->paint(&painter, NULL);
+			}
+		}
+
+		// Make sure the image is square
+		QRect intRect = boundingBox.toRect();
+		int maxDim = (intRect.width() > intRect.height() ?
+						  intRect.width() : intRect.height());
+		QPoint center = intRect.center();
+
+		// NOTE that this might fail if your selection area is in top-left
+		// making the rectangle to lie outside 1st quadrant
+		QRect squareRect = QRect(center.x()-maxDim/2, center.y()-maxDim/2,
+								 maxDim, maxDim);
+
+		// Crop the image based on selection
+		QImage croppedSelection = image.copy(squareRect);
+		return croppedSelection;
+	}
+
+	QImage Page::getSelectionImageFromHighlight()
+	{
+		QRectF sceneRect = _scene->itemsBoundingRect();
+		int x_min = sceneRect.x() + sceneRect.width();
+		int x_max = sceneRect.x();
+		int y_min = sceneRect.y() + sceneRect.height();
+		int y_max = sceneRect.y();
+
+		QImage image(sceneRect.x()+sceneRect.width(),
+					 sceneRect.y()+sceneRect.height(),
+					 QImage::Format_ARGB32_Premultiplied);
+		image.fill(Qt::transparent);
+
+		QPainter painter(&image);
+		painter.setRenderHint(QPainter::Antialiasing, true);
+		QList<QGraphicsItem*> allitems = _scene->items();
+		for (int i=0; i < allitems.size(); i++)
+		{
+			QGraphicsItem* graphicsitem = allitems[i];
+			// TODO Check if the selection polygon and AABB intersect
+			if (graphicsitem->type() == Stroke::Type && graphicsitem->isVisible())
+			{
+				Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
+				if (stroke->isHighlighted())
+				{
+					stroke->highlight(false);
+					painter.setTransform(stroke->sceneTransform());
+					stroke->paint(&painter, NULL);
+					stroke->highlight(true);
+
+					QRect rect=
+							stroke->sceneTransform().inverted().mapRect(stroke->boundingRect()).toRect();
+
+					x_min = (x_min < rect.x() ? x_min : rect.x());
+					y_min = (y_min < rect.y() ? y_min : rect.y());
+
+					x_max = (rect.x()+rect.width() > x_max) ? rect.x()+rect.width() : x_max;
+					y_max = (rect.y()+rect.height() > y_max) ? rect.y()+rect.height() : y_max;
+				}
+			}
+		}
+
+		int maxDim = ( (x_max-x_min) > (y_max-y_min) ? (x_max-x_min) : (y_max-y_min) );
+		QRect squareRect = QRect(x_min, y_min, maxDim, maxDim);
+		QImage croppedSelection = image.copy(squareRect);
+		return croppedSelection;
+	}
+
+	QImage Page::getSelectionImage()
+	{
+		//		if (freeStrokes.size() == 0 ) return QImage();
+		QRectF rect = _scene->sceneRect();
+		int x_min = 0;  int y_min = 0;
+		int x_max = rect.x() + rect.width();
+		int y_max = rect.y() + rect.height();
+		QImage image(x_max,y_max, QImage::Format_ARGB32);
+		image.fill(Qt::transparent);
+
+		QPainter painter(&image);
+		painter.setRenderHint(QPainter::Antialiasing);
+		x_min = x_max; y_min = y_max; x_max = 0; y_max = 0;
+		QList<QGraphicsItem*> allitems = _scene->items();
+		for (int i=0; i<allitems.size(); i++)
+		{
+			QGraphicsItem* graphicsitem = allitems[i];
+
+			if (graphicsitem->isVisible() == false) continue;
+			if (graphicsitem->type() != Stroke::Type) continue;
+
+			painter.setTransform(graphicsitem->sceneTransform());
+			graphicsitem->paint(&painter, NULL);
+
+			QRect rect =
+					graphicsitem->sceneTransform().inverted().mapRect(
+						graphicsitem->boundingRect().toRect());
+
+			x_min = (x_min < rect.x() ? x_min : rect.x());
+			y_min = (y_min < rect.y() ? y_min : rect.y());
+
+			x_max = (rect.x()+rect.width() > x_max) ? rect.x()+rect.width() : x_max;
+			y_max = (rect.y()+rect.height() > y_max) ? rect.y()+rect.height() : y_max;
+		}
+		QImage croppedSelection = image.copy(QRect(x_min,y_min,
+												   x_max-x_min, y_max-y_min));
+		croppedSelection.save("dummy.png");
+		return croppedSelection;
+	}
+
+	QList<Stroke*> Page::getSelectedStrokes(Point2D pos, float margin)
+	{
+		QList<Stroke*> selectedStrokes = QList<Stroke*>();
+		QList<QGraphicsItem*> allitems = _scene->items();
+
+		for(QList<QGraphicsItem*>::const_iterator iter = allitems.constBegin();
+			iter != allitems.constEnd(); ++iter)
+		{
+			QGraphicsItem* graphicsitem = (*iter);
+			if (graphicsitem->isVisible() == false) continue;
+			if (graphicsitem->type() != Stroke::Type) continue;
+			Stroke* stroke =
+					qgraphicsitem_cast<Stroke*>(graphicsitem);
+			Point2D mappedPos = stroke->sceneTransform().inverted().map(pos);
+			if (stroke->contains(mappedPos, margin))
+				selectedStrokes.push_back(stroke);
+		}
+		return selectedStrokes;
+	}
+
+	QList<Stroke*> Page::getSelectedStrokes
+	(QPolygonF selectionPolygon, float minimalAllowedSelection)
+	{
+		QList<Stroke*> selectedStrokes;
+		QList<QGraphicsItem*> allitems = _scene->items();
+		for(QList<QGraphicsItem*>::const_iterator iter = allitems.constBegin();
+			iter != allitems.constEnd(); ++iter)
+		{
+			QGraphicsItem* graphicsitem = (*iter);
+			if (graphicsitem->isVisible() == false) continue;
+			if (graphicsitem->type() != Stroke::Type) continue;
+			Stroke* stroke=
+					qgraphicsitem_cast<Stroke*>(graphicsitem);
+			QPolygonF mappedPolygon =
+					stroke->sceneTransform().inverted().map(selectionPolygon);
+			if (stroke->isContainedWithin(&mappedPolygon, minimalAllowedSelection))
+				selectedStrokes.push_back(stroke);
+		}
+		return selectedStrokes;
+	}
+
+	QList<Stroke*> Page::getHighlightedStrokes()
+	{
+		QList<Stroke*> selectedStrokes;
+		QList<QGraphicsItem*> allitems = _scene->items();
+		for(QList<QGraphicsItem*>::const_iterator iter = allitems.constBegin();
+			iter != allitems.constEnd(); ++iter)
+		{
+			QGraphicsItem* graphicsitem = (*iter);
+			if (graphicsitem->isVisible() == false) continue;
+			if (graphicsitem->type() != Stroke::Type) continue;
+			Stroke* stroke =
+					qgraphicsitem_cast<Stroke*>(graphicsitem);
+			if (stroke->isHighlighted())
+				selectedStrokes.push_back(stroke);
+		}
+		return selectedStrokes;
+	}
+
+	QList<QGraphicsItem *> Page::getSelectedItems(Point2D pos, float margin)
+	{
+		QList<QGraphicsItem*>  selectedItems;
+		QList<QGraphicsItem*> allitems = _scene->items(pos, Qt::IntersectsItemBoundingRect,
+											   Qt::AscendingOrder, QTransform());
+		foreach (QGraphicsItem* graphicsitem, allitems)
+		{
+			bool selectParentItem = false;
+			switch (graphicsitem->type())
+			{
+			case Pixmap::Type :
+			case Polygon2D::Type :
+			{
+				if (graphicsitem->contains(graphicsitem->mapFromScene(pos)) &&
+						graphicsitem->isVisible())
+				{
+					if (graphicsitem->parentItem())
+					{
+						selectParentItem = true;
+					} else
+					{
+						if ( selectedItems.contains(graphicsitem) == false)
+							selectedItems.push_back(graphicsitem);
+					}
+				}
+				break;
+			}
+			case Stroke::Type :
+			{
+				Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
+				if (stroke->isVisible() && stroke->contains(stroke->mapFromScene(pos), margin))
+				{
+					//					if (graphicsitem->parentItem())
+					//					{
+					//						selectParentItem = true;
+					//					} else
+					//					{
+					if ( selectedItems.contains(graphicsitem) == false)
+						selectedItems.push_back(graphicsitem);
+					//					}
+				}
+				break;
+			}
+			}
+			if (selectParentItem)
+			{
+				QGraphicsItem* parent = graphicsitem->parentItem();
+				if (parent->type() == Component::Type &&
+						( selectedItems.contains(parent) == false))
+				{
+					selectedItems.push_back(parent);
+				}
+			}
+		}
+		return  selectedItems;
+	}
+
+	QRectF Page::getBoundingBox(QList<QGraphicsItem *> listOfItems)
+	{
+		if (listOfItems.size() == 0)
+		{
+			QLOG_ERROR() << "List of selected items is empty.";
+			return QRectF();
+		}
+
+		QRectF baseRect = listOfItems[0]->sceneTransform().inverted().mapRect(listOfItems[0]->boundingRect());
+		for (int i=1; i < listOfItems.size(); i++)
+		{
+			baseRect = baseRect.united(
+						listOfItems[i]->sceneTransform().inverted().mapRect
+						(listOfItems[i]->boundingRect()));
+		}
+		return baseRect;
+	}
+
+	void Page::clearStrokeHighlight()
+	{
+		QList<QGraphicsItem*> allitems = _scene->items();
+		for(QList<QGraphicsItem*>::const_iterator iter = allitems.constBegin();
+			iter != allitems.constEnd(); ++iter)
+		{
+			QGraphicsItem* graphicsitem = (*iter);
+			if (graphicsitem->type() != Stroke::Type) continue;
+			Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
+			if (stroke->isHighlighted()) stroke->highlight(false);
+		}
+	}
+
+	/*---------------------------------------------------------------------------------
+	 * Scene query and paint related functions
+	 * END
+	 * -------------------------------------------------------------------------------*/
 
 	QDataStream& Page::serialize(QDataStream& stream) const
 	{

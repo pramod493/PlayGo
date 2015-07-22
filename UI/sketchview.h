@@ -16,24 +16,21 @@ namespace CDI
 	protected:
 		Page* _page;
 
-		SketchScene* _scene;
 	public:
 		SketchView(Page* page, QWidget* parent = 0);
 
 		virtual ~SketchView();
 
+		void setPage(Page* page);
+
+		Page* getPage() const;
+
 		void drawBackground(QPainter * painter, const QRectF & rect);
 
 		void drawForeground(QPainter * painter, const QRectF & rect);
 
-		SketchScene* getSketchScene();
-
 	protected:
 		void resizeEvent(QResizeEvent *event);
-
-		//bool event(QEvent* event);
-
-		//void tabletEvent(QTabletEvent *event);
 
 		void wheelEvent(QWheelEvent* event);
 

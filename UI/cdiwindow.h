@@ -74,13 +74,9 @@ namespace CDI
 		// Sketching related widgets
 		SketchView* sketchView;			// Primarily use this one. Skip the
 										// other ones...
-		SketchScene* sketchScene;
 
 		SearchView* searchView;
 		QGraphicsScene* searchScene;
-
-//		QGraphicsView* gestureView;
-//		QGraphicsScene* gestureScene;
 
 		PlayGoController* controller;
 
@@ -93,6 +89,8 @@ namespace CDI
 		~CDIWindow();
 
 		void initWidgets();
+
+		void loadPage(Page* page);
 
 	protected:
 		void createActions();

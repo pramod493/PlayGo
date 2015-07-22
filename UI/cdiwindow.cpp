@@ -53,13 +53,12 @@ namespace CDI
 
 		// Views and scene
 		sketchView = new SketchView(playgo->currentPage(), this);
-		sketchScene = sketchView->getSketchScene();
 		searchView = new SearchView(this);
 		searchScene = searchView->scene();
 
 		// Controller to handle touch, tablet and mouse events
 		// and possibly synchronize with Box2D and Indexer
-		controller = new PlayGoController(sketchScene, sketchView, this);
+		controller = new PlayGoController(sketchView, this);
 
 		FileSystemWatcher* watcher = new FileSystemWatcher();
 #ifdef Q_OS_WIN
@@ -85,6 +84,17 @@ namespace CDI
 		addDockWidget(Qt::RightDockWidgetArea, searchDock);
 
 		setCentralWidget(splitter);
+	}
+
+	void CDIWindow::loadPage(Page *page)
+	{
+		if (sketchView->getPage() != page)
+		{
+			sketchView->setPage(page);
+			playgo->setCurrentPage(page);
+			if (controller) delete controller;
+			controller = new PlayGoController(sketchView, this);
+		}
 	}
 
 	//// Protected functions. Called only for initialization only
@@ -263,8 +273,6 @@ namespace CDI
 
 	void CDIWindow::clear()
 	{
-//        sketchScene->clear();
-//		sketchScene->update();
 		if (controller != NULL)
 			controller->clearCurrentScene();
 	}

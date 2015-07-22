@@ -20,11 +20,11 @@
 namespace CDI
 {
 
-PlayGoController::PlayGoController(SketchScene *scene, SketchView *view, CDIWindow *parent)
+PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
     :QObject(parent)
 {
 
-    if (view == NULL || scene == NULL || parent == NULL)
+	if (view == NULL || parent == NULL)
     {
         QLOG_FATAL() << "Invalid scene and view reference.";
         QMessageBox::about(NULL, "Error message",
@@ -37,18 +37,18 @@ PlayGoController::PlayGoController(SketchScene *scene, SketchView *view, CDIWind
     tree = NULL;
 
     _toplevelWindow = parent;
-    _scene = scene;
+	_scene = static_cast<SketchScene*>(view->getPage()->scene());
     _view = view;
     _viewport = view->viewport();
-    _page = _scene->page();
+	_page = view->getPage();
 
     // Do not install event filter on QGraphicsView but on viewport
     // Installing event on QGraphicsView seems to filter out touch
     _view->viewport()->installEventFilter(this);
 
-    view->setTransformationAnchor(QGraphicsView::NoAnchor);
-    view->setOptimizationFlag(QGraphicsView::DontSavePainterState);
-    view->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+	_view->setTransformationAnchor(QGraphicsView::NoAnchor);
+	_view->setOptimizationFlag(QGraphicsView::DontSavePainterState);
+	_view->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
 
     connect(_view, SIGNAL(viewDrawforeground(QPainter*,const QRectF&)),
             this, SLOT(drawMenusOnView(QPainter*,const QRectF&)));
@@ -66,10 +66,15 @@ PlayGoController::PlayGoController(SketchScene *scene, SketchView *view, CDIWind
     }
 }
 
+PlayGoController::~PlayGoController()
+{
+	if (tree != NULL) delete tree;
+}
+
 void PlayGoController::initController()
 {
-    // Set the deafult value of other settings
-    _mouseModeEnabled = false;
+	// Set the deafult value of other settings
+	_mouseModeEnabled = true;
 
     _activeMode = UI::Sketch;
     _device = QTabletEvent::NoDevice;
@@ -268,12 +273,12 @@ void PlayGoController::eraserMove(Point2DPT pos)
 {
 	if (_activeMode == UI::Sketch)
 	{
-		QList<Stroke*> selectedStrokes = _scene->getSelectedStrokes(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
+		QList<Stroke*> selectedStrokes = _page->getSelectedStrokes(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
 		for (int i=0; i< selectedStrokes.size(); i++)
 			delete selectedStrokes[i];
 	} else
 	{
-		QList<QGraphicsItem*> selectedItems = _scene->getSelectedItems(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
+		QList<QGraphicsItem*> selectedItems = _page->getSelectedItems(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
 		QList<QGraphicsItem*>::iterator iter;
 		for (iter = selectedItems.begin(); iter != selectedItems.end();
 			 ++iter)
@@ -316,7 +321,7 @@ void PlayGoController::lassoRelease(Point2DPT pos)
     //_lasso->setPolygon(_lassoPolygon);
     _lasso->update(_lasso->boundingRect());
 
-    QList<Stroke*> selectedStrokes = _scene->getSelectedStrokes(_lassoPolygon, 1.0f);
+	QList<Stroke*> selectedStrokes = _page->getSelectedStrokes(_lassoPolygon, 1.0f);
     if (selectedStrokes.size()) _itemHighlighted = true;
     for (int i=0; i < selectedStrokes.size(); i++)
     {
@@ -792,12 +797,12 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
     {
         if (newmode == UI::Erase) // delete highlight
         {
-            QList<Stroke*> highlihghtedItems = _scene->getHighlightedStrokes();
+			QList<Stroke*> highlihghtedItems = _page->getHighlightedStrokes();
             for (int i=0; i < highlihghtedItems.size(); i++)
                 delete highlihghtedItems[i];
         }
         if (_itemHighlighted)
-            _scene->clearStrokeHighlight();
+			_page->clearStrokeHighlight();
         _isLassoDisplayed = false;
         _lassoPolygon.clear();
         _lasso->setPolygon(_lassoPolygon);
@@ -841,7 +846,7 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
         case QEvent::TouchCancel :
         {
             bool retval =  onTouchEventFromView(static_cast<QTouchEvent*>(event));
-            return retval;
+			return retval;
             // Let the scene handle its own touch events in any way it sees fit
             break;
         }
@@ -852,8 +857,8 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
         {
             if (_mouseModeEnabled) return false;
             // Ignores all  mouse events
-            event->accept();
-            return true;	// consumes event
+			/*event->accept();
+			return true;	// consumes event*/
             break;
         }
         case QEvent::TabletPress :
@@ -861,8 +866,8 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
         case QEvent::TabletRelease :
         {
             onTabletEventFromView(static_cast<QTabletEvent*>(event), _view);
-            event->accept();
-            return true;	// consumes event
+			/*event->accept();
+			return true;	// don't consume event - */
             break;
         }
         case QEvent::Gesture :
@@ -1016,14 +1021,14 @@ void PlayGoController::searchAction()
     // multiple iterations
     QImage inputImage =
             //				_scene->getSelectionImage(_lassoPolygon);
-            _scene->getSelectionImageFromHighlight();
+			_page->getSelectionImageFromHighlight();
     QList<Stroke*> selectedStrokes =
-            _scene->getHighlightedStrokes();
+			_page->getHighlightedStrokes();
 
     if (selectedStrokes.size() == 0) return;
 
     QList<SearchResult*> searchResults =
-            _scene->page()->getSearchManager()->search(inputImage, 20);
+			_page->getSearchManager()->search(inputImage, 20);
 
     if (searchResults.size())
     {
@@ -1060,7 +1065,7 @@ void PlayGoController::onSearchComplete()
 
 void PlayGoController::onSearchItemSelect(SearchResult *result)
 {
-    QList<Stroke*> selectedStrokes = _scene->getHighlightedStrokes();
+	QList<Stroke*> selectedStrokes = _page->getHighlightedStrokes();
     if (selectedStrokes.size() == 0)
     {
         // If selected strokes are empty.. this will create
@@ -1074,7 +1079,7 @@ void PlayGoController::onSearchItemSelect(SearchResult *result)
     for (int i=0; i < selectedStrokes.size(); i++)
         graphicsitems.push_back(selectedStrokes[i]);
 
-    QRectF itemRect = _scene->getBoundingBox(graphicsitems);
+	QRectF itemRect = _page->getBoundingBox(graphicsitems);
     qDeleteAll(selectedStrokes);
     selectedStrokes.clear();
     graphicsitems.clear();
@@ -1235,13 +1240,15 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 				eventAcceptedByJoint = false;
 				touchEventOwner = 0;
 				const QTouchEvent::TouchPoint &tp = event->touchPoints().first();
-				QPointF scenePos = tp.scenePos();
-				QList<QGraphicsItem*> selectedItems = _scene->itemAt(scenePos, Qt::IntersectsItemBoundingRect,
-																	 Qt::DescendingOrder, _view->transform());
+                QPointF scenePos = _view->mapToScene(tp.pos().toPoint());//tp.scenePos();
+                qDebug() << scenePos << tp.scenePos();
+
+                QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
+                                                                    Qt::DescendingOrder, _view->transform());
 				JointGraphics* jointGraphics = 0;
 				foreach(QGraphicsItem* graphicsitem, selectedItems)
 				{
-					if (graphicsitem->type() == JointGraphics::Type)
+					if (graphicsitem->type() == JointGraphics::Type && graphicsitem->parentItem())
 					{
 						if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
 						{
@@ -1257,10 +1264,16 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 
 			if (event->type() == QEvent::TouchUpdate && eventAcceptedByJoint)
 			{
+				QGraphicsItem* parentItem = touchEventOwner->parentItem();
+				const QTouchEvent::TouchPoint &tp = event->touchPoints().first();
+				QPointF difference = parentItem->mapFromScene(tp.scenePos()) - parentItem->mapFromScene(tp.lastScenePos());
+				touchEventOwner->moveBy(difference.x(), difference.y());
 				return true;
 			}
 			if (event->type() == QEvent::TouchEnd && eventAcceptedByJoint)
 			{
+				eventAcceptedByJoint = false;
+				touchEventOwner = 0;
 				return true;
 			}
 			if (event->type() == QEvent::TouchCancel && eventAcceptedByJoint)
@@ -1274,29 +1287,6 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
     else if (event->touchPoints().count() == 2)
     {
         return false;
-        // Rotate aspect is not well implemented
-        QTransform t = QTransform();
-        const QTouchEvent::TouchPoint &tp1 = event->touchPoints()[0];
-        const QTouchEvent::TouchPoint &tp2 = event->touchPoints()[1];
-
-        // 1. Scaling by increase in radius
-        QPointF previousCenter = inverted.map(0.5f* (tp1.lastPos() + tp2.lastPos()));
-        QPointF currentCenter = inverted.map(0.5f* (tp1.pos() + tp2.pos()));
-
-        QPointF pan = currentCenter - previousCenter;
-
-        QVector2D v1 = QVector2D (tp1.pos() - tp2.pos());
-        QVector2D v2 = QVector2D(tp1.lastPos() - tp2.lastPos());
-
-        float rot = atan2(v1.y(), v1.x()) - atan2(v2.y(), v2.x());
-
-        // 3. Rotate by mean of rotation of each point by center
-
-        t.rotateRadians(rot);
-        t.translate(pan.x(), pan.y());
-        t.scale(v1.length()/v2.length(), v1.length()/v2.length());
-
-        _view->setTransform(t, true);
     }
     else if (event->touchPoints().count() == 3)
     {

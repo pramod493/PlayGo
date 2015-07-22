@@ -70,26 +70,6 @@ namespace CDI
 	Component::~Component()
 	{
 		// Deletion handled by Page object
-		/*if (parentItem()!= NULL)
-		{
-			QGraphicsItem* item = parentItem();
-			if (item->type() == Assembly::Type)
-			{
-				Assembly* parentAssembly = qgraphicsitem_cast<Assembly*>(item);
-				// On item delete, destroy reference from assembly.
-				parentAssembly->removeComponent(this);
-			}
-		}
-
-		QList<QGraphicsItem*> children = childItems();
-		for (int i=0; i < children.size(); i++)
-			delete children[i];
-
-		if (_physicsBody != NULL)
-		{
-			b2World* world = _physicsBody->GetWorld();
-			world->DestroyBody(_physicsBody);
-		}*/
 	}
 
 	QRectF Component::boundingRect() const

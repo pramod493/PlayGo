@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 		view->setScene(scene);
 		view->show();
 		//webwidget->setFlag(QGraphicsItem::ItemIsMovable, true);
-		//window->sketchScene->addItem(webwidget);
+		//window->sketchView->scene()->addItem(webwidget);
 		scene->addItem(webwidget);
 	}*/
 	return app.exec();

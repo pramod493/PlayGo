@@ -14,7 +14,6 @@ namespace CDI
 		: QGraphicsView(parent)
 	{
 		_page = page;
-		qDebug() << "SketchView created";
 
 		{	// Gesture stuff
 			viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
@@ -36,8 +35,8 @@ namespace CDI
 		setBackgroundBrush(QBrush(gradient));
 
 		// Create scene to contain _page
-		_scene = new SketchScene(_page, this);
-		setScene(_scene);
+		QGraphicsScene *scene = page->scene();
+		setScene(scene);
 		setSceneRect(0,0,5000,5000);
 		setRenderHint(QPainter::Antialiasing);
 		setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
@@ -53,8 +52,28 @@ namespace CDI
 
 	SketchView::~SketchView()
 	{
-		// Need not delete the scene since its destructor will automatically
-		// be called because its parent QObject is being destroyed here
+		// Nothing to do here
+	}
+
+	void SketchView::setPage(Page *page)
+	{
+		if (page)
+		{
+			_page = page;
+			setScene(_page->scene());
+
+			setSceneRect(0,0,5000,5000);
+			setRenderHint(QPainter::Antialiasing);
+			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+		} else {
+			_page = NULL;
+			setScene(NULL);
+		}
+	}
+
+	Page* SketchView::getPage() const
+	{
+		return _page;
 	}
 
 	void SketchView::drawBackground(QPainter * painter, const QRectF & rect)
@@ -92,11 +111,6 @@ namespace CDI
 	{
 		QGraphicsView::drawForeground(painter, rect);
 		emit viewDrawforeground(painter, rect);
-	}
-
-	SketchScene* SketchView::getSketchScene()
-	{
-		return _scene;
 	}
 
 	// Handle the resizing of the main window

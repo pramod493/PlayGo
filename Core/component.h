@@ -126,7 +126,6 @@ namespace CDI
 			pendingPositionUpdate = true;
 			emit onTransformChange(this);
 		}
-
 		friend class Page;
 	};
 }

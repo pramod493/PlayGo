@@ -141,12 +141,9 @@ namespace CDI
 		ForceGraphicsItem* forceLine;
 
 	public:
-		PlayGoController(SketchScene* scene, SketchView* view, CDIWindow *parent = NULL);
+		PlayGoController(SketchView* view, CDIWindow *parent = NULL);
 
-		virtual ~PlayGoController()
-		{
-			if (tree != NULL) delete tree;
-		}
+		virtual ~PlayGoController();
 
 		SketchScene* scene() const { return _scene; }
 		SketchView* view() const { return _view; }

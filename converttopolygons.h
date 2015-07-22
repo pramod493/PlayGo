@@ -15,12 +15,11 @@ public:
 	Polygonize(CDIWindow* window) : QObject(window)
 	{
 		_window = window;
-		scene = window->sketchScene;
+		scene = window->sketchView->scene();
 
 		connect(window->openPageAction, SIGNAL(triggered()),
 				this, SLOT(openFile()));
 	}
 public slots:
 	void openFile();
-
 };
