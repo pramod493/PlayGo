@@ -16,6 +16,7 @@
 #include <QPair>
 namespace CDI
 {
+	class Page;
 	class PhysicsJoint;
 	/**
 	 * @brief It is equivalent of Component in visualization size. This stores references to the all the children
@@ -45,6 +46,8 @@ namespace CDI
 		// Store the joint as well as its position w.r.t. unscaled component
 		QList<PhysicsJoint*> _jointlist;
 
+		QGraphicsPathItem* _anchorItem;
+
 	public:
 		Component(QGraphicsItem* parent = 0);
 
@@ -63,6 +66,10 @@ namespace CDI
 		b2Body* physicsBody() const { return _physicsBody; }
 
 		void setPhysicsBody(b2Body* body);
+
+		bool isStatic() const;
+
+		void setStatic(bool value);
 
 		bool sceneEvent(QEvent *event);
 
@@ -113,11 +120,13 @@ namespace CDI
 
 		void onTransformChange(QGraphicsItem* component);
 
-	protected slots:
+    public slots:
 		void internalTransformChanged()
 		{
 			pendingPositionUpdate = true;
 			emit onTransformChange(this);
 		}
+
+		friend class Page;
 	};
 }

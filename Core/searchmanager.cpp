@@ -38,28 +38,28 @@ vector<string> getDummyResults()
 
 namespace CDI
 {
-    SearchManager::SearchManager(QObject *parent)
-        : QObject(parent)
-    {
-        databaseDir = getHomeDirectory();
+	SearchManager::SearchManager(QObject *parent)
+		: QObject(parent)
+	{
+		databaseDir = getHomeDirectory();
 		inputFilePath   = databaseDir + QString("Input.png");
 		resultFilePath  = databaseDir + QString("results/results.yml");
 		origImagePath   = databaseDir + QString("trans");
 
-        namespace po = boost::program_options;
-        path datapasePath = path(databaseDir.toStdString());
-        wbBICE *biceDescriptor = new wbBICE();
-        searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
+		namespace po = boost::program_options;
+		path datapasePath = path(databaseDir.toStdString());
+		wbBICE *biceDescriptor = new wbBICE();
+		searchEngine = new wbSearchEngine(datapasePath, biceDescriptor);
 
 		_databaseIndexed = false;
 		//searchEngine->Index();
 		//searchEngine->Load();
-    }
+	}
 
-    SearchManager::~SearchManager()
-    {
-        if (searchEngine!= NULL) delete searchEngine;
-    }
+	SearchManager::~SearchManager()
+	{
+		if (searchEngine!= NULL) delete searchEngine;
+	}
 
 	void SearchManager::reload()
 	{
@@ -74,11 +74,11 @@ namespace CDI
 	}
 
 	QList<SearchResult*> SearchManager::search(QImage &image, int numResults)
-    {
+	{
 		if (image.isNull()) return QList<SearchResult*>();
 		image.save(inputFilePath);
 		return search(inputFilePath, numResults);
-    }
+	}
 
 	QList<SearchResult*> SearchManager::search(QString filePath, int numResults)
 	{
@@ -98,17 +98,17 @@ namespace CDI
 		}
 		QDir originialImageDir(origImagePath);
 		QList<SearchResult*> searchResults;
-        for(vector<string>::iterator it = results.begin();
-            it != results.end(); ++it)
-        {
-            QString str = QString::fromStdString(*it);
+		for(vector<string>::iterator it = results.begin();
+			it != results.end(); ++it)
+		{
+			QString str = QString::fromStdString(*it);
 			QFileInfo fileinfo = QFileInfo(str);
 			QString justFilename(fileinfo.fileName());
 			QString newFilepath = originialImageDir.filePath(justFilename);
 
 			SearchResult *searchResult = new SearchResult(newFilepath);
-            searchResults.push_back(searchResult);
-        }
-        return searchResults;
+			searchResults.push_back(searchResult);
+		}
+		return searchResults;
 	}
 }

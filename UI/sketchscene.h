@@ -94,6 +94,15 @@ namespace CDI
 		QList<Stroke*> getHighlightedStrokes();
 
 		/**
+		 * @brief Find the components at given position. Note that this checks against visible polygons
+		 * as well as images and strokes to select components
+		 * @param pos
+		 * @param margin
+		 * @return
+		 */
+		QList<QGraphicsItem *> getSelectedItems(Point2D pos, float margin = 0);
+
+		/**
 		 * @brief Get all the selected items
 		 * @return List of selected items
 		 */

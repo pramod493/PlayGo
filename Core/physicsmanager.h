@@ -24,6 +24,28 @@ namespace CDI
 	 */
 	typedef struct b2BodyDef physicsBodyDef;
 
+	enum cdEntityCategory {
+		ENTITY_GROUND		= 0x0001,
+		ENTITY_LAYER_01	= 0x0002,
+		ENTITY_LAYER_02	= 0x0004,
+		ENTITY_LAYER_03	= 0x0008,
+		ENTITY_LAYER_04	= 0x0010,
+		ENTITY_LAYER_05	= 0x0020,
+		ENTITY_LAYER_06	= 0x0040,
+		ENTITY_LAYER_07	= 0x0080
+	};
+
+	enum cdMaskCategory {
+		MASK_GROUND		= 0x0001,
+		MASK_LAYER_01	= 0x0002,
+		MASK_LAYER_02	= 0x0004,
+		MASK_LAYER_03	= 0x0008,
+		MASK_LAYER_04	= 0x0010,
+		MASK_LAYER_05	= 0x0020,
+		MASK_LAYER_06	= 0x0040,
+		MASK_LAYER_07	= 0x0080
+	};
+
 	class PhysicsSettings {
 	public:
 		float timeStep;
@@ -80,9 +102,11 @@ namespace CDI
 
 		bool _isRunning;
 
-		BoxDebugScene* debugView;
-
 		b2World* _b2World;
+
+		bool _enableDebugView;
+	public:
+		BoxDebugScene* debugView;
 
 	public:
 		explicit PhysicsManager(PhysicsSettings* settings, Page *parentPage);
@@ -93,12 +117,20 @@ namespace CDI
 		// creating multiple derived classes for joints
 		virtual b2Body *createBody(const b2BodyDef& def);
 
+		virtual void destroyBody(b2Body* body);
+
+		virtual void destroyBody(Component* component);
+
 		virtual PhysicsJoint* createPinJoint(Component *c1, Component *c2, QPointF scenePos,
 										bool enableMotor, bool enableLimits,
 										float motorSpeed, float motorTorque,
 										float lowerLimit, float upperLimit);
 
 		virtual bool updateJoint(PhysicsJoint* joint);
+
+		virtual bool deleteJoint(PhysicsJoint* joint);
+
+		virtual bool deleteJoint(b2Joint* joint);
 
 		/*virtual b2Joint* createWheelJoint(Component* c1, Component* c2,
 											   b2WheelJointDef& def);
@@ -114,6 +146,10 @@ namespace CDI
 		 * @param newSettings
 		 */
 		void updateSettings(PhysicsSettings* newSettings);
+
+		void setEnableDebugView(bool enableDebugView);
+
+		bool enableDebugView() const;
 
 	protected:
 		virtual b2Joint* createJoint(b2JointDef& jointDef);

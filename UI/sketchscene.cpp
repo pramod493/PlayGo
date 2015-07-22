@@ -244,6 +244,63 @@ namespace CDI
 		return selectedStrokes;
 	}
 
+	QList<QGraphicsItem *> SketchScene::getSelectedItems(Point2D pos, float margin)
+	{
+		QList<QGraphicsItem*>  selectedItems;
+		QList<QGraphicsItem*> allitems = items(pos, Qt::IntersectsItemBoundingRect,
+											   Qt::AscendingOrder, QTransform());
+		foreach (QGraphicsItem* graphicsitem, allitems)
+		{
+			bool selectParentItem = false;
+			switch (graphicsitem->type())
+			{
+			case Pixmap::Type :
+			case Polygon2D::Type :
+			{
+				if (graphicsitem->contains(graphicsitem->mapFromScene(pos)) &&
+						graphicsitem->isVisible())
+				{
+					if (graphicsitem->parentItem())
+					{
+						selectParentItem = true;
+					} else
+					{
+						if ( selectedItems.contains(graphicsitem) == false)
+							 selectedItems.push_back(graphicsitem);
+					}
+				}
+				break;
+			}
+			case Stroke::Type :
+			{
+				Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
+				if (stroke->isVisible() && stroke->contains(stroke->mapFromScene(pos), margin))
+				{
+//					if (graphicsitem->parentItem())
+//					{
+//						selectParentItem = true;
+//					} else
+//					{
+						if ( selectedItems.contains(graphicsitem) == false)
+							 selectedItems.push_back(graphicsitem);
+//					}
+				}
+				break;
+			}
+			}
+			if (selectParentItem)
+			{
+				QGraphicsItem* parent = graphicsitem->parentItem();
+				if (parent->type() == Component::Type &&
+						( selectedItems.contains(parent) == false))
+				{
+					 selectedItems.push_back(parent);
+				}
+			}
+		}
+		return  selectedItems;
+	}
+
 	QRectF SketchScene::getBoundingBox(QList<QGraphicsItem *> listOfItems)
 	{
 		if (listOfItems.size() == 0)

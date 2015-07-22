@@ -5,6 +5,9 @@
 #include "cdi2qtwrapper.h"
 #include <QEvent>
 #include <QTouchEvent>
+#include <QDrag>
+#include <QMimeData>
+#include <QByteArray>
 
 namespace CDI
 {
@@ -44,7 +47,7 @@ namespace CDI
 		virtual QDataStream& deserialize(QDataStream& stream);
 
 	protected:
-//		void mousePressEvent(QGraphicsSceneMouseEvent* event);
+		void mousePressEvent(QGraphicsSceneMouseEvent* event);
 
 		void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event);
 

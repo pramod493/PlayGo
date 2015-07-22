@@ -114,6 +114,7 @@ namespace CDI
 
 	int currentTime();
 
+	vector<p2t::Triangle*> triangularizePolygon(QPolygonF& polygon);
 	/**
 	 * @brief generatePolygonFromImage creates contour from given image, simplies using RDG
 	 * algorith and triangulates the resultant polygon

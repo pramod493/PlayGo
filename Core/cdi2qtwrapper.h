@@ -27,6 +27,12 @@ namespace CDI
 		ASSEMBLYVIEW
 	};
 
+	const float Z_COMPONENTVIEW		= 1.0f;
+	const float Z_IMAGEVIEW			= 0.1f;
+	const float Z_POLYGONVIEW		= 0.2f;
+	const float Z_STROKEVIEW		= 0.3f;
+	const float Z_JOINTVIEW			= 0.9f;
+
 	// This section will create various paint
 	// functions which will be helpful in rendering
 	// joint and other items on screen. Its painting

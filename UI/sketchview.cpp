@@ -11,25 +11,26 @@
 namespace CDI
 {
 	SketchView::SketchView(Page *page, QWidget* parent)
-        : QGraphicsView(parent)
-    {
+		: QGraphicsView(parent)
+	{
 		_page = page;
 		qDebug() << "SketchView created";
 
 		{	// Gesture stuff
-//			setAttribute(Qt::WA_AcceptTouchEvents, true);
 			viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
-//			grabGesture(Qt::PinchGesture);
-//			viewport()->grabGesture(Qt::PinchGesture);
+			viewport()->grabGesture(Qt::TapGesture, Qt::DontStartGestureOnChildren);
+			viewport()->grabGesture(Qt::TapAndHoldGesture, Qt::DontStartGestureOnChildren);
+			viewport()->grabGesture(Qt::PanGesture, Qt::DontStartGestureOnChildren);
+			viewport()->grabGesture(Qt::SwipeGesture, Qt::DontStartGestureOnChildren);
 		}
 
 		// Keep the scrollbar hidden
 		setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 		// Define the background gradient
-        QLinearGradient gradient = QLinearGradient(0,0,0,1000);
-        gradient.setColorAt(0.0,Qt::white);
+		QLinearGradient gradient = QLinearGradient(0,0,0,1000);
+		gradient.setColorAt(0.0,Qt::white);
 		gradient.setColorAt(1.0, QColor(255,200,200,255));
 
 		setBackgroundBrush(QBrush(gradient));
@@ -48,13 +49,13 @@ namespace CDI
 		setTransform(t);
 
 		setAcceptDrops(true);
-    }
+	}
 
 	SketchView::~SketchView()
-    {
+	{
 		// Need not delete the scene since its destructor will automatically
 		// be called because its parent QObject is being destroyed here
-    }
+	}
 
 	void SketchView::drawBackground(QPainter * painter, const QRectF & rect)
 	{
@@ -98,15 +99,15 @@ namespace CDI
 		return _scene;
 	}
 
-    // Handle the resizing of the main window
-    void SketchView::resizeEvent(QResizeEvent *event)
-    {
-        if (scene() != NULL)
-        {
-            scene()->setSceneRect(QRect(QPoint(), event->size()));
-        }
-        QGraphicsView::resizeEvent(event);
-    }
+	// Handle the resizing of the main window
+	void SketchView::resizeEvent(QResizeEvent *event)
+	{
+		if (scene() != NULL)
+		{
+			scene()->setSceneRect(QRect(QPoint(), event->size()));
+		}
+		QGraphicsView::resizeEvent(event);
+	}
 
 	void SketchView::wheelEvent(QWheelEvent* event)
 	{
@@ -115,6 +116,23 @@ namespace CDI
 
 	void SketchView::dragEnterEvent(QDragEnterEvent *event)
 	{
+		if (event->mimeData()->hasHtml())
+		{
+			QLOG_INFO() << "Contains HTML";
+		}
+		if (event->mimeData()->hasImage())
+		{
+			QLOG_INFO() << "Contains Image";
+		}
+		if (event->mimeData()->hasText())
+		{
+			QLOG_INFO() << "Contains text";
+		}
+		if (event->mimeData()->hasUrls())
+		{
+			QLOG_INFO() << "Contains URLs";
+		}
+
 		foreach(QUrl url, event->mimeData()->urls())
 			if (QFileInfo(url.toLocalFile()).suffix().toUpper()=="PNG")
 			{

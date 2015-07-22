@@ -19,33 +19,33 @@ namespace CDI
 {
 	////////////// ENUM conversion from int
 	ItemType getItemType(int i)
-    {
-        switch (i)
-        {
-        case STROKE :
-            return STROKE;
-        case IMAGE :
-            return IMAGE;
-        case POLYGON2D:
-            return POLYGON2D;
-        case SEARCHRESULT :
-            return SEARCHRESULT;
-        case PHYSICSBODY :
-            return PHYSICSBODY;
+	{
+		switch (i)
+		{
+		case STROKE :
+			return STROKE;
+		case IMAGE :
+			return IMAGE;
+		case POLYGON2D:
+			return POLYGON2D;
+		case SEARCHRESULT :
+			return SEARCHRESULT;
+		case PHYSICSBODY :
+			return PHYSICSBODY;
 		case PHYSICSSHAPE :
 			return PHYSICSSHAPE;
-        case PHYSICSJOINT :
-            return PHYSICSJOINT;
-        case COMPONENT :
-            return COMPONENT;
-        case ASSEMBLY :
-            return ASSEMBLY;
-        case PAGE :
-            return PAGE;
-        case ROOT :
-            return ROOT;
-        }
-        return NONE;
+		case PHYSICSJOINT :
+			return PHYSICSJOINT;
+		case COMPONENT :
+			return COMPONENT;
+		case ASSEMBLY :
+			return ASSEMBLY;
+		case PAGE :
+			return PAGE;
+		case ROOT :
+			return ROOT;
+		}
+		return NONE;
 	}
 
 	SelectionType getSelectionType(int i)
@@ -53,77 +53,77 @@ namespace CDI
 		// This function is not needed since we are not going to serialize the selection type
 		switch (i)
 		{
-        case OnItem :
-            return OnItem;
-        case Inside :
-            return Inside;
-        case Outside :
-            return Outside;
-        case Nearby :
-            return Nearby;
+		case OnItem :
+			return OnItem;
+		case Inside :
+			return Inside;
+		case Outside :
+			return Outside;
+		case Nearby :
+			return Nearby;
 		}
-        return Nearby;
+		return Nearby;
 	}
 
 	QString getItemNameByType(ItemType i)
 	{
 		switch (i)
 		{
-        case STROKE :
+		case STROKE :
 			return "ItemType::STROKE";
-        case IMAGE :
+		case IMAGE :
 			return "ItemType::IMAGE";
-        case POLYGON2D:
+		case POLYGON2D:
 			return "ItemType::POLYGON2D";
-        case SEARCHRESULT :
+		case SEARCHRESULT :
 			return "ItemType::SEARCHRESULT";
-        case PHYSICSBODY :
+		case PHYSICSBODY :
 			return "ItemType::PHYSICSBODY";
-        case PHYSICSJOINT :
+		case PHYSICSJOINT :
 			return "ItemType::PHYSICSJOINT";
-        case COMPONENT :
+		case COMPONENT :
 			return "ItemType::COMPONENT";
-        case ASSEMBLY :
+		case ASSEMBLY :
 			return "ItemType::ASSEMBLY";
-        case PAGE :
+		case PAGE :
 			return "ItemType::PAGE";
-        case ROOT :
+		case ROOT :
 			return "ItemType::ROOT";
 		}
 		return "ItemType::NONE";
 	}
 
-    QString getHomeDirectory()
-    {
+	QString getHomeDirectory()
+	{
 #ifdef Q_OS_LINUX
-        return QString("/home/pramod/Junks/database/");
+		return QString("/home/pramod/Junks/database/");
 #endif
 #ifdef Q_OS_WIN
 		return QString("C:/Database/");
 #endif
-    }
+	}
 
 	////////////////////////////////////////
 
 	float dotProduct(Point2D* p1, Point2D* p2)
-    {
-        return (p1->x() * (p2->x()) + p1->y() * (p2->y()));
-    }
+	{
+		return (p1->x() * (p2->x()) + p1->y() * (p2->y()));
+	}
 
 	float crossProduct(Point2D* p1, Point2D* p2)
-    {
+	{
 		return (p1->x() * (p2->y()) - p2->x() * (p1->y()) );
-    }
+	}
 
 	float angleBetweenPoints(Point2D* p1, Point2D* p2)
-    {
+	{
 		return atan2 ((p2->y()-p1->y()), (p2->x()-p1->x()));
-    }
+	}
 
 	float magnitude(Point2D* p)
-    {
-        return sqrt(p->x() * (p->x()) + p->y() * (p->y()) );
-    }
+	{
+		return sqrt(p->x() * (p->x()) + p->y() * (p->y()) );
+	}
 
 	float sqrMagnitude(Point2D* p)
 	{
@@ -131,36 +131,36 @@ namespace CDI
 	}
 
 	bool pointFuzzyCompare(Point2D* p1, Point2D* p2)
-    {
+	{
 		return qFuzzyCompare(p1->x(), p2->x()) && qFuzzyCompare(p1->y(), p2->y());
-    }
+	}
 
 	float sqrEuclideanDistance(Point2D* a, Point2D* b)
-    {
-        return (a->x() - b->x())*(a->x() - b->x()) +
-                (a->y() - b->y())*(a->y() - b->y());
-    }
+	{
+		return (a->x() - b->x())*(a->x() - b->x()) +
+				(a->y() - b->y())*(a->y() - b->y());
+	}
 
 	float euclideanDistance(Point2D* a, Point2D* b)
-    {
+	{
 		return sqrt(sqrEuclideanDistance(a,b));
-    }
+	}
 
-    float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd)
-    {
-        Point2D V1 = Point2D(p->x()-lineStart->x(), p->y()-lineStart->y());
-        Point2D V2 = Point2D(lineEnd->x()-lineStart->x(),lineEnd->y()-lineStart->y());
-        float sqrMag = (V2.x()*V2.x() + V2.y()*V2.y());
+	float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd)
+	{
+		Point2D V1 = Point2D(p->x()-lineStart->x(), p->y()-lineStart->y());
+		Point2D V2 = Point2D(lineEnd->x()-lineStart->x(),lineEnd->y()-lineStart->y());
+		float sqrMag = (V2.x()*V2.x() + V2.y()*V2.y());
 
-        // dot product
-        float t = (V1.x()*V2.x() + V1.y()*V2.y()) / sqrMag;
+		// dot product
+		float t = (V1.x()*V2.x() + V1.y()*V2.y()) / sqrMag;
 //		if (t < 0.0 || t > 1.0) continue;
 
-        // check normal distance
-        V2 *= t;	// set to coord of projection point
-        float dist = (V1.x()-V2.x())*(V1.x()-V2.x()) + (V1.y()-V2.y())*(V1.y()-V2.y());
-        return dist;
-    }
+		// check normal distance
+		V2 *= t;	// set to coord of projection point
+		float dist = (V1.x()-V2.x())*(V1.x()-V2.x()) + (V1.y()-V2.y())*(V1.y()-V2.y());
+		return dist;
+	}
 
 	float diameterOfCircumcircle(float a, float b, float c)
 	{
@@ -171,31 +171,31 @@ namespace CDI
 		return 2*a*b*c / sqrt(den);
 	}
 
-    bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance)
-    {
-        bool OnSegment = true;
-        Point2D V1 = Point2D(p->x()-lineStart->x(), p->y()-lineStart->y());
-        Point2D V2 = Point2D(lineEnd->x()-lineStart->x(),lineEnd->y()-lineStart->y());
-        float sqrMag = (V2.x()*V2.x() + V2.y()*V2.y());
+	bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance)
+	{
+		bool OnSegment = true;
+		Point2D V1 = Point2D(p->x()-lineStart->x(), p->y()-lineStart->y());
+		Point2D V2 = Point2D(lineEnd->x()-lineStart->x(),lineEnd->y()-lineStart->y());
+		float sqrMag = (V2.x()*V2.x() + V2.y()*V2.y());
 
-        // dot product
-        float t = (V1.x()*V2.x() + V1.y()*V2.y()) / sqrMag;
-        if (t < 0.0 || t > 1.0) OnSegment = false;
+		// dot product
+		float t = (V1.x()*V2.x() + V1.y()*V2.y()) / sqrMag;
+		if (t < 0.0 || t > 1.0) OnSegment = false;
 
 
-        if (t < 0.0)
-        {
+		if (t < 0.0)
+		{
 			*distance = euclideanDistance(p, lineStart);
-        } else if (t > 1.0)
-        {
+		} else if (t > 1.0)
+		{
 			*distance = euclideanDistance(p, lineEnd);
-        } else {
-            // check normal distance
-            V2 *= t;    // set to coord of projection point
+		} else {
+			// check normal distance
+			V2 *= t;    // set to coord of projection point
 			*distance = euclideanDistance(&V1, &V2);
-        }
-        return OnSegment;
-    }
+		}
+		return OnSegment;
+	}
 
 	bool extractTransformComponents(QTransform& t, float* rotation, float* scale, Point2D* translation)
 	{
@@ -219,10 +219,10 @@ namespace CDI
 		return true;
 	}
 
-    bool colorCompare(QColor c1, QColor c2)
-    {
-         return (c1.red()== c2.red()) && (c1.green() == c2.green()) && (c1.blue() == c2.blue());
-    }
+	bool colorCompare(QColor c1, QColor c2)
+	{
+		 return (c1.red()== c2.red()) && (c1.green() == c2.green()) && (c1.blue() == c2.blue());
+	}
 
 	bool isConvexPolygon(Point2D *points, int numPoints)
 	{
@@ -257,7 +257,7 @@ namespace CDI
 
 	float getPhysicsScale()
 	{
-		return 10.0f;
+		return 50.0f;
 	}
 
 	/**
@@ -287,6 +287,34 @@ namespace CDI
 		return (xmax-xmin) < (ymax-ymin) ? (xmax-xmin) : (ymax-ymin);
 	}
 
+	vector<p2t::Triangle*> triangularizePolygon(QPolygonF& polygon)
+	{
+		vector<p2t::Triangle*> triangles;
+
+		if (polygon.size() < 3) return triangles;
+
+		QPointF* points = polygon.data();
+		int num_points = polygon.size();
+		vector<p2t::Point*> tmp_contour;
+		tmp_contour.reserve(num_points);
+		for (int i=0; i < num_points; i++)
+			tmp_contour.push_back(new p2t::Point(points[i].x(), points[i].y()));
+
+		p2t::CDT *cdt = new p2t::CDT(tmp_contour);
+		cdt->Triangulate();
+		triangles = cdt->GetTriangles();
+
+		// Do not delete triangles but delete rest of it
+//		TODO - Delete the triangles and return PhysicsShape* as return type
+//		for (int i=0; i < tmp_contour.size(); i++)
+//		{
+//			p2t::Point* point = tmp_contour[i];
+//			//delete point;
+//		}
+		tmp_contour.clear();
+		return triangles;
+	}
+
 	vector<p2t::Triangle*> triangularizeImage(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
 	{
 		vector<p2t::Triangle*> triangles;
@@ -313,7 +341,7 @@ namespace CDI
 		{
 			// 1. Get outer loop and corresponding inner loop
 			vector<cv::Point> outerContour = outerContours[i];
-            vector<vector<cv::Point> > innerContours = allInnerContours[i];
+			vector<vector<cv::Point> > innerContours = allInnerContours[i];
 
 			// 2. Convert into format accepted by RDP algo
 			vector<p2t::Point> tmp_contour;

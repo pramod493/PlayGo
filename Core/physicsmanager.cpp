@@ -9,6 +9,17 @@
 
 namespace CDI
 {
+
+	void PhysicsManager::setEnableDebugView(bool enableDebugView)
+	{
+		_enableDebugView = enableDebugView;
+	}
+
+	bool PhysicsManager::enableDebugView() const
+	{
+		return _enableDebugView;
+	}
+
 	PhysicsManager::PhysicsManager(PhysicsSettings *settings, Page *parentPage) : QObject(parentPage)
 	{
 		defaultPhysicsScale = getPhysicsScale();
@@ -23,11 +34,11 @@ namespace CDI
 		_b2World = new b2World(gravity);
 		_b2World->SetAllowSleeping(_settings.enableSleep);
 
-
+        _enableDebugView = true;
 		debugView = new BoxDebugScene(defaultPhysicsScale);
-
-		debugView->SetFlags(b2Draw::e_shapeBit | b2Draw::e_pairBit | b2Draw::e_jointBit | b2Draw::e_centerOfMassBit);// |/* b2Draw::e_aabbBit |*/  b2Draw::e_centerOfMassBit);
-
+		debugView->SetFlags(  b2Draw::e_shapeBit
+							  | b2Draw::e_pairBit | b2Draw::e_jointBit
+							  | b2Draw::e_centerOfMassBit);//b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
 		_b2World->SetDebugDraw(debugView);
 
 		timer = NULL;
@@ -49,6 +60,16 @@ namespace CDI
 			return body;
 		}
 		return NULL;
+	}
+
+	void PhysicsManager::destroyBody(b2Body *body)
+	{
+		_b2World->DestroyBody(body);
+	}
+
+	void PhysicsManager::destroyBody(Component *component)
+	{
+		destroyBody(component->physicsBody());
 	}
 
 	b2Joint *PhysicsManager::createJoint(b2JointDef &jointDef)
@@ -129,6 +150,23 @@ namespace CDI
 		return false;
 	}
 
+	bool PhysicsManager::deleteJoint(PhysicsJoint *joint)
+	{
+		joint->_physicsManager = this;
+		delete joint;
+		return true;
+	}
+
+	bool PhysicsManager::deleteJoint(b2Joint *joint)
+	{
+		if (joint)
+		{
+			_b2World->DestroyJoint(joint);
+			return true;
+		}
+		return false;
+	}
+
 	/*
 	b2Joint* PhysicsManager::createWheelJoint(Component* c1, Component* c2,
 											  b2WheelJointDef& def)
@@ -183,6 +221,8 @@ namespace CDI
 	{
 		if (timer!= NULL) timer->stop();
 		_isRunning = false;
+
+		if (debugView) debugView->clear();
 	}
 
 	void PhysicsManager::start(int timerStepIn_msecs)
@@ -196,6 +236,7 @@ namespace CDI
 				this, SLOT(step()));
 		timer->start(timerStepIn_msecs);
 		_isRunning = true;
+		if (debugView) debugView->clear();
 	}
 
 	void PhysicsManager::step()
@@ -205,8 +246,11 @@ namespace CDI
 		emit physicsStepStart();
 		_b2World->Step(_settings.timeStep, _settings.velocityIterations,
 					   _settings.positionIterations);
-		debugView->clear();
-		_b2World->DrawDebugData();
+		if (_enableDebugView)
+		{
+			debugView->clear();
+			_b2World->DrawDebugData();
+		}
 		emit physicsStepComplete();
 	}
 

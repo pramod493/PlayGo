@@ -49,7 +49,7 @@ namespace CDI
 				*closeAction, *cameraLoadAction;
 
 		// Sketching related operations
-		QAction *brushSelectAction, *eraseSelectAction, *marqueeAction,						*searchAction,*connectModeAction;
+		QAction *brushSelectAction, *polygonSelectAction, *eraseSelectAction, *marqueeAction,						*searchAction,*connectModeAction;
 
 		//QAction* selectorAction;        // Enable selection of components.
 		//QAction* marqueeEnableAction;   // Enable the marquee widget
@@ -124,6 +124,8 @@ namespace CDI
 		void exit();
 
 		void setToDraw();
+
+		void setToShape();
 
 		void setToConnectorMode();
 

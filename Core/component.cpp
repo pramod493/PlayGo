@@ -27,9 +27,17 @@ namespace CDI
 		_jointlist = QList<PhysicsJoint*>();
 
 		setAcceptTouchEvents(true);
+
+		/*grabGesture(Qt::TapGesture);
+		grabGesture(Qt::TapAndHoldGesture);
+		grabGesture(Qt::SwipeGesture);
+		grabGesture(Qt::PanGesture);*/
+
 		// TODO - Check if we really need this option set up. We can avoid this by
 		// gettting rid of all event to the component so its not a big issue
-		setFlag(QGraphicsItem::ItemIsMovable);
+        //setFlag(QGraphicsItem::ItemIsMovable);
+
+		setZValue(Z_COMPONENTVIEW);
 
 		// We can also use signals to find positionUpdates
 		// component->update signal to Page->update signal to Physics Manager
@@ -49,8 +57,10 @@ namespace CDI
 		connect(this, SIGNAL(rotationChanged()),
 				this, SLOT(internalTransformChanged()));
 
+		_anchorItem = NULL;
+
 #ifdef CDI_DEBUG_DRAW_SHAPE
-        QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
+		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
 		addToComponent(ellipse);
 		ellipse->setRect(QRectF(-10,-10,20,20));
 		ellipse->setTransform(QTransform());
@@ -59,8 +69,8 @@ namespace CDI
 
 	Component::~Component()
 	{
-		// Deletes the children as well
-		if (parentItem()!= NULL)
+		// Deletion handled by Page object
+		/*if (parentItem()!= NULL)
 		{
 			QGraphicsItem* item = parentItem();
 			if (item->type() == Assembly::Type)
@@ -79,7 +89,7 @@ namespace CDI
 		{
 			b2World* world = _physicsBody->GetWorld();
 			world->DestroyBody(_physicsBody);
-		}
+		}*/
 	}
 
 	QRectF Component::boundingRect() const
@@ -94,17 +104,20 @@ namespace CDI
 
 	void Component::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 	{
-		Q_UNUSED(widget);
+		Q_UNUSED(widget)
+		Q_UNUSED(option)
 		// parent object does not need to manage children paint operations
+#ifdef CDI_DEBUG_DRAW_SHAPE
 		if (option->state & QStyle::State_Selected)
 		{
 			painter->setBrush(Qt::NoBrush);
 			painter->drawRect(itemBoundingRect);
 		}
+#endif //CDI_DEBUG_DRAW_SHAPE
 
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		painter->setPen(QPen(Qt::blue));
-        painter->setBrush(QBrush(Qt::NoBrush));
+		painter->setBrush(QBrush(Qt::NoBrush));
 		painter->drawRect(itemBoundingRect);
 #endif //CDI_DEBUG_DRAW_SHAPE
 	}
@@ -117,6 +130,54 @@ namespace CDI
 				foreach(b2Fixture* fixture, _fixtures)
 					_physicsBody->DestroyFixture(fixture);
 			_physicsBody = body;
+		}
+	}
+
+	bool Component::isStatic() const
+	{
+		if (_physicsBody)
+		{
+			if (_physicsBody->GetType() == b2_dynamicBody)
+				return false;
+			else return true;
+		}
+		return false;
+	}
+
+	void Component::setStatic(bool value)
+	{
+		if (_physicsBody)
+		{
+			if (value)
+			{
+				if (_anchorItem == NULL)
+				{
+					_anchorItem = new QGraphicsPathItem(this);
+					_anchorItem->setFlag(QGraphicsItem::ItemIgnoresParentOpacity);
+					_anchorItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+					QPen pen = QPen(Qt::blue);
+					pen.setWidth(2);
+					_anchorItem->setPen(pen);
+
+					QPainterPath path;
+					float length = 15;
+					path.moveTo(-length, -length);
+					path.lineTo(length, length);
+					path.moveTo(-length, length);
+					path.lineTo(length, -length);
+					_anchorItem->setPath(path);
+				} else
+				{
+					_anchorItem->show();
+				}
+					_physicsBody->SetType(b2_staticBody);
+			} else
+			{
+				_physicsBody->SetType(b2_dynamicBody);
+				if (_anchorItem)
+					delete _anchorItem;
+				_anchorItem = NULL;
+			}
 		}
 	}
 
@@ -207,9 +268,6 @@ namespace CDI
 		{
 			// Single finger. Drag
 			const QTouchEvent::TouchPoint &tp1 = event->touchPoints().first();
-
-			qDebug() << "Rect " << sceneBoundingRect() << "Pos" << tp1.scenePos();
-
 			if (QGraphicsItem::contains(mapFromScene(tp1.scenePos())) == false)
 			{
 				// TODO - This seems to not work with TUIO. Disbaling till further info is available
@@ -363,6 +421,7 @@ namespace CDI
 		case Polygon2D::Type :
 		{
 			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(item);
+			polygon->initializePhysicsShape();
 			addToHash(polygon->id(), polygon);
 			break;
 		}
@@ -572,7 +631,9 @@ namespace CDI
 		if (graphicsitem->type() == Polygon2D::Type)
 		{
 			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(graphicsitem);
-			QLOG_ERROR() << "Feature not implemented. You shouldn't be here";
+			polygon->initializePhysicsShape();  // Lets go it again
+			shape = polygon->physicsShape();
+			r = polygon->boundingRect().toRect().size();
 		}
 
 		if (shape && _physicsBody)
@@ -641,6 +702,7 @@ namespace CDI
 					b2FixtureDef fixtureDef;
 					fixtureDef.shape = &b2TriaShape;
 					fixtureDef.density = 1.0f;
+					fixtureDef.filter.groupIndex = -1;
 					b2Fixture* fixture = _physicsBody->CreateFixture(&fixtureDef);
 					_fixtures.push_back(fixture);
 				}

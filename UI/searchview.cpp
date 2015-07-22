@@ -12,7 +12,7 @@ namespace CDI
 		QGraphicsScene* tmp = new QGraphicsScene(this);
 		setScene(tmp);
 
-		setAttribute(Qt::WA_AcceptTouchEvents, true);
+        //setAttribute(Qt::WA_AcceptTouchEvents, true);
 		viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
 
 		setRenderHint(QPainter::Antialiasing);
@@ -42,10 +42,13 @@ namespace CDI
 	void SearchView::mousePressEvent(QMouseEvent *event)
 	{
 		//QMessageBox::about(this, QString("Search view"), QString("Search view"));
+        QGraphicsView::mousePressEvent(event);
 	}
 
 	bool SearchView::viewportEvent(QEvent *event)
 	{
+        return QGraphicsView::viewportEvent(event);
+
 		switch(event->type())
 		{
 		case QEvent::TouchBegin :

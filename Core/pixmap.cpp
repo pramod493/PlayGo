@@ -12,6 +12,8 @@ namespace CDI
 //        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
 		setShapeMode(QGraphicsPixmapItem::MaskShape);
 
+		setZValue(Z_IMAGEVIEW);
+
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
 		ellipse->setPen(QPen(Qt::blue));
@@ -43,6 +45,8 @@ namespace CDI
 //		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
 		setShapeMode(QGraphicsPixmapItem::MaskShape);
 
+		setZValue(Z_IMAGEVIEW);
+
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
 		ellipse->setPen(QPen(Qt::blue));
@@ -63,6 +67,8 @@ namespace CDI
 		_filename = filepath;
 //		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
 		setShapeMode(QGraphicsPixmapItem::MaskShape);
+
+		setZValue(Z_IMAGEVIEW);
 
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
@@ -135,6 +141,7 @@ namespace CDI
 			if (tria) delete tria;
 			p2tTrias[i] = 0;
 		}
-		QLOG_INFO() << "Regenerated physics shape";
+        QLOG_INFO() << "Regenerated Pixmap physics shape. " <<
+                       p2tTrias.size() << "triangles created";
 	}
 }

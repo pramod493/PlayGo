@@ -55,15 +55,21 @@ namespace CDI
 		return stream;
 	}
 
-	/*void GraphicsSearchItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+	void GraphicsSearchItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 	{
 		QLOG_INFO() << "Search result clicked" << _parentResult->resultFilePath;
-		if (_searchView != NULL)
-		{
-			_searchView->onSearchResultSelect(_parentResult);
-		}
+
+		QByteArray byteArray = QByteArray();
+		QString filePath = _parentResult->resultFilePath;
+		byteArray.append(filePath);
+
+		QDrag *drag = new QDrag(this->parentObject());
+		QMimeData *mimeData = new QMimeData;
+		mimeData->setData("SearchResult", byteArray);
+		drag->setMimeData(mimeData);
+		drag->start();
 		QGraphicsPixmapItem::mousePressEvent(event);
-	}*/
+	}
 
 	void GraphicsSearchItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	{

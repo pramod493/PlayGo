@@ -24,6 +24,8 @@ namespace CDI
 		init();
 		_points = QVector<Point2DPT*>();
 		recalculateAABB();
+
+		setZValue(Z_STROKEVIEW);
 	}
 
 	Stroke::Stroke(QVector<Point2DPT*> points, QGraphicsItem* parent)
@@ -42,6 +44,8 @@ namespace CDI
 			_points.push_back(copy);
 		}
 		recalculateAABB();
+
+		setZValue(Z_STROKEVIEW);
 	}
 
 	Stroke::~Stroke()

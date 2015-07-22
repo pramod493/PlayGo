@@ -23,5 +23,4 @@ HEADERS += \
     $$PWD/searchview.h \
     $$PWD/graphicssearchitem.h
 
-DISTFILES += \
-    $$PWD/searchView.qml
+DISTFILES +=

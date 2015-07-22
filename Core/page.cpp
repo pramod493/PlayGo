@@ -252,6 +252,18 @@ namespace CDI
 			_components.remove(component->id());
 			removeComponentConnections(component);
 		}
+
+		// Remove it from temp list
+		if (transformedComponents.contains(component))
+		{
+			transformedComponents.removeOne(component);
+		}
+
+		if (_currentComponent == component)
+		{
+			_currentComponent = NULL;
+		}
+
 		// 1. Find the assembly which contains the components
 		QHash<QUuid, Assembly*>::const_iterator assemiter;
 		for (assemiter = _assemblies.constBegin();
@@ -268,6 +280,28 @@ namespace CDI
 		if (markForDelete)
 		{
 			emit signalItemDelete(component);
+			QList<QGraphicsItem*> childItems = component->childItems();
+			b2Body* physicsBody = component->physicsBody();
+			if (physicsBody)
+			{
+				foreach (PhysicsJoint* joint, component->_jointlist)
+				{
+					_physicsManager->deleteJoint(joint);
+				}
+				component->_jointlist.clear();
+
+				foreach (b2Fixture* fixture, component->_fixtures)
+				{
+					physicsBody->DestroyFixture(fixture);
+				}
+				component->_fixtures.clear();
+
+				_physicsManager->destroyBody(component);
+				component->_physicsBody = NULL;
+			}
+
+			qDeleteAll(childItems);
+
 			delete component;
 		}
 		return markForDelete;

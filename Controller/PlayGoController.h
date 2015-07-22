@@ -38,6 +38,7 @@
 #include <QMessageBox>
 #include <box2dworld.h>
 #include "pdollarrecognizer.h"
+#include "polygon2d.h"
 
 #include <QDebug>
 
@@ -45,24 +46,24 @@ namespace CDI
 {
 	class CDIWindow;
 	class ConnectController;
-    namespace UI
-    {
+	namespace UI
+	{
 		enum MODE {None, Sketch, Shapes, Erase, Transform,
-                   Edit, Select, Connect};
-    }
+				   Edit, Select, Connect};
+	}
 
-    /**
-     * @brief Main controller object. This receives input events from View and Scene
-     * and modifies the view as well as scene based on that.
-     * @remarks We can also implement state machine to manage various modes
-     * but currently using UI::MODE flag to determine the operations
-     */
+	/**
+	 * @brief Main controller object. This receives input events from View and Scene
+	 * and modifies the view as well as scene based on that.
+	 * @remarks We can also implement state machine to manage various modes
+	 * but currently using UI::MODE flag to determine the operations
+	 */
 	class PlayGoController : public QObject
 	{
 		Q_OBJECT
 
 	protected:
-        enum ConnectionMode {GestureSketch, HingeJoint, SliderJoint, FixedJoint/*Sets body as static*/,
+		enum ConnectionMode {GestureSketch, StaticJoint, HingeJoint, SliderJoint, FixedJoint/*Sets body as static*/,
 							 SpringJoint, ApplyForce};	// Leave it to be private
 
 	protected:
@@ -79,7 +80,7 @@ namespace CDI
 		 * Tablet relatred operations
 		 *****************************************************/
 		bool _mouseModeEnabled;
-        UI::MODE _activeMode;
+		UI::MODE _activeMode;
 		QTabletEvent::TabletDevice _device;
 		QTabletEvent::PointerType _pointerType;
 
@@ -91,6 +92,7 @@ namespace CDI
 
 		bool _isDrawingNow;
 		Stroke* _currentStroke;
+		Polygon2D* _currentPolygon;
 
 		/*********************************************************
 		 * Lasso related variables
@@ -102,9 +104,9 @@ namespace CDI
 
 		ModelViewTreeWidget* tree;
 
-        /*********************************************************
-         * Search related variables
-         ********************************************************/
+		/*********************************************************
+		 * Search related variables
+		 ********************************************************/
 		SearchView* searchView;
 
 		/*********************************************************
@@ -170,6 +172,10 @@ namespace CDI
 		virtual void brushRelease(Point2DPT pos);
 		virtual void brushRelease(float x, float y, float pressure, int time);
 
+		virtual void shapePress(QPointF pos);
+		virtual void shapeMove(QPointF pos);
+		virtual void shapeRelease(QPointF pos);
+
 		virtual void eraserPress(Point2DPT pos);
 		virtual void eraserMove(Point2DPT pos);
 		virtual void eraserRelease(Point2DPT pos);
@@ -186,13 +192,13 @@ namespace CDI
 		void showConnectionsToolbar();
 		void hideConnectionsToolbar();
 
-        /**
-         * @brief Handles updates whenever MODE is changed.
-         * Note that this function does not actually change the mode
-         * @param oldmode Current mode of the controller
-         * @param newmode New mode of the controller
-         */
-        virtual bool onModeChange(UI::MODE oldmode, UI::MODE newmode);
+		/**
+		 * @brief Handles updates whenever MODE is changed.
+		 * Note that this function does not actually change the mode
+		 * @param oldmode Current mode of the controller
+		 * @param newmode New mode of the controller
+		 */
+		virtual bool onModeChange(UI::MODE oldmode, UI::MODE newmode);
 
 		bool eventFilter(QObject* obj, QEvent* event);
 
@@ -200,6 +206,7 @@ namespace CDI
 
 	public:
 		virtual void sketchAction(QTabletEvent *event);
+		virtual void shapeAction(QTabletEvent *event);
 		virtual void eraseAction(QTabletEvent *event);
 		virtual void selectAction(QTabletEvent *event);
 		virtual void connectAction(QTabletEvent *event);
@@ -236,42 +243,52 @@ namespace CDI
 
 		void onSearchItemSelect(SearchResult* result);
 
-        /**
-         * @brief Receives tablet/pen event from view
-         * @param event QTabletEvent
-         * @param view QGraphicsView from which the event originiated
-         */
+		/**
+		 * @brief Receives tablet/pen event from view
+		 * @param event QTabletEvent
+		 * @param view QGraphicsView from which the event originiated
+		 */
 		void onTabletEventFromView(QTabletEvent *event, QGraphicsView *view);
 
-        /**
-         * @brief Receives mouse event from scene
-         * @param mouseEvent QGraphicsSceneMouseEvent
-         * @param status QGraphicsScene from which the event originiated
-         */
+		/**
+		 * @brief Receives mouse event from scene
+		 * @param mouseEvent QGraphicsSceneMouseEvent
+		 * @param status QGraphicsScene from which the event originiated
+		 */
 		void onMouseEventFromScene(QGraphicsSceneMouseEvent* mouseEvent, int status);
 
-        /**
-         * @brief Receives touch event from view
-         * @param event QTouchEvent
-         * @param view QGraphicsView from where event originiated
-         */
+		/**
+		 * @brief Receives touch event from view
+		 * @param event QTouchEvent
+		 * @param view QGraphicsView from where event originiated
+		 */
 		bool onTouchEventFromView(QTouchEvent* event);
+
+		/**
+		 * @brief Manages gesture events received from viewport.
+		 * @param event QGestureEvent
+		 * @return
+		 * @remarks Should the events be accepted by Component object in the Scene
+		 */
+		void onGestureEventFromView(QGestureEvent* event);
 
 		void connectionModeReset();
 
 		void setToDraw();
+		void setToShape();
 		void setToErase();
 		void setToConnectorMode();
 		void setToSelect();
 		void setToEdit();
 
 		void setModeScribble();
+		void setModeLockItem();
 		void setModeHingeJoint();
 		void setModeSliderJoint();
 		void setModeSpringJoint();
 		void setModeForce();
 
-        void setMode(UI::MODE newMode);
+		void setMode(UI::MODE newMode);
 
 		void enableMouse(bool enable);
 

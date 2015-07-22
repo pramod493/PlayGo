@@ -63,7 +63,7 @@ namespace CDI
 
 		FileSystemWatcher* watcher = new FileSystemWatcher();
 #ifdef Q_OS_WIN
-        watcher->setDirectory(QString("C:/Users/Pramod/Dropbox/Camera Uploads"));
+		watcher->setDirectory(QString("C:/Users/Pramod/Dropbox/Camera Uploads"));
 #endif
 #ifdef Q_OS_LINUX
 //		watcher->setDirectory(QString("~/Dropbox/Camera Uploads"));
@@ -96,6 +96,10 @@ namespace CDI
 		brushSelectAction = new QAction(QIcon(":/images/spline.png"), tr("Draw strokes"), sketchActions);
 		brushSelectAction->setCheckable(true);
 		brushSelectAction->setChecked(true);
+
+		polygonSelectAction = new QAction(QIcon(":/images/polygon.png"), tr("Sketch polygon"), sketchActions);
+		polygonSelectAction->setCheckable(true);
+		polygonSelectAction->setChecked(false);
 
 		eraseSelectAction = new QAction(QIcon(":/images/eraser.png"), tr("Eraser"), sketchActions);
 		eraseSelectAction->setCheckable(true);
@@ -149,6 +153,7 @@ namespace CDI
 		mainToolbar->addSeparator();
 
 		mainToolbar->addAction(brushSelectAction);
+		mainToolbar->addAction(polygonSelectAction);
 		mainToolbar->addAction(connectModeAction);
 		mainToolbar->addAction(eraseSelectAction);
 		mainToolbar->addAction(marqueeAction);
@@ -206,6 +211,10 @@ namespace CDI
 		// Draw
 		connect(brushSelectAction, SIGNAL(triggered()),
 				this,SLOT(setToDraw()));
+
+		// Polygon shape
+		connect(polygonSelectAction, SIGNAL(triggered()),
+				this, SLOT(setToShape()));
 
 		// Connector Mode
 		connect(connectModeAction, SIGNAL(triggered()),
@@ -282,6 +291,11 @@ namespace CDI
 	void CDIWindow::setToDraw()
 	{
 		controller->setToDraw();
+	}
+
+	void CDIWindow::setToShape()
+	{
+		controller->setToShape();
 	}
 
 	void CDIWindow::setToConnectorMode()

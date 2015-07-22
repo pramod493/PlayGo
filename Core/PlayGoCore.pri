@@ -4,7 +4,7 @@ include ($$PWD/../Physics/QBox2D.pri)
 include ($$PWD/../EdgeDetect/Edge Detect.pri)
 #include ($$PWD/../QsLog/QsLog.pri)
 
-DEFINES += CDI_DEBUG_DRAW_SHAPE
+#DEFINES += CDI_DEBUG_DRAW_SHAPE
 
 INCLUDEPATH += $$PWD
 
@@ -25,7 +25,7 @@ HEADERS += \
     $$PWD/asmopencv.h \
     $$PWD/commonfunctions.h \
     $$PWD/abstractmodelitem.h \
- 	 $$PWD/cdi2qtwrapper.h \
+    $$PWD/cdi2qtwrapper.h \
     $$PWD/point2dpt.h 
 	
 SOURCES += \

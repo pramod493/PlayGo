@@ -2,6 +2,7 @@
 #include "abstractmodelitem.h"
 #include "component.h"
 #include "Box2D/Box2D.h"
+#include <QGraphicsPathItem>
 
 namespace CDI
 {
@@ -52,6 +53,8 @@ namespace CDI
 		// NOTE - Might not be required
 		virtual b2JointDef* jointDef();
 
+		virtual bool update();
+
 		//virtual void updateJoint();
 
 		friend class PhysicsManager;
@@ -64,4 +67,25 @@ namespace CDI
 	//		b2JointDef* getJointDef() const;
 	//		void setJointDef(b2JointDef* def);
 	//	};
+
+	class JointGraphics : public QGraphicsPathItem
+	{
+	public:
+		enum {Type = UserType + JOINTVIEW };
+
+	protected:
+		QPainterPath _painterPath;
+		Component *_component;
+		PhysicsJoint *_physicsJoint;
+
+	public:
+		JointGraphics(PhysicsJoint* physicsJoint, Component *parent);
+
+		virtual ~JointGraphics() {}
+
+		int type() const { return Type; }
+
+		virtual void initializePainterPath();
+
+	};
 }

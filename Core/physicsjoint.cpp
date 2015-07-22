@@ -1,5 +1,9 @@
 #include "physicsjoint.h"
+#include "physicsmanager.h"
 #include "QsLog.h"
+#include <QRadialGradient>
+#include <QFont>
+#include <QString>
 
 namespace CDI
 {
@@ -28,13 +32,12 @@ namespace CDI
 
 	PhysicsJoint::~PhysicsJoint()
 	{
-		if (_joint)
-		{
-			// How to delete this one?
-		}
-
 		if (_jointDef) delete _jointDef;
+		if (componentA) componentA->removeJoint(this);
+		if (componentB) componentB->removeJoint(this);
 
+		if (_physicsManager)
+		_physicsManager->deleteJoint(_joint);
 	}
 
 	void PhysicsJoint::createJointByType()
@@ -76,4 +79,68 @@ namespace CDI
 		return _jointDef;
 	}
 
+	bool PhysicsJoint::update()
+	{
+		return _physicsManager->updateJoint(this);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/// \brief JointGraphics::JointGraphics manages display of the joint objects
+	/// \param physicsJoint
+	/// \param parent
+	///
+	JointGraphics::JointGraphics(PhysicsJoint *physicsJoint, Component *parent)
+		:QGraphicsPathItem(parent)
+	{
+		_physicsJoint = physicsJoint;
+		setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+		setFlag(QGraphicsItem::ItemIgnoresParentOpacity, true);
+		initializePainterPath();
+
+		QPen _pen = QPen(Qt::blue);
+
+		QRadialGradient radialGradient = QRadialGradient(QPointF(0,0), 15, QPointF(10,10));
+		radialGradient.setColorAt(0, Qt::red);
+		radialGradient.setColorAt(1, Qt::blue);
+		QBrush _brush = QBrush(radialGradient);
+
+		setPen(_pen);
+		setBrush(_brush);
+		setZValue(Z_JOINTVIEW);
+	}
+
+	void JointGraphics::initializePainterPath()
+	{
+		if (_physicsJoint == NULL) return;
+		_painterPath = QPainterPath();
+		switch (_physicsJoint->jointType())
+		{
+			case e_revoluteJoint :
+		{
+			float radius = 15;
+			_painterPath.moveTo(0,0);
+			_painterPath.addEllipse(QPointF(0,0), radius, radius);
+			_painterPath.moveTo(0,0);
+
+			radius += 15;
+			b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(_physicsJoint->joint());
+			if (revoluteJoint->IsMotorEnabled())
+			{
+				_painterPath.addText(QPointF(0,0),
+									 QFont("Times", 12),
+									 QString("Motor enabled"));
+			} else {
+				_painterPath.addText(QPointF(0,0),
+									 QFont("Times", 12),
+									 QString("Pivot"));
+			}
+			break;
+		}
+		case e_prismaticJoint :
+		{
+			break;
+		}
+		}
+		setPath(_painterPath);
+	}
 }
