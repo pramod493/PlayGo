@@ -29,7 +29,7 @@ namespace CDI
 
 		// Define the background gradient
 		QLinearGradient gradient = QLinearGradient(0,0,0,1000);
-		gradient.setColorAt(0.0,Qt::white);
+		gradient.setColorAt(0.0,Qt::red);
 		gradient.setColorAt(1.0, QColor(255,200,200,255));
 
 		setBackgroundBrush(QBrush(gradient));
@@ -78,6 +78,8 @@ namespace CDI
 
 	void SketchView::drawBackground(QPainter * painter, const QRectF & rect)
 	{
+		// Call this to draw background brush as well
+		//QGraphicsView::drawBackground(painter, rect);
 		QPen pen = QPen();
 		pen.setWidth(1);
 		pen.setColor(QColor(200,200,255)); pen.setStyle(Qt::DashLine);

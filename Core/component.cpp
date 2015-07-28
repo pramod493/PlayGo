@@ -14,19 +14,24 @@
 #include <QMessageBox>
 #include <QVector2D>
 #include "physicsjoint.h"
+#include <QGraphicsTextItem>
+
 namespace CDI
 {
-	Component::Component(QGraphicsItem *parent)
-		: QGraphicsObject(parent)
-	{
-		_highlighted = false;
-		_id = uniqueHash();
-
-		_physicsBody = NULL;		// Creation is done outside but deletion is performed internally
+    Component::Component(QGraphicsItem *parent)
+        : QGraphicsObject(parent)
+    {
+        _highlighted = false;
+        _id = uniqueHash();
+        
+        _physicsBody = NULL;		// Creation is done outside but deletion is performed internally
 		_fixtures	= QList<b2Fixture*>();
 		_jointlist = QList<PhysicsJoint*>();
 
 		setAcceptTouchEvents(true);
+
+		// Capture all the events sent to child items here
+		setFiltersChildEvents(true);
 
 		/*grabGesture(Qt::TapGesture);
 		grabGesture(Qt::TapAndHoldGesture);
@@ -45,6 +50,21 @@ namespace CDI
 		pendingPositionUpdate = false;
 		previousScale = 1.0f;
 
+		disableScaling = false;
+
+		groupIndex		= -1;	// positive and same to enable collision
+								// negative and same to disable collision
+								// non-zero & different - use category and mask
+								// zero - user category and mask
+								// http://www.iforce2d.net/b2dtut/collision-filtering
+		maskBits		= 0xFFFF;
+		categoryBits	= 0x0000;
+
+		_anchorItem		= NULL;
+		_lockScaleItem	= NULL;
+
+		_density = 1.0f;
+
 		connect(this, SIGNAL(xChanged()),
 				this, SLOT(internalTransformChanged()));
 
@@ -56,8 +76,6 @@ namespace CDI
 
 		connect(this, SIGNAL(rotationChanged()),
 				this, SLOT(internalTransformChanged()));
-
-		_anchorItem = NULL;
 
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
@@ -136,16 +154,18 @@ namespace CDI
 					_anchorItem->setFlag(QGraphicsItem::ItemIgnoresParentOpacity);
 					_anchorItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 					QPen pen = QPen(Qt::blue);
-					pen.setWidth(2);
+					pen.setWidth(3);
 					_anchorItem->setPen(pen);
 
 					QPainterPath path;
-					float length = 15;
+					float length = 20;
 					path.moveTo(-length, -length);
 					path.lineTo(length, length);
 					path.moveTo(-length, length);
 					path.lineTo(length, -length);
 					_anchorItem->setPath(path);
+
+					_anchorItem->setPos(boundingRect().center());
 				} else
 				{
 					_anchorItem->show();
@@ -158,6 +178,30 @@ namespace CDI
 					delete _anchorItem;
 				_anchorItem = NULL;
 			}
+		}
+	}
+
+	bool Component::isScalingDisabled() const
+	{
+		return disableScaling;
+	}
+
+	void Component::setDisableScaling(bool value)
+	{
+		if (disableScaling == value) return;		// Nothing to do here
+
+		disableScaling = value;
+
+		if (value)
+		{
+			disableScaling = true;
+			if (_lockScaleItem) delete _lockScaleItem;
+			_lockScaleItem = new QGraphicsPixmapItem(this);
+			_lockScaleItem->setPos(boundingRect().center() - QPointF(24,24));
+			QPixmap tmpPixmap = QPixmap(":/images/overlay/lock.png");
+			tmpPixmap = tmpPixmap.scaled(48,48, Qt::KeepAspectRatio);
+			_lockScaleItem->setPixmap(tmpPixmap);
+			_lockScaleItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 		}
 	}
 
@@ -222,9 +266,10 @@ namespace CDI
 		// Do not process when the touch event arrives
 		if (event->type()==QEvent::TouchBegin)
 		{
+			return isTouchEventAcceptable(event);
 			// Marks the start of touch event to the object
 			// Must accept this event to receive further events
-			return true;
+			//return true;
 		}
 		if (event->touchPointStates() & Qt::TouchPointPressed)
 		{
@@ -268,12 +313,6 @@ namespace CDI
 			QPointF tp1_itemPos = mapFromScene(tp1.scenePos());
 			QPointF tp2_itemPos = mapFromScene(tp2.scenePos());
 
-			/*if ((tp1.state() == Qt::TouchPointPressed) || (tp2.state() == Qt::TouchPointPressed))
-			{
-				// qDebug() << "At least one of points begins here. Ignore";
-				return false;
-			}*/
-
 			if (!(QGraphicsItem::contains(tp1_itemPos) || QGraphicsItem::contains(tp2_itemPos)))
 			{
 				// Does not work properly with TUIO. Disabling till further diagnosis
@@ -292,6 +331,8 @@ namespace CDI
 			}
 			QPointF tmpOrigin =(tp1.scenePos() + tp1.lastScenePos())/2.0f;
 			setTransformOriginPoint(mapFromScene(tmpOrigin));
+
+			if (!disableScaling)
 			{
 				float prevmag = euclideanDistance(&tp2_lastItemPos, &tp1_lastItemPos);
 				float currentmag = euclideanDistance(&tp2_itemPos, &tp1_itemPos);
@@ -581,6 +622,31 @@ namespace CDI
 		return stream;
 	}
 
+	float Component::getDensity() const
+	{
+		return _density;
+	}
+
+	void Component::setDensity(float density)
+	{
+		// TODO on density change
+		_density = density;
+	}
+
+	void Component::onCollisionBitsUpdate()
+	{
+		b2Filter filter;
+		filter.categoryBits = categoryBits;
+		filter.maskBits = maskBits;
+		filter.groupIndex = groupIndex;
+		foreach(b2Fixture* fixture, _fixtures)
+		{
+			fixture->SetFilterData(filter);
+		}
+		if (_physicsBody)
+			_physicsBody->SetAwake(true);
+	}
+
 	void Component::addToHash(QUuid uid, QGraphicsItem* item)
 	{
 		if (QHash<QUuid, QGraphicsItem*>::contains(uid)) return;
@@ -682,7 +748,9 @@ namespace CDI
 					b2FixtureDef fixtureDef;
 					fixtureDef.shape = &b2TriaShape;
 					fixtureDef.density = 1.0f;
-					fixtureDef.filter.groupIndex = -1;
+					fixtureDef.filter.groupIndex = groupIndex;
+					fixtureDef.filter.categoryBits = categoryBits;
+					fixtureDef.filter.maskBits = maskBits;
 					b2Fixture* fixture = _physicsBody->CreateFixture(&fixtureDef);
 					_fixtures.push_back(fixture);
 				}
@@ -691,5 +759,60 @@ namespace CDI
 			image.save(f);
 #endif //CDI_DEBUG_DRAW_SHAPE
 		}
+	}
+
+	bool Component::isTouchEventAcceptable(QTouchEvent *event)
+	{
+		QList<QTouchEvent::TouchPoint> touchpoints = event->touchPoints();
+		bool retval = false;
+		for (QList<QTouchEvent::TouchPoint>::const_iterator it = touchpoints.constBegin();
+			 it != touchpoints.constEnd(); ++it)
+		{
+			const QTouchEvent::TouchPoint &tp = *(it);
+			QPointF pos = tp.scenePos();
+			qDebug() << "Component touch" << pos;
+			if (containsPoint(pos))
+			{
+				retval = true;
+				break;
+			}
+		}
+		return retval;
+	}
+
+	bool Component::containsPoint(QPointF pos)
+	{
+		QList<QGraphicsItem*> items = childItems();
+		for(QList<QGraphicsItem*>::const_iterator it = items.constBegin();
+			it != items.constEnd(); ++it)
+		{
+			QGraphicsItem *graphicsitem = (*it);
+			switch (graphicsitem->type())
+			{
+			case Stroke::Type :
+			{
+				Stroke *stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
+				if (stroke->contains(stroke->mapFromScene(pos), 25.0f))
+					return true;
+				break;
+			}
+			case Polygon2D::Type :
+			{
+				Polygon2D *polygon = qgraphicsitem_cast<Polygon2D*>(graphicsitem);
+				if (polygon->containsPoint(polygon->mapFromScene(pos)))
+					return true;
+				break;
+			}
+			case Pixmap::Type :
+			{
+				Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
+				if (pixmap->contains(pixmap->mapFromScene(pos)))
+					return true;
+				break;
+			}
+				// No other object allowed for selection.
+			}
+		}
+		return false;
 	}
 }

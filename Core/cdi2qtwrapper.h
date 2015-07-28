@@ -24,9 +24,11 @@ namespace CDI
 		SEARCHITEMVIEW,
 		JOINTVIEW,
 		COMPONENTVIEW,
-		ASSEMBLYVIEW
+		ASSEMBLYVIEW,
+		UI_SELECTABLE_ACTIONS
 	};
 
+	const float Z_UIVIEW			= 2.5f;
 	const float Z_COMPONENTVIEW		= 1.0f;
 	const float Z_IMAGEVIEW			= 0.1f;
 	const float Z_POLYGONVIEW		= 0.2f;

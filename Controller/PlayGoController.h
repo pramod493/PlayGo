@@ -41,15 +41,19 @@
 #include "polygon2d.h"
 
 #include <QDebug>
-
+#include <QTabletEvent>
 namespace CDI
 {
 	class CDIWindow;
 	class ConnectController;
+	class TouchAndHoldController;
+
 	namespace UI
 	{
 		enum MODE {None, Sketch, Shapes, Erase, Transform,
 				   Edit, Select, Connect};
+
+		enum EventState {Began = 1, Update, End, Cancel};
 	}
 
 	/**
@@ -82,7 +86,6 @@ namespace CDI
 		bool _mouseModeEnabled;
 		UI::MODE _activeMode;
 		QTabletEvent::TabletDevice _device;
-		QTabletEvent::PointerType _pointerType;
 
 		/*****************************************************
 		 * Sketching and other drawing operations related variables
@@ -90,7 +93,8 @@ namespace CDI
 		QPen _defaultPen, _fillPen, _lassoPen, _highlightPen;
 		QBrush _defaultBrush, _fillBrush, _lassoBrush, _highlightBrush;
 
-		bool _isDrawingNow;
+		bool _isDrawingStroke;
+		bool _isDrawingPolygon;
 		Stroke* _currentStroke;
 		Polygon2D* _currentPolygon;
 
@@ -114,7 +118,7 @@ namespace CDI
 		 ********************************************************/
 		QToolBar* connectionOptionsToolbar;
 
-		ConnectionMode _currentMode;
+		ConnectionMode _activeConnectionMode;
 
 		QList<PenStroke*> _tmpStrokes;
 
@@ -137,6 +141,12 @@ namespace CDI
 
 		// Limit the slider to startPos and endPos
 
+		/*********************************************************
+		 * Edit component and joint settings
+		 ********************************************************/
+		bool _tapOverrideEnabled;
+		TouchAndHoldController* touchholdController;
+
 	private:
 		ForceGraphicsItem* forceLine;
 
@@ -158,28 +168,23 @@ namespace CDI
 		virtual void initController();
 		/// Sketching
 		virtual void brushPress(QPointF pos, float pressure=1.0f, int time=0);
-		virtual void brushPress(Point2DPT pos);
-		virtual void brushPress(float x, float y, float pressure, int time);
-
 		virtual void brushMove(QPointF pos, float pressure=1.0f, int time=0);
-		virtual void brushMove(Point2DPT pos);
-		virtual void brushMove(float x, float y, float pressure, int time);
-
 		virtual void brushRelease(QPointF pos, float pressure=1.0f, int time=0);
-		virtual void brushRelease(Point2DPT pos);
-		virtual void brushRelease(float x, float y, float pressure, int time);
 
+		/// Polygon drawing
 		virtual void shapePress(QPointF pos);
 		virtual void shapeMove(QPointF pos);
 		virtual void shapeRelease(QPointF pos);
 
-		virtual void eraserPress(Point2DPT pos);
-		virtual void eraserMove(Point2DPT pos);
-		virtual void eraserRelease(Point2DPT pos);
+		/// Erase items
+		virtual void eraserPress(QPointF pos);
+		virtual void eraserMove(QPointF pos);
+		virtual void eraserRelease(QPointF pos);
 
-		virtual void lassoPress(Point2DPT pos);
-		virtual void lassoMove(Point2DPT pos);
-		virtual void lassoRelease(Point2DPT pos);
+		/// Select objects
+		virtual void lassoPress(QPointF pos);
+		virtual void lassoMove(QPointF pos);
+		virtual void lassoRelease(QPointF pos);
 
 		virtual void connectPress(QPointF scenePos);
 		virtual void connectMove(QPointF scenePos);
@@ -209,8 +214,11 @@ namespace CDI
 		virtual void connectAction(QTabletEvent *event);
 		virtual void searchAction();
 
+		bool isTapOverrideEnabled() const;
+		void setTapOverride(bool value);
+		void overrideOnTapAndHold(QTapAndHoldGesture* gesture);
+
 	signals:
-		void signalStrokeComplete(Stroke* item);
 		void signalSearchComplete();
 		void signalSearchBegin();
 		void signalSearchItemSelect();
@@ -251,8 +259,8 @@ namespace CDI
 		 * @brief Receives mouse event from scene
 		 * @param mouseEvent QGraphicsSceneMouseEvent
 		 * @param status QGraphicsScene from which the event originiated
-		 */
-		void onMouseEventFromScene(QGraphicsSceneMouseEvent* mouseEvent, int status);
+
+		void onMouseEventFromScene(QGraphicsSceneMouseEvent* mouseEvent, int status);*/
 
 		/**
 		 * @brief Receives touch event from view
@@ -309,5 +317,6 @@ namespace CDI
 		void loadCamera();
 
 		friend class ConnectController;
+		friend class TouchAndHoldController;
 	};
 }

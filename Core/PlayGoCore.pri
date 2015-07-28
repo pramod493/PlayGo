@@ -13,12 +13,14 @@ HEADERS += $$PWD/clipper.hpp \
     $$PWD/cdiboxdebugdraw.h \
     $$PWD/forceitem.h \
     $$PWD/penstroke.h \
-    $$PWD/scenebutton.h
+    $$PWD/scenebutton.h \
+    $$PWD/cdcontactlistener.h
 SOURCES += $$PWD/clipper.cpp \
     $$PWD/grabcut.cpp \
     $$PWD/forceitem.cpp \
     $$PWD/penstroke.cpp \
-    $$PWD/scenebutton.cpp
+    $$PWD/scenebutton.cpp \
+    $$PWD/cdcontactlistener.cpp
 
 HEADERS += \
     $$PWD/ramerdouglaspeucker.h \

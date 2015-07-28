@@ -12,7 +12,8 @@ CONFIG   += console
 
 TEMPLATE = app
 
-RESOURCES += images.qrc
+RESOURCES += images.qrc \
+    overlayimages.qrc
 unix {
 include ($$PWD/QtTuio/qTUIO.pri)
 }

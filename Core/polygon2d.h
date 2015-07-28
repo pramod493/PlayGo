@@ -45,7 +45,7 @@ namespace CDI
 
 		static QPolygonF applyLaplacianSmoothing(QPolygonF poly, int order);
 
-		virtual bool containsPoint(const Point2D &pt, SelectionType rule, float margin=0);
+		virtual bool containsPoint(const Point2D &pt, SelectionType rule = Inside, float margin=0);
 
 		bool isHighlighted() const;
 

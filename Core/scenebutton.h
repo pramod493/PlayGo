@@ -1,10 +1,12 @@
 #ifndef SCENEBUTTON_H
 #define SCENEBUTTON_H
 #include <QGraphicsWidget>
+#include <QDebug>
 #include <QPixmap>
 #include <QStyleOptionGraphicsItem>
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
+#include <QMessageBox>
 
 namespace CDI
 {
@@ -14,12 +16,12 @@ namespace CDI
 	public:
 		SceneButton(const QPixmap &pixmap, QString filePath, QGraphicsItem *parent = 0);
 
-		QRectF boundingRect() const Q_DECL_OVERRIDE
+		QRectF boundingRect() const
 		{
-			return QRectF(_pix.rect());
+			return QRectF(-65, -65, 130, 130);
 		}
 
-		QPainterPath shape() const Q_DECL_OVERRIDE
+		QPainterPath shape() const
 		{
 			QPainterPath path;
 			path.addEllipse(boundingRect());
@@ -32,15 +34,14 @@ namespace CDI
 		void pressed(QString filepath);
 
 	protected:
-		void mousePressEvent(QGraphicsSceneMouseEvent *) Q_DECL_OVERRIDE
+		void mousePressEvent(QGraphicsSceneMouseEvent *)
 		{
-			//        emit pressed();
-			//        update();
+			qDebug() << _filePath << "clicked...";
 		}
 
-		void mouseReleaseEvent(QGraphicsSceneMouseEvent *) Q_DECL_OVERRIDE
+		void mouseReleaseEvent(QGraphicsSceneMouseEvent *)
 		{
-			//        update(_filePath);
+			emit pressed(_filePath);
 		}
 
 	private:

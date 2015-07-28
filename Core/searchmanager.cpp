@@ -83,7 +83,7 @@ namespace CDI
 	QList<SearchResult*> SearchManager::search(QString filePath, int numResults)
 	{
 		vector<string> results;
-		if(true)
+		if(false)
 		{
 			results = getDummyResults();
 		} else

@@ -46,6 +46,42 @@ namespace CDI
 		MASK_LAYER_07	= 0x0080
 	};
 
+    class Material : public QObject
+    {
+        Q_OBJECT
+		Q_PROPERTY(float friction READ friction WRITE setFriction)
+		Q_PROPERTY(float restitution READ restitution WRITE setRestitution)
+		Q_PROPERTY(float density READ density WRITE setDensity)
+		Q_PROPERTY(QString name READ materialName WRITE setMaterialName)
+
+	protected:
+		float _friction;
+		float _restitution;
+		float _density;
+		QString _materialName;
+	public :
+		Material();
+
+		Material(float friction, float restitution, float density, QString name);
+
+		Material(const Material& mat);
+
+		float friction() const;
+		void setFriction(float friction);
+
+		float restitution() const;
+		void setRestitution(float restitution);
+
+		float density() const;
+		void setDensity(float density);
+
+		QString materialName() const;
+		void setMaterialName(const QString &materialName);
+
+	signals:
+		void materialChanged(Material* mat);
+	};
+
 	class PhysicsSettings {
 	public:
 		float timeStep;
@@ -61,6 +97,15 @@ namespace CDI
 			positionIterations = 4;
 			gravity = Point2D(0.0f,10.0f);
 			enableSleep = true;
+		}
+
+		PhysicsSettings(const PhysicsSettings& settings)
+		{
+			timeStep			= settings.timeStep;
+			velocityIterations	= settings.velocityIterations;
+			positionIterations	= settings.positionIterations;
+			gravity				= settings.gravity;
+			enableSleep			= settings.enableSleep;
 		}
 
 		QDataStream& serialize(QDataStream& stream) const
@@ -88,9 +133,9 @@ namespace CDI
 	{
 		Q_OBJECT
 
+	protected:
 		float defaultPhysicsScale;
 
-	protected:
 		QHash<QUuid, b2Body*> _box2DBodies;
 		QHash<QUuid, PhysicsBody*> _physicsBodies;
 
@@ -101,15 +146,19 @@ namespace CDI
 		bool _internalLock;
 
 		bool _isRunning;
-
+public :
 		b2World* _b2World;
-
+protected:
 		bool _enableDebugView;
 	public:
 		BoxDebugScene* debugView;
 
 	public:
-		explicit PhysicsManager(PhysicsSettings* settings, Page *parentPage);
+		PhysicsManager(PhysicsSettings* settings, Page *parentPage);
+
+		explicit PhysicsManager(QObject *parent = 0);
+
+		PhysicsManager(const PhysicsManager& physicsManager);
 
 		~PhysicsManager();
 
@@ -126,7 +175,15 @@ namespace CDI
 										float motorSpeed, float motorTorque,
 										float lowerLimit, float upperLimit);
 
+		virtual PhysicsJoint* createPrismaticJoint(Component *c1, Component *c2,
+												   QPointF startPos, QPointF endPos,
+												   bool enableMotoe, bool enableLimits,
+												   float motorSpeed, float motorForce,
+												   float lowerLimit, float upperLimit);
+
 		virtual bool updateJoint(PhysicsJoint* joint);
+
+		virtual bool updateJoint(PhysicsJoint* joint, QPointF newScenePos);
 
 		virtual bool deleteJoint(PhysicsJoint* joint);
 
@@ -154,6 +211,8 @@ namespace CDI
 	protected:
 		virtual b2Joint* createJoint(b2JointDef& jointDef);
 
+		virtual void init();
+
 	signals:
 		void physicsStepStart();
 
@@ -179,6 +238,10 @@ namespace CDI
 		void onItemAdd(QGraphicsItem* item);
 	};
 }
+
+Q_DECLARE_METATYPE(CDI::Material)
+Q_DECLARE_METATYPE(CDI::PhysicsSettings)
+Q_DECLARE_METATYPE(CDI::PhysicsManager)
 
 /* Random code snippets
  *

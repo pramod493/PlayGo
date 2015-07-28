@@ -9,6 +9,7 @@ namespace CDI
 		: QGraphicsPixmapItem(parent)
 	{
 		if (dim <= 0) dim = 150;
+        _dim = dim;
 		_id = uniqueHash();
 
 		_parentResult = searchresult;
@@ -27,12 +28,28 @@ namespace CDI
 		setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
 
 		_searchView = NULL;
+
+
+        QColor brushColor = Qt::blue;
+        _pen = QPen(Qt::blue);
+        _pen.setWidth(2);
+        brushColor.setAlpha(100);
+		//_brush = QBrush(brushColor, Qt::SolidPattern);
+		_brush = QBrush(Qt::NoBrush);
 	}
 
 	GraphicsSearchItem::~GraphicsSearchItem()
 	{
 		// Do not delete _parentResult as it is associated with Component.
 	}
+
+    void GraphicsSearchItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+    {
+		painter->setPen(_pen);
+		painter->setBrush(_brush);
+		painter->drawRect(boundingRect());
+        QGraphicsPixmapItem::paint(painter, option, widget);
+    }
 
 	SearchResult* GraphicsSearchItem::getSearchResult()
 	{

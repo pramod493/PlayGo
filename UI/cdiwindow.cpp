@@ -62,7 +62,8 @@ namespace CDI
 
 		FileSystemWatcher* watcher = new FileSystemWatcher();
 #ifdef Q_OS_WIN
-		watcher->setDirectory(QString("C:/Users/Pramod/Dropbox/Camera Uploads"));
+		watcher->setDirectory(QString("C:/Database/watched"));
+				//watcher->setDirectory(QString("C:/Users/Pramod/Dropbox/Camera Uploads"));
 #endif
 #ifdef Q_OS_LINUX
 //		watcher->setDirectory(QString("~/Dropbox/Camera Uploads"));
@@ -124,17 +125,17 @@ namespace CDI
 		connectModeAction->setChecked(false);
 
 		// Physics simulation related actions
-		QActionGroup *playActions = new QActionGroup(this);
+//		QActionGroup *playActions = new QActionGroup(this);	// Put all actions in one group
 
-		playAction = new QAction(QIcon(":/images/play.png"), tr("Play simulation"), playActions);
+		playAction = new QAction(QIcon(":/images/play.png"), tr("Play simulation"), sketchActions);
 		playAction->setCheckable(true);
 		playAction->setChecked(false);
 
-		pauseAction = new QAction(QIcon(":/images/pause.png"), tr("Pause simulation"), playActions);
+		pauseAction = new QAction(QIcon(":/images/pause.png"), tr("Pause simulation"), sketchActions);
 		pauseAction->setCheckable(true);
 		playAction->setChecked(false);
 
-		resetAction = new QAction(QIcon(":/images/reset.png"), tr("Reset simulation"), playActions);
+		resetAction = new QAction(QIcon(":/images/reset.png"), tr("Reset simulation"), sketchActions);
 		pauseAction->setCheckable(true);
 		pauseAction->setChecked(false);
 
@@ -201,6 +202,10 @@ namespace CDI
 		colorToolbar->InitToolbarItems();
 		addToolBar(Qt::LeftToolBarArea, colorToolbar);
 		colorToolbar->show();
+
+		QString styleSheet("background-color: #FFFFFF");
+		mainToolbar->setStyleSheet(styleSheet);
+		colorToolbar->setStyleSheet(styleSheet);
 	}
 
 	void CDIWindow::createStatusbar()

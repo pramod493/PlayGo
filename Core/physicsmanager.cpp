@@ -9,6 +9,69 @@
 
 namespace CDI
 {
+	Material::Material()
+	{
+		_friction = 0.1f;
+		_restitution = 0.1f;
+		_density = 1.0f;
+		_materialName = QString("No Material");
+	}
+
+	Material::Material(float friction, float restitution, float density, QString name)
+	{
+		_friction		= friction;
+		_restitution	= restitution;
+		_density		= density;
+		_materialName	= name;
+	}
+
+	Material::Material(const Material &mat)
+	{
+		_friction = mat._friction;
+		_restitution = mat._restitution;
+		_density = mat._density;
+		_materialName = mat._materialName;
+	}
+
+	float Material::friction() const
+	{
+		return _friction;
+	}
+
+	void Material::setFriction(float friction)
+	{
+		_friction = friction;
+	}
+
+	float Material::restitution() const
+	{
+		return _restitution;
+	}
+
+	void Material::setRestitution(float restitution)
+	{
+		_restitution = restitution;
+	}
+
+	float Material::density() const
+	{
+		return _density;
+	}
+
+	void Material::setDensity(float density)
+	{
+		_density = density;
+	}
+
+	QString Material::materialName() const
+	{
+		return _materialName;
+	}
+
+	void Material::setMaterialName(const QString &materialName)
+	{
+		_materialName = materialName;
+	}
 
 	void PhysicsManager::setEnableDebugView(bool enableDebugView)
 	{
@@ -30,21 +93,45 @@ namespace CDI
 		_settings.gravity = settings->gravity;
 		_settings.enableSleep = settings->enableSleep;
 
+        _enableDebugView = true;
+		init();
+	}
+
+	PhysicsManager::PhysicsManager(QObject *parent)
+		:QObject(parent)
+	{
+		defaultPhysicsScale = getPhysicsScale();
+		_settings = PhysicsSettings();
+		_enableDebugView = true;
+
+		init();
+	}
+
+	PhysicsManager::PhysicsManager(const PhysicsManager &physicsManager)
+		:QObject(physicsManager.parent())
+	{
+		defaultPhysicsScale = getPhysicsScale();
+		_settings = PhysicsSettings();
+		_enableDebugView = physicsManager.enableDebugView();
+
+		init();
+	}
+
+	void PhysicsManager::init()
+	{
 		b2Vec2 gravity(_settings.gravity.x(), _settings.gravity.y());
 		_b2World = new b2World(gravity);
 		_b2World->SetAllowSleeping(_settings.enableSleep);
 
-        _enableDebugView = true;
 		debugView = new BoxDebugScene(defaultPhysicsScale);
 		debugView->SetFlags(  b2Draw::e_shapeBit
 							  | b2Draw::e_pairBit | b2Draw::e_jointBit
 							  | b2Draw::e_centerOfMassBit);//b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
 		_b2World->SetDebugDraw(debugView);
 
-		timer = NULL;
-
 		_internalLock = false;
 		_isRunning = false;
+		timer = NULL;
 	}
 
 	PhysicsManager::~PhysicsManager()
@@ -124,6 +211,23 @@ namespace CDI
 		return physicsJoint;
 	}
 
+	PhysicsJoint* PhysicsManager::createPrismaticJoint(Component *c1, Component *c2,
+											   QPointF startPos, QPointF endPos,
+											   bool enableMotoe, bool enableLimits,
+											   float motorSpeed, float motorForce,
+											   float lowerLimit, float upperLimit)
+	{
+		b2PrismaticJointDef* jointDef = new b2PrismaticJointDef;
+		jointDef->bodyA = c1->physicsBody();
+		jointDef->bodyB = c1->physicsBody();
+
+		QPointF direction = endPos - startPos;
+
+
+
+		return NULL;
+	}
+
 	bool PhysicsManager::updateJoint(PhysicsJoint *joint)
 	{
 		QPointF localPosA = joint->relPosA * joint->componentA->scale();
@@ -140,14 +244,31 @@ namespace CDI
 			revoluteJointDef->localAnchorB.Set
 					(localPosB.x()/defaultPhysicsScale, localPosB.y()/defaultPhysicsScale);
 
-			_b2World->DestroyJoint(joint->_joint);
+			b2RevoluteJoint* prevRevoluteJoint = static_cast<b2RevoluteJoint *>(joint->_joint);
+			b2RevoluteJoint* newRevoluteJoint = static_cast<b2RevoluteJoint*>(createJoint(*revoluteJointDef));
 
-			joint->_joint = createJoint(*revoluteJointDef);
+			// Copy values before deleting previous joint
+			newRevoluteJoint->SetMaxMotorTorque(prevRevoluteJoint->GetMaxMotorTorque());
+			newRevoluteJoint->SetMotorSpeed(prevRevoluteJoint->GetMotorSpeed());
+			newRevoluteJoint->EnableMotor(prevRevoluteJoint->IsMotorEnabled());
+			newRevoluteJoint->SetLimits(prevRevoluteJoint->GetLowerLimit(),
+										prevRevoluteJoint->GetUpperLimit());
+			newRevoluteJoint->SetUserData(prevRevoluteJoint->GetUserData());
+
+			_b2World->DestroyJoint(joint->_joint);
+			joint->_joint = newRevoluteJoint;
 			return true;
 		}
 		}
 
 		return false;
+	}
+
+	bool PhysicsManager::updateJoint(PhysicsJoint *joint, QPointF newScenePos)
+	{
+		joint->relPosA = joint->componentA->mapFromScene(newScenePos);
+		joint->relPosB = joint->componentB->mapFromScene(newScenePos);
+		return updateJoint(joint);
 	}
 
 	bool PhysicsManager::deleteJoint(PhysicsJoint *joint)
@@ -308,6 +429,7 @@ namespace CDI
 //			} else
 //				body->SetLinearVelocity(b2Vec2(0,0));	// pause the object which is being moved.
 			body->SetTransform(boxPos, rotation);
+			body->SetAwake(true);
 		}
 	}
 

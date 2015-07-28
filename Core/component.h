@@ -32,6 +32,11 @@ namespace CDI
 		bool requiresRegeneration;
 		bool pendingPositionUpdate;
 		float previousScale;
+		bool disableScaling;
+
+		uint16 groupIndex;
+		uint16 maskBits;
+		int16 categoryBits;
 
 	protected:
 		QRectF itemBoundingRect;
@@ -47,6 +52,10 @@ namespace CDI
 		QList<PhysicsJoint*> _jointlist;
 
 		QGraphicsPathItem* _anchorItem;
+
+		QGraphicsPixmapItem* _lockScaleItem;
+
+		float _density;
 
 	public:
 		Component(QGraphicsItem* parent = 0);
@@ -70,6 +79,10 @@ namespace CDI
 		bool isStatic() const;
 
 		void setStatic(bool value);
+
+		bool isScalingDisabled() const;
+
+		void setDisableScaling(bool value);
 
 		bool sceneEvent(QEvent *event);
 
@@ -101,6 +114,12 @@ namespace CDI
 
 		virtual QDataStream& deserialize(QDataStream& stream);
 
+		float getDensity() const;
+
+		void setDensity(float density);
+
+		void onCollisionBitsUpdate();
+
 	protected:
 		virtual void addToHash(QUuid uid, QGraphicsItem* item);
 
@@ -113,6 +132,9 @@ namespace CDI
 		 */
 		virtual void addFixture(QGraphicsItem* graphicsitem);
 
+		virtual bool isTouchEventAcceptable(QTouchEvent* event);
+
+		virtual bool containsPoint(QPointF pos);
 	signals:
 		void onItemAdd(QGraphicsItem* item);
 

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	 * Set up themes
 	 * **************************************************************/
 	//QStringList list = QStyleFactory::keys();
-	QStyle* style = QStyleFactory::create("Fusion");
+	QStyle* style = QStyleFactory::create("windowsvista");
 	if (style)
 		app.setStyle(style);
 	// Initialize the QsLog logger
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 					 window, SLOT(onStylusProximity(QEvent*)));
 
 	window->initWidgets();
-	//window->showFullScreen();
+//	window->showFullScreen();
 	window->show();
 
 	/****************************************************************

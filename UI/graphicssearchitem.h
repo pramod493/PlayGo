@@ -27,7 +27,13 @@ namespace CDI
 
 		SearchView* _searchView;
 
+        int _dim;
+
 		QUuid _id;
+
+        QPen _pen;
+
+        QBrush _brush;
 
 	public:
 		GraphicsSearchItem(SearchResult* searchresult, int dim = 150, QGraphicsItem* parent = 0);
@@ -37,6 +43,8 @@ namespace CDI
 		int type() const { return Type; }
 
 		QUuid id() const { return _id; }
+
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 		SearchResult* getSearchResult();
 

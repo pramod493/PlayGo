@@ -108,7 +108,8 @@ namespace CDI
 			GraphicsSearchItem* searchItem = _searchDispItems[i];
 			searchItem->setPos((i%5) * (imgDim+margin),
 						(i/5) * (imgDim+margin));
-
+            //searchItem->setTransform(searchItem->transform().rotate( (i%5)*10.0f, Qt::YAxis ));
+            //searchItem->setTransform(searchItem->transform().rotate( (i/5)*10.0f, Qt::XAxis ));
 		}
 	}
 

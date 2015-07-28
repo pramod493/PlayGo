@@ -53,6 +53,10 @@ namespace CDI
 		// NOTE - Might not be required
 		virtual b2JointDef* jointDef();
 
+		Component* getComponentA() const;
+
+		Component* getComponentB() const;
+
 		virtual bool update();
 
 		//virtual void updateJoint();
@@ -75,17 +79,32 @@ namespace CDI
 
 	protected:
 		QPainterPath _painterPath;
-		Component *_component;
 		PhysicsJoint *_physicsJoint;
 
 	public:
-		JointGraphics(PhysicsJoint* physicsJoint, Component *parent);
+		JointGraphics(PhysicsJoint* physicsJoint, QGraphicsItem *parent = 0);
 
 		virtual ~JointGraphics() {}
 
+		/**
+		 * @brief Returns the expanded bounding rect for joint in order to ease the selection
+		 * @return
+		 */
+		QRectF boundingRect() const;
+
+		PhysicsJoint* getPhysicsJoint() const;
+
 		int type() const { return Type; }
 
-		virtual void initializePainterPath();
+		virtual void initializePainterPath() = 0;
 
 	};
+
+	class PinJointGraphics : public JointGraphics
+	{
+	public :
+		PinJointGraphics(PhysicsJoint* physicsJoint, QGraphicsItem* parent = 0);
+		void initializePainterPath();
+	};
+
 }

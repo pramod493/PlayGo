@@ -15,6 +15,8 @@ namespace CDI
 		PlayGo *playgo;
 		QTreeWidgetItem* rootItem;
 
+		QHash<int, QString> id_type_hash;
+
 	public:
 		ModelViewTreeWidget(PlayGo *root);
 		~ModelViewTreeWidget();

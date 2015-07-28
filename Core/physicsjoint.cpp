@@ -79,6 +79,16 @@ namespace CDI
 		return _jointDef;
 	}
 
+	Component* PhysicsJoint::getComponentA() const
+	{
+		return componentA;
+	}
+
+	Component* PhysicsJoint::getComponentB() const
+	{
+		return componentB;
+	}
+
 	bool PhysicsJoint::update()
 	{
 		return _physicsManager->updateJoint(this);
@@ -89,10 +99,29 @@ namespace CDI
 	/// \param physicsJoint
 	/// \param parent
 	///
-	JointGraphics::JointGraphics(PhysicsJoint *physicsJoint, Component *parent)
+	JointGraphics::JointGraphics(PhysicsJoint *physicsJoint, QGraphicsItem *parent)
 		:QGraphicsPathItem(parent)
 	{
 		_physicsJoint = physicsJoint;
+		setZValue(Z_JOINTVIEW);
+	}
+
+	QRectF JointGraphics::boundingRect() const
+	{
+		return QGraphicsPathItem::boundingRect().adjusted(-10,-10,10,10);
+	}
+
+	PhysicsJoint *JointGraphics::getPhysicsJoint() const
+	{
+		return _physicsJoint;
+	}
+
+	/*-------------------------------------------------------------------
+	 * Pin joint graphics class
+	 * */
+	PinJointGraphics::PinJointGraphics(PhysicsJoint* physicsJoint, QGraphicsItem *parent)
+		: JointGraphics(physicsJoint, parent)
+	{
 		setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
 		setFlag(QGraphicsItem::ItemIgnoresParentOpacity, true);
 		initializePainterPath();
@@ -106,41 +135,32 @@ namespace CDI
 
 		setPen(_pen);
 		setBrush(_brush);
-		setZValue(Z_JOINTVIEW);
 	}
 
-	void JointGraphics::initializePainterPath()
+	void PinJointGraphics::initializePainterPath()
 	{
 		if (_physicsJoint == NULL) return;
-		_painterPath = QPainterPath();
-		switch (_physicsJoint->jointType())
-		{
-			case e_revoluteJoint :
-		{
-			float radius = 15;
-			_painterPath.moveTo(0,0);
-			_painterPath.addEllipse(QPointF(0,0), radius, radius);
-			_painterPath.moveTo(0,0);
+		if (_physicsJoint->jointType() != e_revoluteJoint) return;
 
-			radius += 15;
-			b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(_physicsJoint->joint());
-			if (revoluteJoint->IsMotorEnabled())
-			{
-				_painterPath.addText(QPointF(0,0),
-									 QFont("Times", 12),
-									 QString("Motor enabled"));
-			} else {
-				_painterPath.addText(QPointF(0,0),
-									 QFont("Times", 12),
-									 QString("Pivot"));
-			}
-			break;
-		}
-		case e_prismaticJoint :
+		_painterPath = QPainterPath();
+		float radius = 15;
+		_painterPath.moveTo(0,0);
+		_painterPath.addEllipse(QPointF(0,0), radius, radius);
+		_painterPath.moveTo(0,0);
+
+		radius += 15;
+		b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(_physicsJoint->joint());
+		if (revoluteJoint->IsMotorEnabled())
 		{
-			break;
+			_painterPath.addText(QPointF(0,0),
+								 QFont("Times", 12),
+								 QString("Motor enabled"));
+		} else {
+			_painterPath.addText(QPointF(0,0),
+								 QFont("Times", 12),
+								 QString("Pivot"));
 		}
-		}
+
 		setPath(_painterPath);
 	}
 }

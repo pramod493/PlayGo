@@ -1,9 +1,18 @@
 #include "modelviewtreewidget.h"
 #include "commonfunctions.h"
 #include <QDebug>
+#include <QPushButton>
+#include "stroke.h"
+#include "pixmap.h"
+#include "polygon2d.h"
+#include "physicsjoint.h"
 
 namespace CDI
 {
+	// 0 - Type
+	// 1 - ID
+	// 2 - Transform
+	// 3 - Extra details
 	ModelViewTreeWidget::ModelViewTreeWidget(PlayGo *root)
 	{
 		playgo = root;
@@ -11,10 +20,21 @@ namespace CDI
 		rootItem = NULL;
 		populate();
 
-		QTimer *timer = new QTimer(this);
-		connect(timer, SIGNAL(timeout()),
-				this, SLOT(populate()));
-		timer->start(5000);
+		id_type_hash.insert(Stroke::Type, "Stroke");
+		id_type_hash.insert(Polygon2D::Type, "Polygon 2D");
+		id_type_hash.insert(Pixmap::Type, "Pixmap");
+		id_type_hash.insert(JointGraphics::Type, "Pin joint");
+
+// Manual update
+//		QTimer *timer = new QTimer(this);
+//		connect(timer, SIGNAL(timeout()),
+//				this, SLOT(populate()));
+//		timer->start(5000);
+
+		QPushButton *button = new QPushButton(this);
+		button->setText("Refresh tree");
+		connect(button, SIGNAL(clicked()),
+				 this, SLOT(populate()));
 	}
 
 	ModelViewTreeWidget::~ModelViewTreeWidget()
@@ -34,13 +54,12 @@ namespace CDI
 			QTreeWidgetItem* tmpItem = new QTreeWidgetItem(rootItem);
 			tmpItem->setText(0, "Page");
 			tmpItem->setText(1, page->id().toString());
-			tmpItem->setText(3, getItemNameByType(page->type()));
 
-			QList<Assembly*> assemblies = page->getAssemblies();
-			foreach (Assembly* assembly, assemblies)
-			{
-				updateAssembly(tmpItem, assembly);
-			}
+//			QList<Assembly*> assemblies = page->getAssemblies();
+//			foreach (Assembly* assembly, assemblies)
+//			{
+//				updateAssembly(tmpItem, assembly);
+//			}
 
 			QList<Component*> components = page->getComponents();
 			foreach (Component* component, components)
@@ -69,14 +88,12 @@ namespace CDI
 	void ModelViewTreeWidget::updateComponent(QTreeWidgetItem* parent, Component* component)
 	{
 
-//		component->setTransform(component->transform().translate(20,20));
-//		component->setTransform(component->transform().rotate(5));
 		QTreeWidgetItem* compItem = new QTreeWidgetItem(parent);
 		compItem->setText(0, "Component");
 		compItem->setText(1, component->id().toString());
 		updateTransform(2, compItem, component);
 
-		QList<QGraphicsItem*> modelItems = component->values();
+		QList<QGraphicsItem*> modelItems = component->childItems();
 		foreach (QGraphicsItem* modelItem, modelItems)
 		{
 			updateAbstractModelItem(compItem, modelItem);
@@ -86,14 +103,8 @@ namespace CDI
 	void ModelViewTreeWidget::updateAbstractModelItem(QTreeWidgetItem* parent, QGraphicsItem *modelItem)
 	{
 		QTreeWidgetItem* item = new QTreeWidgetItem(parent);
+		item->setText(0, id_type_hash.value(modelItem->type()));
 		updateTransform(2,item, modelItem);
-		if (modelItem->type() == Stroke::Type)
-		{
-			Stroke* s = qgraphicsitem_cast<Stroke*>(modelItem);
-			QTreeWidgetItem* vectorChild = new QTreeWidgetItem(item);
-			vectorChild->setText(0, "Stroke");
-			vectorChild->setText(1, QString::number(s->size()) + " Points");
-		}
 	}
 
 	void ModelViewTreeWidget::updateTransform(int column, QTreeWidgetItem* item, QGraphicsItem *t)
