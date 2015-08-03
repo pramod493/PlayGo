@@ -25,6 +25,7 @@ namespace CDI
 		// For bounding box calculations
 		float _x_min, _x_max, _y_min, _y_max;
 		QRectF aabb;
+		bool _isStrokeFinalized;
 	public:
 
 		/**

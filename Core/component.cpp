@@ -240,10 +240,6 @@ namespace CDI
 			return touchEvent(static_cast<QTouchEvent*>(event));
 			break;
 		case QEvent::Gesture :
-			//			qDebug() << "Gesture received component";
-			//			gestureEvent(static_cast<QGestureEvent*>(event));
-			//			event->accept();
-			//			return true;
 			break;
 		}
 		return QGraphicsObject::sceneEvent(event);
@@ -286,9 +282,11 @@ namespace CDI
 
 	bool Component::touchEvent(QTouchEvent *event)
 	{
-		// Do not process when the touch event arrives
+		qDebug() << "Touch event @ component";
+
 		if (event->type()==QEvent::TouchBegin)
 		{
+			// Do not process when the touch event arrives
 			if (isTouchEventAcceptable(event))
 			{
 				event->accept();
@@ -304,18 +302,8 @@ namespace CDI
 		{
 			return false;
 		}
-		//		if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
-		//		{
-		//			setTransformOriginPoint(0,0);
-		//			return true;
-		//		}
 
-		//		if ((event->touchPointStates() & Qt::TouchPointPressed) ||		// Start of input
-		//			(event->touchPointStates() & Qt::TouchPointReleased))		// Touch leaving
-		//		{
-		//			// Ignore begninning/end of touch
-		//			return false;	// Nothing to do if point does not move
-		//		}
+		event->accept();
 
 		if (event->touchPoints().count() == 1 &&
 				(event->touchPointStates() & Qt::TouchPointMoved))
@@ -799,7 +787,6 @@ namespace CDI
 		{
 			const QTouchEvent::TouchPoint &tp = *(it);
 			QPointF pos = tp.scenePos();
-			qDebug() << "Component touch" << pos;
 			if (containsPoint(pos))
 			{
 				retval = true;

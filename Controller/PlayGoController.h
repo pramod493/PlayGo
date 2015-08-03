@@ -39,7 +39,6 @@
 #include <box2dworld.h>
 #include "pdollarrecognizer.h"
 #include "polygon2d.h"
-
 #include <QDebug>
 #include <QTabletEvent>
 namespace CDI
@@ -285,6 +284,8 @@ namespace CDI
 		 * @param view QGraphicsView from where event originiated
 		 */
 		bool onTouchEventFromView(QTouchEvent* event);
+
+		bool onTouchEventFromScene(QTouchEvent* event);
 
 		/**
 		 * @brief Manages gesture events received from viewport.

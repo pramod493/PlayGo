@@ -6,18 +6,6 @@ using namespace std;
 
 namespace CDI
 {
-
-	// TODO - Add stroke and thickness information to the stroke
-//	Stroke::GraphicsPathItem(QGraphicsItem *parent, Point2D startPoint, float pressure, int time)
-//		: QGraphicsPathItem (parent)
-//	{
-//		_parentStroke = new Stroke();
-//		_parentStroke->setTransform
-//				(_parentStroke->transform().translate(startPoint.x(), startPoint.y()));
-//		setTransform(_parentStroke->transform());
-//		push_back(startPoint,pressure,time);
-//    }
-
 	Stroke::Stroke(QGraphicsItem* parent)
 		:QGraphicsPathItem(parent)
 	{
@@ -26,6 +14,8 @@ namespace CDI
 		recalculateAABB();
 
 		setZValue(Z_STROKEVIEW);
+
+		_isStrokeFinalized = false;
 	}
 
 	Stroke::Stroke(QVector<Point2DPT*> points, QGraphicsItem* parent)
@@ -46,6 +36,8 @@ namespace CDI
 		recalculateAABB();
 
 		setZValue(Z_STROKEVIEW);
+
+		_isStrokeFinalized = false;
 	}
 
 	Stroke::~Stroke()
@@ -60,6 +52,7 @@ namespace CDI
 				component->removeFromComponent(this);
 			}
 		}
+		qDeleteAll(_points);
     }
 
 	void Stroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -95,7 +88,7 @@ namespace CDI
 			painter->drawLine(*p1, *p2);
 		}
 #ifdef CDI_DEBUG_DRAW_SHAPE
-		painter->setPen((_pen.setWidth(0), _pen));
+		painter->setPen((_pen.setWidth(0),_pen.setStyle(Qt::DashDotLine), _pen));
 		painter->drawRect(boundingRect());
 #endif
     }
@@ -146,9 +139,14 @@ namespace CDI
 
 	QRectF Stroke::boundingRect() const
 	{
-		if (_points.size() == 0) return QRectF();
-		if (isVisible()== false) return QRectF();
-		return aabb;
+		if (!_isStrokeFinalized)
+		{
+			if (_points.size() == 0) return QRectF();
+			if (isVisible()== false) return QRectF();
+			return aabb;
+		}
+
+		return QGraphicsPathItem::boundingRect();
 	}
 
 	void Stroke::push_point(QPointF point, float pressure, int time)
@@ -178,6 +176,15 @@ namespace CDI
 				points[index]->setPressure
 						(0.5f *(points[index-1]->pressure() + points[index+1]->pressure()) );
 			}
+
+		QPainterPath localPath = QPainterPath();
+		localPath.moveTo(*_points[0]);
+		for (int index = 0;index < num_points; index++)
+		{
+			localPath.lineTo(*_points[index]);
+		}
+		setPath(localPath);
+		_isStrokeFinalized = true;
 		recalculateAABB();
     }
 
@@ -196,16 +203,16 @@ namespace CDI
 	QDataStream& Stroke::serialize(QDataStream &stream) const
 	{
 		stream << _id;
+		stream << static_cast<int>(_points.size());
+		for(QVector<Point2DPT*>::const_iterator iter = _points.constBegin();
+			iter != _points.constEnd(); ++iter)
+		{
+			Point2DPT *point = (*iter);
+			stream << *point;
+		}
+		stream << sceneTransform();
+		stream << transform();
 		return stream;
-//
-//		stream << pen();
-//		stream << transform();
-
-//		int len = _points.size();
-//		stream << qint32(len);
-//		for (i=0; i< len; i++)
-//			stream << this->at(i);
-//		return stream;
 	}
 
 	QDataStream& Stroke::deserialize(QDataStream &stream)

@@ -1434,7 +1434,7 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
             float d1 = diameterOfCircumcircle(euclideanDistance(&a1,&b1),
                                               euclideanDistance(&b1,&c1),
                                               euclideanDistance(&c1,&a1));
-            qDebug() << d0 << d1 << "SearchView";
+			//qDebug() << d0 << d1 << "SearchView";
 
             if ((qFuzzyCompare(d0,0) == false && qFuzzyCompare(d1,0)) == false)
 			{
@@ -1450,12 +1450,27 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 		difference = currentCenter - updatedViewCenter;
 		t = QTransform();
 		t.translate(difference.x(), difference.y());
-		qDebug() <<"Extra t" << difference;
 		_view->setTransform(t, true);
 
 		event->accept();
         return true;
 	}
+	return false;
+}
+
+bool PlayGoController::onTouchEventFromScene(QTouchEvent *event)
+{
+	// Here the event is not accepted and therefore we are free to do whatever we wish
+	// NOTE - This might create issues when we are displaying scene in a view != sketchview
+	if (event->touchPoints().count() == 1)
+	{
+		// pan
+
+	} else if (event->touchPoints().count() == 2)
+	{
+
+	}
+
 	return false;
 }
 

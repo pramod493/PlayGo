@@ -62,6 +62,37 @@ namespace CDI
 		}
 	}
 
+	bool SketchScene::event(QEvent *sceneEvent)
+	{
+		switch (sceneEvent->type())
+		{
+		case QEvent::TouchBegin :
+		case QEvent::TouchUpdate :
+		case QEvent::TouchEnd :
+		case QEvent::TouchCancel :
+			qDebug() << "TOUCH" << sceneEvent->isAccepted();
+		}
+
+		bool retval = QGraphicsScene::event(sceneEvent);
+		if (true /*retval == false || sceneEvent->isAccepted() == false */)
+		{
+			switch (sceneEvent->type())
+			{
+			case QEvent::TouchBegin :
+			case QEvent::TouchUpdate :
+			case QEvent::TouchEnd :
+			case QEvent::TouchCancel :
+			{
+				qDebug() << "Return:" << retval << "Accept:" << sceneEvent->isAccepted();
+				emit signalUnacceptedTouchEvent(static_cast<QTouchEvent*>(sceneEvent));
+				sceneEvent->accept();
+				return true;
+			}
+			}
+		}
+		return retval;
+	}
+
 	Page *SketchScene::page() const
 	{
 		return _page;

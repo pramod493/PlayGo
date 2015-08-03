@@ -29,6 +29,9 @@ namespace CDI
 	{
 		Q_OBJECT
 	protected:
+		/**
+		 * @brief Reference to parent page
+		 */
 		Page* _page;
 
 	public:
@@ -36,10 +39,28 @@ namespace CDI
 
 		SketchScene(Page* page);
 
-		~SketchScene();
+		/**
+		 * @brief Deletes the scene and removes all the components
+		 */
+		virtual ~SketchScene();
 
 		void clear();
 
+		/**
+		 * @brief Override the default behavior of scene events
+		 * @param sceneEvent
+		 * @return True, if accepted; false otherwise
+		 */
+		bool event(QEvent* sceneEvent);
+
+		/**
+		 * @brief Returns the reference to parent Page
+		 * @return
+		 */
 		Page* page() const;
+
+	signals:
+		void signalUnacceptedTouchEvent(QTouchEvent* event);
+
 	};
 }
