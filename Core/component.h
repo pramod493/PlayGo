@@ -10,10 +10,11 @@
 #include "pixmap.h"
 #include "polygon2d.h"
 #include "physicsshape.h"
-
 #include "box2dworld.h"
 #include "QsLog.h"
 #include <QPair>
+#include <QGraphicsEffect>
+
 namespace CDI
 {
 	class Page;
@@ -29,19 +30,18 @@ namespace CDI
 	public:
 		enum { Type = UserType + COMPONENTVIEW };
 
-		bool requiresRegeneration;
-		bool pendingPositionUpdate;
-		float previousScale;
-		bool disableScaling;
+		bool requiresRegeneration;	/**< Regenerate the physics info if mark is true */
+		bool pendingPositionUpdate;	/**< Marks change in item position for a given iteration */
+		float previousScale;		/**< Stores the previous scale. Allows for regenration only when scaled beyong a value */
+		bool disableScaling;		/**< Disables the scaling on touch gestures */
 
-		uint16 groupIndex;
-		uint16 maskBits;
-		int16 categoryBits;
+		uint16 groupIndex;			/**< Box2D groupIndex for fixtures */
+		uint16 maskBits;			/**< Box2D maskBits for fixtures */
+		int16 categoryBits;			/**< Box2D categoryBits for fixtures */
 
 	protected:
 		QRectF itemBoundingRect;
 
-		bool _highlighted;
 		QUuid _id;
 
 		b2Body* _physicsBody;
@@ -62,16 +62,41 @@ namespace CDI
 
 		virtual ~Component();
 
+		/**
+		 * @brief Bounding rectangle of the item in local transform
+		 * @return Union of bounding rect of the children item
+		 */
 		QRectF boundingRect() const;
 
+		/**
+		 * @brief Recalculates the items bounding rect
+		 */
 		void recalculateBoundingRect();
 
+		/**
+		 * @brief Paint operations for the component. Draws the bounding rect when debugging
+		 * @param painter QPainter for drawing
+		 * @param option paint options
+		 * @param widget QWidget parameter (Not sure what it does)
+		 */
 		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+		/**
+		 * @brief Returns Component's type. Useful for casting to right item type
+		 * @return
+		 */
 		int type () const { return Type; }
 
+		/**
+		 * @brief Returns component's unique QUuid id
+		 * @return id
+		 */
 		QUuid id() const { return _id; }
 
+		/**
+		 * @brief Returns b2Body pointer associated with the object
+		 * @return
+		 */
 		b2Body* physicsBody() const { return _physicsBody; }
 
 		void setPhysicsBody(b2Body* body);
@@ -83,6 +108,10 @@ namespace CDI
 		bool isScalingDisabled() const;
 
 		void setDisableScaling(bool value);
+
+        void setHighlight(bool value);
+
+        bool isHighlighted() const;
 
 		bool sceneEvent(QEvent *event);
 
@@ -141,6 +170,8 @@ namespace CDI
 		void onShapeUpdate(Component* component);
 
 		void onTransformChange(QGraphicsItem* component);
+
+        void preComponentDelete(Component* component);
 
     public slots:
 		void internalTransformChanged()

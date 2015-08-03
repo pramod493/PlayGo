@@ -112,9 +112,10 @@ namespace CDI
 		 * Search related variables
 		 ********************************************************/
 		SearchView* searchView;
+		bool _searchResultsDisplayed;
 
 		/*********************************************************
-		 * Search related variables
+		 * joint related variables
 		 ********************************************************/
 		QToolBar* connectionOptionsToolbar;
 
@@ -149,6 +150,7 @@ namespace CDI
 
 	private:
 		ForceGraphicsItem* forceLine;
+		bool _isStylusNearby;
 
 	public:
 		PlayGoController(SketchView* view, CDIWindow *parent = NULL);
@@ -225,6 +227,22 @@ namespace CDI
 
 	public slots:
 		/**
+		 * @brief Disables the touch input when stylus is near the tablet
+		 */
+		void stylusEnter();
+
+		/**
+		 * @brief Enables the touch input when stylus is near the tablet
+		 */
+		void stylusLeave();
+
+		/**
+		 * @brief When set enables/disables touch input on all the components
+		 * @param value
+		 */
+		void setAcceptComponentTouch(bool value);
+
+		/**
 		 * @brief onBrushSizeChange updates the pen width of default brush used for sketching
 		 * @param size: new pen size (It is still subject to pressure changes)
 		 */
@@ -259,7 +277,6 @@ namespace CDI
 		 * @brief Receives mouse event from scene
 		 * @param mouseEvent QGraphicsSceneMouseEvent
 		 * @param status QGraphicsScene from which the event originiated
-
 		void onMouseEventFromScene(QGraphicsSceneMouseEvent* mouseEvent, int status);*/
 
 		/**

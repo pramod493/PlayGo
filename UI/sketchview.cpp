@@ -83,6 +83,8 @@ namespace CDI
 		QPen pen = QPen();
 		pen.setWidth(1);
 		pen.setColor(QColor(200,200,255)); pen.setStyle(Qt::DashLine);
+		QBrush brush = QBrush(Qt::white, Qt::SolidPattern);
+		painter->fillRect(rect, brush);
 		painter->setPen(pen);
 
 		QRect int_rect = rect.toRect();

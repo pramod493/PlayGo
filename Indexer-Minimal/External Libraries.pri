@@ -1,7 +1,7 @@
 unix {
     #-------------------------------------------------------------
     #       LINUX SPECIFIC OPTIONS
-    LIBS += -lopencv_core -lopencv_features2d -lopencv_highgui -lopencv_shape -lopencv_ts -lopencv_imgproc -lopencv_photo -lopencv_imgcodecs
+    LIBS += -lopencv_core -lopencv_features2d -lopencv_shape -lopencv_ts -lopencv_imgproc -lopencv_photo -lopencv_imgcodecs
     #LIBS += -lopencv_core -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc  -lopencv_nonfree -lopencv_photo
     LIBS += -lboost_filesystem -lboost_system
     LIBS += -ltbb

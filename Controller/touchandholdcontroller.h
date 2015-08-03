@@ -9,6 +9,7 @@
 #include "commonfunctions.h"
 #include "physicsjoint.h"
 
+class QGraphicsView;
 namespace CDI
 {
 	class PlayGoController;

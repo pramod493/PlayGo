@@ -21,7 +21,6 @@ namespace CDI
     Component::Component(QGraphicsItem *parent)
         : QGraphicsObject(parent)
     {
-        _highlighted = false;
         _id = uniqueHash();
         
         _physicsBody = NULL;		// Creation is done outside but deletion is performed internally
@@ -32,11 +31,6 @@ namespace CDI
 
 		// Capture all the events sent to child items here
 		setFiltersChildEvents(true);
-
-		/*grabGesture(Qt::TapGesture);
-		grabGesture(Qt::TapAndHoldGesture);
-		grabGesture(Qt::SwipeGesture);
-		grabGesture(Qt::PanGesture);*/
 
 		// TODO - Check if we really need this option set up. We can avoid this by
 		// gettting rid of all event to the component so its not a big issue
@@ -61,7 +55,7 @@ namespace CDI
 		categoryBits	= 0x0000;
 
 		_anchorItem		= NULL;
-		_lockScaleItem	= NULL;
+        _lockScaleItem	= NULL;
 
 		_density = 1.0f;
 
@@ -111,9 +105,6 @@ namespace CDI
 			painter->setBrush(Qt::NoBrush);
 			painter->drawRect(itemBoundingRect);
 		}
-#endif //CDI_DEBUG_DRAW_SHAPE
-
-#ifdef CDI_DEBUG_DRAW_SHAPE
 		painter->setPen(QPen(Qt::blue));
 		painter->setBrush(QBrush(Qt::NoBrush));
 		painter->drawRect(itemBoundingRect);
@@ -205,6 +196,38 @@ namespace CDI
 		}
 	}
 
+    void Component::setHighlight(bool value)
+    {
+        if (graphicsEffect() == NULL)
+        {
+            QGraphicsColorizeEffect* effect = new QGraphicsColorizeEffect(this);
+            effect->setColor(QColor(255,100,100,255));
+            effect->setStrength(0.75f);
+            setGraphicsEffect(effect);
+        }
+//        if (value == false)
+//        {
+//            if (_highlightEffect)
+//                _highlightEffect->setEnabled(false);
+//        } else
+//        {
+//            if (_highlightEffect)
+//            {
+//                _highlightEffect->setEnabled(true);
+//            } else
+//            {
+
+//            }
+//        }
+    }
+
+	bool Component::isHighlighted() const
+    {
+		if (graphicsEffect())
+			return graphicsEffect()->isEnabled();
+        return false;
+    }
+
 	bool Component::sceneEvent(QEvent *event)
 	{
 		switch (event->type())
@@ -266,10 +289,16 @@ namespace CDI
 		// Do not process when the touch event arrives
 		if (event->type()==QEvent::TouchBegin)
 		{
-			return isTouchEventAcceptable(event);
+			if (isTouchEventAcceptable(event))
+			{
+				event->accept();
+				return true;
+			} else
+			{
+				return false;
+			}
 			// Marks the start of touch event to the object
 			// Must accept this event to receive further events
-			//return true;
 		}
 		if (event->touchPointStates() & Qt::TouchPointPressed)
 		{

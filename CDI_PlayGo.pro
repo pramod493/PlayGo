@@ -4,7 +4,7 @@
 #----------------------------------------------------------------------
 QT       += core gui widgets multimedia network webkitwidgets
 
-QT      += sensors
+QT      += sensors printsupport
 
 TARGET = PlayGo
 
@@ -17,7 +17,6 @@ RESOURCES += images.qrc \
 unix {
 include ($$PWD/QtTuio/qTUIO.pri)
 }
-include ($$PWD/QsLog/QsLog.pri)
 
 include ($$PWD/Core/PlayGoCore.pri)
 

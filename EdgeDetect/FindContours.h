@@ -1,10 +1,10 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+
 #include <vector>
 #include <iostream>
 #include <string>
 
-using namespace cv;
 using namespace std;
 /**
  * @brief gbFindContours create  contours from image at given file path

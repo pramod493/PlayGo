@@ -36,10 +36,15 @@ int main(int argc, char *argv[])
 	/****************************************************************
 	 * Set up themes
 	 * **************************************************************/
-	//QStringList list = QStyleFactory::keys();
-	QStyle* style = QStyleFactory::create("windowsvista");
-	if (style)
-		app.setStyle(style);
+    QStringList list = QStyleFactory::keys();
+#ifdef Q_OS_LINUX
+	QStyle* style = QStyleFactory::create("Windows");   // Looks more theme independent
+	if (style)	app.setStyle(style);
+#else
+    QStyle* style = QStyleFactory::create("windowsvista");
+	if (style)	app.setStyle(style);
+#endif //Q_OS_LINUX
+
 	// Initialize the QsLog logger
 
 	/****************************************************************
@@ -48,6 +53,8 @@ int main(int argc, char *argv[])
 	QString qslog_time_format("yyyy-MM-ddThh-mm-ss");
 	QString logfilename = QDateTime::currentDateTime().toString(qslog_time_format);
 	logfilename += QString(".log");
+	// We can also ask for the log file name to be one of the arguments or 
+	// pop-up text box for book-keeping the user information
 	logfilename = "log.txt";
 	// init the logging mechanism
 	QsLogging::Logger& logger = QsLogging::Logger::instance();
@@ -77,8 +84,11 @@ int main(int argc, char *argv[])
 	 * **************************************************************/
 	CDI::CDIWindow *window =  new CDI::CDIWindow();
 	// Triggered when stylus enters/leaves the device proximity
-	QObject::connect(&app, SIGNAL(OnStylusProximity(QEvent*)),
-					 window, SLOT(onStylusProximity(QEvent*)));
+	QObject::connect(&app, SIGNAL(signalStylusEnter()),
+                     window, SLOT(onStylusEnter()));
+
+	QObject::connect(&app, SIGNAL(signalStylusLeave()),
+					 window, SLOT(onStylusLeave()));
 
 	window->initWidgets();
 //	window->showFullScreen();

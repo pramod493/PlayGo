@@ -286,7 +286,8 @@ namespace CDI
 	{
 		if(playgo!= NULL)
 		{
-			playgo->SaveModel("PlayGoData.dat");
+			// Need to think more in this regard
+			//playgo->SaveModel("PlayGoData.dat");
 		}
 	}
 
@@ -340,18 +341,23 @@ namespace CDI
 	{
 		if (controller!= NULL)
 		{
-			if (searchDock)
-				searchDock->setVisible(true);
+//			if (searchDock)
+//				searchDock->setVisible(true);
 			QLOG_INFO() << "Search selection";
 			controller->searchAction();
 		}
 	}
 
-	void CDIWindow::onStylusProximity(QEvent* event)
+	void CDIWindow::onStylusEnter()
 	{
-		tabletDevice = static_cast<QTabletEvent*>(event)->device();
-		if (tabletDevice == QTabletEvent::Stylus)
-			controller->enableMouse(false);
+		if (controller)
+			controller->stylusEnter();
+	}
+
+	void CDIWindow::onStylusLeave()
+	{
+		if (controller)
+			controller->stylusLeave();
 	}
 
 	void CDIWindow::startSimulation()

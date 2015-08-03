@@ -137,11 +137,12 @@ namespace CDI
 
 		void onSearchTrigger();
 		/**
-		 * @brief onStylusProximity is called when a tablet device is near
+		 * @brief onStylusEnter is called when a tablet device is near
 		 * Use this to disable mouse input as well as other tasks
-		 * @param event Proximity event
 		 */
-		void onStylusProximity(QEvent* event);
+		void onStylusEnter();
+
+		void onStylusLeave();
 
 		void startSimulation();
 

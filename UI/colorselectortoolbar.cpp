@@ -3,6 +3,7 @@
 #include "QsLog.h"
 #include <QPixmap>
 #include "commonfunctions.h"
+#include <stdlib.h>
 
 namespace CDI
 {
@@ -16,19 +17,17 @@ namespace CDI
         toolbarColors.append(Qt::green);
         toolbarColors.append(Qt::darkGreen);
         toolbarColors.append(Qt::blue);
-        toolbarColors.append(Qt::blue);
         toolbarColors.append(Qt::darkBlue);
         toolbarColors.append(Qt::magenta);
-        toolbarColors.append(Qt::darkYellow);
-		toolbarColors.append(QColor(1,1,1,1));
+		toolbarColors.append(Qt::darkYellow);
+
+		srand(111111);	// initialize randomizer
     }
 
     void ColorSelectorToolbar::InitToolbarItems()
     {
-        // Create actions and add them at the same time
-		//#ifdef Q_OS_LINUX	// Keep const icon size across different platforms
         int iconSize = 32;
-        QActionGroup* colorGroup = new QActionGroup(this);
+		colorGroup = new QActionGroup(this);
         for (int i=0; i< toolbarColors.size(); i++)
         {
             QColor color = toolbarColors[i];
@@ -44,6 +43,7 @@ namespace CDI
             connect(action, SIGNAL(ColorSelected(QString,QColor)),
                     this, SLOT(slotColorChange(QString,QColor)));
         }
+		actions = colorGroup->actions();
         setIconSize(QSize(iconSize,iconSize));
         current_color = toolbarColors[0];
     }
@@ -57,6 +57,14 @@ namespace CDI
        }
     }
 
+	void ColorSelectorToolbar::slotRandomizeColor()
+	{
+		int size = actions.size();
+		int index = rand() % size;
+		QAction* action = actions[index];
+		action->trigger();
+		action->setChecked(true);
+	}
 
     /*------------------------------------------------------
      * ------------------------------------------------------*/

@@ -15,8 +15,14 @@
 #include "grabcut.h"
 #include <QCamera>
 #include <QCameraImageCapture>
+#include <QGraphicsOpacityEffect>
+#include <QGraphicsDropShadowEffect>
+#include <QGraphicsColorizeEffect>
+#include <QGraphicsBlurEffect>
+#include <QPropertyAnimation>
 #include "cdiboxdebugdraw.h"
 #include "touchandholdcontroller.h"
+#include "mainsettings.h"
 
 namespace CDI
 {
@@ -24,12 +30,12 @@ namespace CDI
 PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
     :QObject(parent)
 {
-
 	if (view == NULL || parent == NULL)
     {
         QLOG_FATAL() << "Invalid scene and view reference.";
         QMessageBox::about(NULL, "Error message",
                            "Cannot initialize controller. Invalid arguments in the constructor");
+		exit(0);
     }
 
     // Hide display of the model tree...
@@ -77,7 +83,7 @@ PlayGoController::~PlayGoController()
 void PlayGoController::initController()
 {
 	// Set the deafult value of other settings
-	_mouseModeEnabled = true;
+	_mouseModeEnabled = false;
 
     _activeMode = UI::Sketch;
     _device = QTabletEvent::NoDevice;
@@ -146,6 +152,12 @@ void PlayGoController::initController()
 	_tapOverrideEnabled = false;
 	touchholdController = new TouchAndHoldController(this);
 	touchholdController->setMainController(this);
+
+	/////////////////////////////////////////////////////////////////
+	_isStylusNearby = false;
+
+	//////////////////////////////////////////////////////////////////
+	_searchResultsDisplayed = false;
 }
 
 void PlayGoController::brushPress(QPointF pos, float pressure, int time)
@@ -195,12 +207,12 @@ void PlayGoController::shapePress(QPointF pos)
     newComponent->addToComponent(_currentPolygon);
     //		_currentPolygon->setPos(0,0);
     newComponent->moveBy(pos.x(),pos.y());
-
-    _currentPolygon->push_point(pos);
+	newComponent->setOpacity(0.75f);
+	_currentPolygon->setOpacity(0.90f);
+	_currentPolygon->push_point(pos);
 
     _fillPen = _defaultPen;
 	QColor tmpColor = _fillPen.color().lighter();
-	tmpColor.setAlpha(200);
 	_fillBrush.setColor(tmpColor);
     _currentPolygon->setPen(_defaultPen);
     _currentPolygon->setBrush(_fillBrush);
@@ -227,9 +239,14 @@ void PlayGoController::shapeRelease(QPointF pos)
 				component->recalculateBoundingRect();
 				component->internalTransformChanged();
 				component->requiresRegeneration = true;
+				component->setOpacity(1.0f);
+			} else
+			{
+				_currentPolygon->parentItem()->setOpacity(1.0f);
 			}
 		}
     }
+	_toplevelWindow->colorToolbar->slotRandomizeColor();	// randomizes the main color after each selection
 	_currentPolygon = NULL;
 	_isDrawingPolygon = false;
 }
@@ -793,51 +810,50 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 
 bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj == _viewport)
-    {
-		if (_tapOverrideEnabled) return touchholdController->handleTapAndHold(event);
-		switch(event->type())
-        {
-        case QEvent::TouchBegin :
-        case QEvent::TouchUpdate :
-        case QEvent::TouchEnd :
-        case QEvent::TouchCancel :
-        {
-            bool retval =  onTouchEventFromView(static_cast<QTouchEvent*>(event));
-			return retval;
-            // Let the scene handle its own touch events in any way it sees fit
-            break;
-        }
-        case QEvent::MouseButtonDblClick :
-        case QEvent::MouseButtonPress :
-        case QEvent::MouseButtonRelease :
-        case QEvent::MouseMove :
-        {
-			return false;
-            break;
-        }
-        case QEvent::TabletPress :
-        case QEvent::TabletMove :
-        case QEvent::TabletRelease :
-        {
-            onTabletEventFromView(static_cast<QTabletEvent*>(event), _view);
-            break;
-        }
-        case QEvent::Gesture :
-        {
-            QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(event);
-			onGestureEventFromView(gestureEvent);
-            break;
-        }
-		case QEvent::KeyPress :
-		case QEvent::KeyRelease :
-		{
-			break;
-		}
-        }
-    }
-    //		qDebug() << "Some other event. Ignore";
-    return false;
+	if (obj != _viewport) return false;
+
+	if (_tapOverrideEnabled) return touchholdController->handleTapAndHold(event);
+
+	switch(event->type())
+	{
+	case QEvent::TouchBegin :
+	case QEvent::TouchUpdate :
+	case QEvent::TouchEnd :
+	case QEvent::TouchCancel :
+	{
+		if (_isStylusNearby) return true;	// Ignore all touch events when pen is nearby
+		// Check if we are handling the events here
+		bool retval =  onTouchEventFromView(static_cast<QTouchEvent*>(event));
+		return retval;
+		break;
+	}
+	case QEvent::MouseButtonDblClick :
+	case QEvent::MouseButtonPress :
+	case QEvent::MouseButtonRelease :
+	case QEvent::MouseMove :
+	{
+		break;		// Nothing to do with mouse events currently
+	}
+	case QEvent::TabletPress :
+	case QEvent::TabletMove :
+	case QEvent::TabletRelease :
+	{
+		onTabletEventFromView(static_cast<QTabletEvent*>(event), _view);
+		break;
+	}
+	case QEvent::Gesture :
+	{
+		QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(event);
+		onGestureEventFromView(gestureEvent);
+		break;
+	}
+	case QEvent::KeyPress :
+	case QEvent::KeyRelease :
+	{
+		break;
+	}
+	}
+	return false;
 }
 
 QList<Component*> PlayGoController::getSelectableComponentsByPhysics(QPointF scenePos)
@@ -960,6 +976,78 @@ void PlayGoController::connectAction(QTabletEvent *event)
 
 void PlayGoController::searchAction()
 {
+
+	if (0) {
+		QList<SearchResult*> results = _page->getSearchManager()->search(QString("Image.png"), 30);
+
+		// Testing adding of overlay on the scene
+		QRect portRect = _view->viewport()->rect();
+		QPolygonF scenePolygon= _view->mapToScene(portRect);
+		//QRectF itemRect = yourItem->mapRectFromScene(sceneRect);
+
+		QGraphicsPolygonItem* rectItem = new QGraphicsPolygonItem;
+
+		_scene->addItem(rectItem);
+
+		//rectItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		QColor col = QColor(200,150,150,10);
+
+		QBrush brush = QBrush(col);
+
+		rectItem->setBrush(brush);
+
+		rectItem->setPolygon(scenePolygon);
+
+		QRect boundingRectOfPolygon = scenePolygon.boundingRect().toRect();	// bounding rect should be close to display area
+
+		int screen_width = portRect.width();
+		int screen_height = portRect.height();
+		int screen_startx = portRect.left();
+		int screen_starty = portRect.top();
+
+		qDebug() << results;
+		int each_image_width = 150;	// px
+		int image_margin = 20;	// px
+		int num_images = screen_width / (each_image_width + image_margin);
+
+		qDebug() << num_images	<< each_image_width << "(" << screen_width << "x" << screen_height << ")";
+		qDebug() << "Scene dimensions" << boundingRectOfPolygon;
+
+		int i=0; int j=0;
+		foreach (SearchResult* searchResult, results)
+		{
+			QString filepath = searchResult->resultFilePath;
+			QPixmap pixmap = QPixmap(filepath);
+			QPixmap cropped = pixmap.scaled(each_image_width, each_image_width, Qt::KeepAspectRatio);
+			QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(cropped);
+
+			QRectF rect = QRect(0, 0, each_image_width, each_image_width);
+			QGraphicsRectItem* rectItem = new QGraphicsRectItem(rect);
+			rectItem->setPen(QPen(Qt::green));
+			rectItem->setBrush(QBrush(QColor(20,20,20,200), Qt::BDiagPattern));
+
+			_scene->addItem(pixmapItem);
+			_scene->addItem(rectItem);
+
+			pixmapItem->setZValue(3);
+			rectItem->setZValue(2.90);
+
+			QPoint screenPos = QPoint(screen_startx+ i * (each_image_width+image_margin), screen_starty+ j * (each_image_width+image_margin));
+			pixmapItem->setPos(_view->mapToScene(screenPos));
+			rectItem->setPos(_view->mapToScene(screenPos));
+
+			rectItem->setAcceptTouchEvents(true);
+			rectItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+			pixmapItem->setParentItem(rectItem);
+			pixmapItem->setFlag(QGraphicsItem::ItemIsMovable);
+			pixmapItem->setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+			pixmapItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+			if (++i == num_images){ i=0; j++; }
+		}
+	}
     // We are searching if at least one of the strokes is highlighted
     if (!_itemHighlighted) return;
     // Do not use lasso polygon to find the selected strokes because selection can be done in
@@ -977,6 +1065,7 @@ void PlayGoController::searchAction()
 
     if (searchResults.size())
     {
+
         searchView->LoadSearchData(selectedStrokes, searchResults);
         emit onSearchComplete();
     } else
@@ -1096,7 +1185,29 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 	if (selectedComponent)
 	{
 		touchholdController->enableOverlay(selectedComponent, scenePos);
-		_view->centerOn(scenePos);
+
+		// _view->centerOn(scenePos);	// centering has odd effect on eyes
+	}
+}
+
+void PlayGoController::stylusEnter()
+{
+	_isStylusNearby = true;
+}
+
+void PlayGoController::stylusLeave()
+{
+	_isStylusNearby = false;
+}
+
+void PlayGoController::setAcceptComponentTouch(bool value)
+{
+	QList<Component*> components = _page->getComponents();
+	for (QList<Component*>::const_iterator iter = components.constBegin();
+		 iter != components.constEnd(); ++iter)
+	{
+		Component *component = (*iter);
+		component->setAcceptTouchEvents(value);
 	}
 }
 
@@ -1559,6 +1670,7 @@ void PlayGoController::loadImage(QString imagePath)
     component->addToComponent(pixmap);
 }
 
+int depth = 1;
 void PlayGoController::loadImage(QString imagePath, QObject* obj, QDropEvent* event)
 {
 	QPixmap _pixmap = QPixmap();
@@ -1572,7 +1684,33 @@ void PlayGoController::loadImage(QString imagePath, QObject* obj, QDropEvent* ev
 	component->addToComponent(pixmap);
 
 	QPointF scenePos = _view->mapToScene(event->pos());
+	scenePos = scenePos - QPointF(_pixmap.width()/2.0f, _pixmap.height()/2.0f);
 	component->moveBy(scenePos.x(), scenePos.y());
+
+//	QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect;
+//	opacityEffect->setOpacity(0.85);
+//	component->setGraphicsEffect(opacityEffect);
+
+//	QGraphicsBlurEffect *blurEffect = new QGraphicsBlurEffect;
+//	blurEffect->setBlurRadius(4.0f);
+//	component->setGraphicsEffect(blurEffect);
+
+//	QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect;
+//	shadowEffect->setBlurRadius(4.0f);
+//	shadowEffect->setColor(QColor(80,80,80,200));
+//	shadowEffect->setOffset(4);
+//	component->setGraphicsEffect(shadowEffect);
+
+	QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
+	colorize->setColor(Qt::red);
+	colorize->setStrength(0.1);
+	component->setGraphicsEffect(colorize);
+
+	QPropertyAnimation *animation = new QPropertyAnimation(colorize, "strength");
+	animation->setDuration(2000);
+	animation->setStartValue(0.1f);
+	animation->setEndValue(1.0f);
+	animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void PlayGoController::startSimulation()

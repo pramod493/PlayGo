@@ -1,5 +1,7 @@
 #include "FindContours.h"
 
+using namespace cv;
+
 void gbFindContours(string imgDir,
 	vector<vector<cv::Point> >& outerContours,
 	vector<vector<vector<cv::Point> > >& innerContours,

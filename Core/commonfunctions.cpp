@@ -96,7 +96,7 @@ namespace CDI
 	QString getHomeDirectory()
 	{
 #ifdef Q_OS_LINUX
-		return QString("/home/pramod/Junks/database/");
+		return QString("/home/pramod/Qt-Build/database/");
 #endif
 #ifdef Q_OS_WIN
 		return QString("C:/Database/");
@@ -318,8 +318,10 @@ namespace CDI
 	vector<p2t::Triangle*> triangularizeImage(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
 	{
 		vector<p2t::Triangle*> triangles;
+
 		vector<vector<cv::Point> > outerContours;
 		vector<vector<vector<cv::Point> > > allInnerContours;
+
 
 		gbFindContours(imagePath.toStdString(), outerContours, allInnerContours, true);
 
@@ -464,7 +466,6 @@ namespace CDI
 				triangles.push_back(tmp_trias[m]);
 			}
 		}
-
 		return triangles;
 	}
 
