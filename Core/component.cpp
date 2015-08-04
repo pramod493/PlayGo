@@ -57,6 +57,8 @@ namespace CDI
 		_anchorItem		= NULL;
         _lockScaleItem	= NULL;
 
+		_lockItem = false;
+
 		_density = 1.0f;
 
 		connect(this, SIGNAL(xChanged()),
@@ -227,6 +229,19 @@ namespace CDI
 			return graphicsEffect()->isEnabled();
         return false;
     }
+
+	bool Component::isLocked() const
+	{
+		return _lockItem;
+	}
+
+	void Component::lock(bool value)
+	{
+		if (_lockItem != value)
+		{
+			_lockItem = value;
+		}
+	}
 
 	bool Component::sceneEvent(QEvent *event)
 	{

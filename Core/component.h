@@ -57,6 +57,8 @@ namespace CDI
 
 		float _density;
 
+		bool _lockItem;
+
 	public:
 		Component(QGraphicsItem* parent = 0);
 
@@ -112,6 +114,10 @@ namespace CDI
         void setHighlight(bool value);
 
         bool isHighlighted() const;
+
+		bool isLocked() const;
+
+		void lock(bool value);
 
 		bool sceneEvent(QEvent *event);
 
