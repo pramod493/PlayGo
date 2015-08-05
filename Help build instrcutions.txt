@@ -1,0 +1,2 @@
+// Qt help generation
+qhelpgenerator index.qhp -o PlayGo-Doc.qch
