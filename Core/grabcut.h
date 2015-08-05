@@ -8,18 +8,20 @@
 #include <QStringList>
 #include "opencv2/opencv.hpp"
 #include <iostream>
-#include "PlayGoController.h"
 
-using namespace cv;
 using namespace std;
-using namespace CDI;
 
-void mouseHandler(int event, int x, int y, int flags, void* param);
+namespace CDI
+{
+	class PlayGoController;
 
-int grabcut_load_camera(string outputfile);
+	void mouseHandler(int event, int x, int y, int flags, void* param);
 
-Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile, vector<vector<Point> > &outerContours, vector<vector<vector<Point> > > &innerContours);
+	int grabcut_load_camera(string outputfile);
 
-int grabcut_process_image(Mat& image, string outputfile);
+	cv::Mat grabCutBackground(cv::Rect rectangle, cv::Mat& image, string outputfile, vector<vector<cv::Point> > &outerContours, vector<vector<vector<cv::Point> > > &innerContours);
 
-int grabcut_process_image(PlayGoController* controller, string imagepath, string outputfile);
+	int grabcut_process_image(cv::Mat& image, string outputfile);
+
+	int grabcut_process_image(PlayGoController* controller, string imagepath, string outputfile);
+}
