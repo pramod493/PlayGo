@@ -1,46 +1,41 @@
-#pragma once
+#ifndef __PLAYGOCONTROLLER_H__
+#define __PLAYGOCONTROLLER_H__
+
 #include <QObject>
+
 #include <QList>
 #include <QVector>
 #include <QtAlgorithms>
-#include <QTabletEvent>
+
 #include <QColor>
-#include <QTabletEvent>
 #include <QPen>
 #include <QBrush>
 #include <QPainter>
-#include <QPointF>
-#include <QPolygonF>
-#include <QRectF>
+
 #include <QTouchDevice>
 #include <QTouchEvent>
+#include <QTabletEvent>
+
+#include <QToolBar>
 #include <QLineEdit>
 #include <QValidator>
 #include <QIntValidator>
 #include <QCheckBox>
+#include <QMessageBox>
 
-#include "commonfunctions.h"
-#include "point2dpt.h"
-#include "stroke.h"
-#include "polygon2d.h"
-
-#include "searchmanager.h"
+#include "playgocore.h"
+#include <QGraphicsLineItem>
 
 #include "sketchscene.h"
 #include "sketchview.h"
 #include "searchview.h"
 #include "modelviewtreewidget.h"
 
-#include <QToolBar>
-#include "penstroke.h"
-#include <QGraphicsLineItem>
-#include "forceitem.h"
-#include <QMessageBox>
-#include <box2dworld.h>
-#include "pdollarrecognizer.h"
-#include "polygon2d.h"
-#include <QDebug>
-#include <QTabletEvent>
+#include "box2dworld.h"
+
+#include <QStateMachine>
+#include <QState>
+
 namespace CDI
 {
 	class CDIWindow;
@@ -82,7 +77,10 @@ namespace CDI
 		/*******************************************************
 		 * Tablet relatred operations
 		 *****************************************************/
-		bool _mouseModeEnabled;
+		//bool _mouseModeEnabled;
+		// Need not use mouse mode because we can reject touch->mouse events
+		// use _isStylusNearby to differentiate between mouse event from stylus
+		// and from stylus
 		UI::MODE _activeMode;
 		QTabletEvent::TabletDevice _device;
 
@@ -152,6 +150,11 @@ namespace CDI
 		bool _isStylusNearby;
 
 	public:
+		/**
+		 * @brief Instantiate controller for specific Page and SketchView
+		 * @param view SketchView reference
+		 * @param parent Main window (contains all the UI parameters
+		 */
 		PlayGoController(SketchView* view, CDIWindow *parent = NULL);
 
 		virtual ~PlayGoController();
@@ -209,10 +212,20 @@ namespace CDI
 
 	public:
 		virtual void sketchAction(QTabletEvent *event);
+		virtual void sketchAction(QMouseEvent *event);
+
 		virtual void shapeAction(QTabletEvent *event);
+		virtual void shapeAction(QMouseEvent *event);
+
 		virtual void eraseAction(QTabletEvent *event);
+		virtual void eraseAction(QMouseEvent *event);
+
 		virtual void selectAction(QTabletEvent *event);
+		virtual void selectAction(QMouseEvent *event);
+
 		virtual void connectAction(QTabletEvent *event);
+		virtual void connectAction(QMouseEvent *event);
+
 		virtual void searchAction();
 
 		bool isTapOverrideEnabled() const;
@@ -273,6 +286,13 @@ namespace CDI
 		void onTabletEventFromView(QTabletEvent *event, QGraphicsView *view);
 
 		/**
+		 * @brief Receives mouse event from view
+		 * @param event QMouseEvent
+		 * @param status QGraphicsView from which the event originiated
+		 */
+		void onMouseEventFromView(QMouseEvent *event, QGraphicsView *view);
+
+		/**
 		 * @brief Receives mouse event from scene
 		 * @param mouseEvent QGraphicsSceneMouseEvent
 		 * @param status QGraphicsScene from which the event originiated
@@ -285,6 +305,11 @@ namespace CDI
 		 */
 		bool onTouchEventFromView(QTouchEvent* event);
 
+		/**
+		 * @brief Receives touch events which were not accepted/processed by the
+		 * scene
+		 * @param event QTouchEvent pointer from scene
+		 */
 		bool onTouchEventFromScene(QTouchEvent* event);
 
 		/**
@@ -313,8 +338,6 @@ namespace CDI
 
 		void setMode(UI::MODE newMode);
 
-		void enableMouse(bool enable);
-
 		void clearCurrentScene();
 
 		//////////////////////////////////////////////
@@ -338,3 +361,5 @@ namespace CDI
 		friend class TouchAndHoldController;
 	};
 }
+
+#endif //__PLAYGOCONTROLLER_H__

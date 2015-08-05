@@ -16,6 +16,8 @@ namespace CDI
         TabletApplication(int &argv, char **args)
 			: QApplication(argv, args)
 		{
+			setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, false);
+			setAttribute(Qt::AA_NativeWindows, false);
 		}
 
         bool event(QEvent *event) Q_DECL_OVERRIDE;

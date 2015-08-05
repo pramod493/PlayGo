@@ -311,11 +311,15 @@ namespace CDI
 		}
 		case QEvent::MouseButtonDblClick :
 		case QEvent::MouseButtonPress :
-		case QEvent::MouseButtonRelease :
 		case QEvent::MouseMove :
 		{
 			return true;
 			break;
+		}
+		case QEvent::MouseButtonRelease :
+		{
+			QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+			handleSelection(_mainController->_view->mapToScene(mouseEvent->pos()));
 		}
 		case QEvent::TabletPress :
 		case QEvent::TabletMove :
