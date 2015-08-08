@@ -17,53 +17,7 @@ using namespace cv;
 
 namespace CDI
 {
-	cv::Point pt1, pt2;
-	bool draggin = false;
-	void mouseHandler(int event, int x, int y, int flags, void* param)
-	{
-		if (event == CV_EVENT_LBUTTONDOWN)
-		{
-			pt1 = Point(x, y);
-			draggin = true;
-		}
-		if (event == CV_EVENT_MOUSEMOVE && draggin )
-		{
-			pt2 = Point(x, y);
-		}
-		if (event == CV_EVENT_LBUTTONUP)
-		{
-			pt2 = Point(x, y);
-			draggin = false;
-		}
-	}
-
-	int grabcut_load_camera(string outputfile)
-	{
-		//	// Open Camera
-		//	VideoCapture cap(0); // open the default camera
-		//	if (!cap.isOpened())  // check if we succeeded
-		//		return -1;
-
-		//	// Snap Photo
-		//	Mat image;
-		//	namedWindow("Camera", 1);
-		//	for (;;)
-		//	{
-		//		Mat frame;
-		//		cap >> frame; // get a new frame from camera
-		//		imshow("Camera", frame);
-		//		if (waitKey(30) >= 0)
-		//		{
-		//			image = frame;
-		//			break;
-		//		}
-		//	}
-
-		//	return grabcut_process_image(image, outputfile);
-		return 0;
-	}
-
-	Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile,
+	cv::Mat grabCutBackground(cv::Rect rectangle, Mat& image, string outputfile,
 						  vector<vector<cv::Point> >& outerContours,
 						  vector<vector<vector<cv::Point> > >& innerContours)
 	{
@@ -139,43 +93,6 @@ namespace CDI
 		imwrite(outputfile, foreground);
 
 		return foreground;
-	}
-
-	int grabcut_process_image(Mat& image, string outputfile)
-	{
-		// Select Roi
-
-		//	imshow("Camera", image);
-		//	for (;;)
-		//	{
-		//		Mat cln = image.clone();
-
-		//		cvSetMouseCallback("Camera", mouseHandler, NULL);
-		//		if (draggin)
-		//		{
-		//			rectangle(cln, cv::Rect(pt1.x, pt1.y, pt2.x - pt1.x, pt2.y - pt1.y), CV_RGB(255, 0, 0), 3, 8, 0);
-		//			imshow("Camera", cln);
-		//		}
-
-		//		if (waitKey(30) >= 0)
-		//		{
-		//			break;
-		//		}
-		//	}
-
-		//	// Initialization
-		//	cv::Rect rectangle(pt1.x, pt1.y, pt2.x-pt1.x, pt2.y-pt1.y);
-		//	cv::Mat foreground = grabCutBackground(rectangle, image, outputfile);
-
-		//	// display result
-		//	cv::namedWindow("Extracted Image");
-		//	cv::imshow("Extracted Image", foreground);
-
-
-
-		//	waitKey();
-		return 0;
-
 	}
 
 	class grabcutView : public QGraphicsView

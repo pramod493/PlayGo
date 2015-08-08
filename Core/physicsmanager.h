@@ -6,6 +6,7 @@
 #include <QHash>
 #include "physicsbody.h"
 #include "physicsjoint.h"
+#include "material.h"
 #include <QTimer>
 
 class BoxDebugScene;
@@ -23,9 +24,13 @@ namespace CDI
 	 * 4. Gavity scale and other props
 	 */
 	typedef struct b2BodyDef physicsBodyDef;
+		const unsigned int physicsPaused 		= 0;
+		const unsigned int noGravity			= MASK_BIT0;
+		const unsigned int noCollision			= MASK_BIT1;
+		const unsigned int noMotor				= MASK_BIT2;
 
 	enum cdEntityCategory {
-		ENTITY_GROUND		= 0x0001,
+		ENTITY_GROUND	= 0x0001,
 		ENTITY_LAYER_01	= 0x0002,
 		ENTITY_LAYER_02	= 0x0004,
 		ENTITY_LAYER_03	= 0x0008,
@@ -44,42 +49,6 @@ namespace CDI
 		MASK_LAYER_05	= 0x0020,
 		MASK_LAYER_06	= 0x0040,
 		MASK_LAYER_07	= 0x0080
-	};
-
-    class Material : public QObject
-    {
-        Q_OBJECT
-		Q_PROPERTY(float friction READ friction WRITE setFriction)
-		Q_PROPERTY(float restitution READ restitution WRITE setRestitution)
-		Q_PROPERTY(float density READ density WRITE setDensity)
-		Q_PROPERTY(QString name READ materialName WRITE setMaterialName)
-
-	protected:
-		float _friction;
-		float _restitution;
-		float _density;
-		QString _materialName;
-	public :
-		Material();
-
-		Material(float friction, float restitution, float density, QString name);
-
-		Material(const Material& mat);
-
-		float friction() const;
-		void setFriction(float friction);
-
-		float restitution() const;
-		void setRestitution(float restitution);
-
-		float density() const;
-		void setDensity(float density);
-
-		QString materialName() const;
-		void setMaterialName(const QString &materialName);
-
-	signals:
-		void materialChanged(Material* mat);
 	};
 
 	class PhysicsSettings {
@@ -138,6 +107,8 @@ namespace CDI
 
 		QHash<QUuid, b2Body*> _box2DBodies;
 		QHash<QUuid, PhysicsBody*> _physicsBodies;
+
+		QList<PhysicsJoint*> _jointList;
 
 		PhysicsSettings _settings;
 
@@ -227,6 +198,14 @@ protected:
 
 		void step();
 
+		// Settings update
+		void setEnableGravity(bool enable);
+
+		void setEnableMotor(bool value);
+
+		void setGlobalCollision(QList<Component*> components, bool enableCollision);	// use playgoCollision parameter
+
+		// Manage component state
 		void updateComponentPosition(QList<Component*>& components);
 
 		void updateComponentPosition(Component* component);

@@ -260,6 +260,38 @@ namespace CDI
 		return 50.0f;
 	}
 
+	QString getEventname(QEvent *e)
+	{
+		QString name;
+			//  Only for logging purposes
+		switch (e->type())
+		{
+		case QEvent::TouchBegin :
+		{ name = "Touch begin"; break; }
+		case QEvent::TouchUpdate :
+		{ name = "Touch update"; break; }
+		case QEvent::TouchEnd :
+		{ name = "Touch end"; break; }
+		case QEvent::TouchCancel :
+		{ name = "Touch cancel"; break; }
+		case QEvent::TabletPress :
+		{ name = "Tablet press"; break; }
+		case QEvent::TabletMove :
+		{ name = "Tablet move"; break; }
+		case QEvent::TabletRelease :
+		{ name = "Tablet release"; break; }
+		case QEvent::MouseButtonDblClick :
+		{ name = "Mouse button double click"; break; }
+		case QEvent::MouseButtonPress :
+		{ name = "Mouse button press "; break; }
+		case QEvent::MouseButtonRelease :
+		{ name = "Mouse button release"; break; }
+		case QEvent::MouseMove :
+		{ name = "Mouse move"; break;	}
+		}
+		return name;
+	}
+
 	/**
 	 * @brief uniqueHash returns a QUuid for identification. Assumed to be unique
 	 * @return Unique QUuid identifier

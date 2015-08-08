@@ -1,11 +1,14 @@
 #ifndef SKETCHSTATE_H
 #define SKETCHSTATE_H
+#include "cdState.h"
 
-
-class SketchState : public cdState
+namespace CDI
 {
-public:
-	SketchState();
-};
+	class SketchState : public cdState
+	{
+	public:
+		SketchState(PlayGoController* parentController, QState *parentState = 0);
 
+	};
+}
 #endif // SKETCHSTATE_H

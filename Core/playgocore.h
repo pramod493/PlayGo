@@ -3,7 +3,6 @@
 
 #include "asmopencv.h"
 #include "clipper.hpp"
-#include "cdiboxdebugdraw.h"
 #include "grabcut.h"
 #include "ramerdouglaspeucker.h"
 #include "filesystemwatcher.h"
@@ -18,7 +17,6 @@
 #include "pixmap.h"
 #include "polygon2d.h"
 #include "searchresult.h"
-#include "SearchAPI.h"
 
 #include "component.h"
 #include "assembly.h"

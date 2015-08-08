@@ -9,70 +9,6 @@
 
 namespace CDI
 {
-	Material::Material()
-	{
-		_friction = 0.1f;
-		_restitution = 0.1f;
-		_density = 1.0f;
-		_materialName = QString("No Material");
-	}
-
-	Material::Material(float friction, float restitution, float density, QString name)
-	{
-		_friction		= friction;
-		_restitution	= restitution;
-		_density		= density;
-		_materialName	= name;
-	}
-
-	Material::Material(const Material &mat)
-	{
-		_friction = mat._friction;
-		_restitution = mat._restitution;
-		_density = mat._density;
-		_materialName = mat._materialName;
-	}
-
-	float Material::friction() const
-	{
-		return _friction;
-	}
-
-	void Material::setFriction(float friction)
-	{
-		_friction = friction;
-	}
-
-	float Material::restitution() const
-	{
-		return _restitution;
-	}
-
-	void Material::setRestitution(float restitution)
-	{
-		_restitution = restitution;
-	}
-
-	float Material::density() const
-	{
-		return _density;
-	}
-
-	void Material::setDensity(float density)
-	{
-		_density = density;
-	}
-
-	QString Material::materialName() const
-	{
-		return _materialName;
-	}
-
-	void Material::setMaterialName(const QString &materialName)
-	{
-		_materialName = materialName;
-	}
-
 	void PhysicsManager::setEnableDebugView(bool enableDebugView)
 	{
 		_enableDebugView = enableDebugView;
@@ -86,6 +22,8 @@ namespace CDI
 	PhysicsManager::PhysicsManager(PhysicsSettings *settings, Page *parentPage) : QObject(parentPage)
 	{
 		defaultPhysicsScale = getPhysicsScale();
+
+		_jointList = QList<PhysicsJoint*>();
 
 		_settings.timeStep = settings->timeStep;
 		_settings.velocityIterations = settings->velocityIterations;
@@ -208,6 +146,8 @@ namespace CDI
 		c1->addJoint(physicsJoint);
 		c2->addJoint(physicsJoint);
 
+		_jointList.push_back(physicsJoint);
+
 		return physicsJoint;
 	}
 
@@ -222,8 +162,6 @@ namespace CDI
 		jointDef->bodyB = c1->physicsBody();
 
 		QPointF direction = endPos - startPos;
-
-
 
 		return NULL;
 	}
@@ -273,6 +211,8 @@ namespace CDI
 
 	bool PhysicsManager::deleteJoint(PhysicsJoint *joint)
 	{
+		if (_jointList.contains(joint))
+			_jointList.removeOne(joint);
 		joint->_physicsManager = this;
 		delete joint;
 		return true;
@@ -280,12 +220,10 @@ namespace CDI
 
 	bool PhysicsManager::deleteJoint(b2Joint *joint)
 	{
-		if (joint)
-		{
-			_b2World->DestroyJoint(joint);
-			return true;
-		}
-		return false;
+		if (joint == 0)	return false;
+
+		_b2World->DestroyJoint(joint);
+		return true;
 	}
 
 	/*
@@ -352,10 +290,13 @@ namespace CDI
 		{
 			delete timer;
 		}
+
+		// Start the timer for physics engine
 		timer = new QTimer(this);
 		connect(timer, SIGNAL(timeout()),
 				this, SLOT(step()));
 		timer->start(timerStepIn_msecs);
+
 		_isRunning = true;
 		if (debugView) debugView->clear();
 	}
@@ -373,6 +314,65 @@ namespace CDI
 			_b2World->DrawDebugData();
 		}
 		emit physicsStepComplete();
+	}
+
+	void PhysicsManager::setEnableGravity(bool enable)
+	{
+		if (enable)
+			_b2World->SetGravity
+					(b2Vec2(_settings.gravity.x(), _settings.gravity.y()));
+		else
+			_b2World->SetGravity(b2Vec2(0,0));
+	}
+
+	void PhysicsManager::setEnableMotor(bool enable)
+	{
+		qDebug() << "All motors " << enable;
+		foreach (PhysicsJoint* physicsJoint, _jointList)
+		{
+			qDebug() << "Inside motor";
+			switch (physicsJoint->_box2dJointType)
+			{
+				case e_revoluteJoint :
+				{
+					b2RevoluteJoint* pinJoint =	static_cast<b2RevoluteJoint*>(physicsJoint->_joint);
+					b2RevoluteJointDef* pinJointDef = static_cast<b2RevoluteJointDef*>(physicsJoint->_jointDef);
+					enable ? pinJoint->EnableMotor(pinJointDef->enableMotor) : pinJoint->EnableMotor(false);
+					break;
+				}
+				case e_prismaticJoint :
+				{
+					b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(physicsJoint->_joint);
+					b2PrismaticJointDef* sliderJointDef = static_cast<b2PrismaticJointDef*>(physicsJoint->_jointDef);
+					enable ? sliderJoint->EnableMotor(sliderJointDef->enableMotor) : sliderJoint->EnableMotor(false);
+					break;
+				}
+			}
+
+			if (!enable)
+			{
+				b2Body* bodyA = physicsJoint->_joint->GetBodyA();
+				b2Body* bodyB = physicsJoint->_joint->GetBodyB();
+
+				bodyA->SetLinearVelocity(b2Vec2(0,0));
+				bodyB->SetLinearVelocity(b2Vec2(0,0));
+
+				bodyA->SetAngularVelocity(0);
+				bodyB->SetAngularVelocity(0);
+			}
+		}
+
+		QLOG_INFO() << "All joint motor" << enable;
+	}
+
+	void PhysicsManager::setGlobalCollision
+			(QList<Component*> components, bool enableCollision)
+	{
+		foreach(Component* component, components)
+		{
+			b2Body* body = component->physicsBody();
+			body->playgoCollisionEnabled = enableCollision;
+		}
 	}
 
 	void PhysicsManager::updateComponentPosition(QList<Component *> &components)

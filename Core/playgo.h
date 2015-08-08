@@ -14,7 +14,6 @@
  All objetcs are derived from AbstractModelItem object
  \section Conact Info
 Author: Pramod Kumar
-email: pramod@purdue.edu
 email: pramod493@gmail.com
  */
 namespace CDI

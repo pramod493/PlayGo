@@ -13,7 +13,7 @@
 #include <QPainter>
 
 #include <QTouchDevice>
-#include <QTouchEvent>
+#include <QTouchEvent>,
 #include <QTabletEvent>
 
 #include <QToolBar>
@@ -41,7 +41,7 @@ namespace CDI
 	class CDIWindow;
 	class ConnectController;
 	class TouchAndHoldController;
-
+	class cdState;
 	namespace UI
 	{
 		enum MODE {None, Sketch, Shapes, Erase, Transform,
@@ -59,7 +59,6 @@ namespace CDI
 	class PlayGoController : public QObject
 	{
 		Q_OBJECT
-
 	protected:
 		enum ConnectionMode {GestureSketch, StaticJoint, HingeJoint, SliderJoint, FixedJoint/*Sets body as static*/,
 							 SpringJoint, ApplyForce};	// Leave it to be private
@@ -103,6 +102,7 @@ namespace CDI
 		QPolygonF _lassoPolygon;
 		bool _itemHighlighted;
 
+		// Widgets
 		ModelViewTreeWidget* tree;
 
 		/*********************************************************
@@ -110,6 +110,11 @@ namespace CDI
 		 ********************************************************/
 		SearchView* searchView;
 		bool _searchResultsDisplayed;
+
+		/*********************************************************
+		 * Physics manager settings
+		 ********************************************************/
+		unsigned int _physicsMask;	/**< Decides which physics options will be active*/
 
 		/*********************************************************
 		 * joint related variables
@@ -148,6 +153,8 @@ namespace CDI
 	private:
 		ForceGraphicsItem* forceLine;
 		bool _isStylusNearby;
+
+		unsigned int p_physicsmask;
 
 	public:
 		/**
@@ -228,6 +235,9 @@ namespace CDI
 
 		virtual void searchAction();
 
+		unsigned int getPhysicsMask() const;
+		void setPhysicsMask(unsigned int newMask);
+
 		bool isTapOverrideEnabled() const;
 		void setTapOverride(bool value);
 		void overrideOnTapAndHold(QTapAndHoldGesture* gesture);
@@ -236,6 +246,7 @@ namespace CDI
 		void signalSearchComplete();
 		void signalSearchBegin();
 		void signalSearchItemSelect();
+		void signalPhysicsMaskChange();
 
 	public slots:
 		/**
@@ -320,6 +331,14 @@ namespace CDI
 		 */
 		void onGestureEventFromView(QGestureEvent* event);
 
+		/**
+		 * @brief Manages gesture events received from viewport.
+		 * @param event QGestureEvent
+		 * @return
+		 * @remarks Should the events be accepted by Component object in the Scene
+		 */
+	 	void onPhysicsMaskUpdate();
+
 		void connectionModeReset();
 
 		void setToDraw();
@@ -359,6 +378,7 @@ namespace CDI
 
 		friend class ConnectController;
 		friend class TouchAndHoldController;
+		friend class cdState;
 	};
 }
 

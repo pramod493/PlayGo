@@ -1,5 +1,6 @@
 #include <QApplication>
 #include "PlayGoController.h"
+#include "commonfunctions.h"
 #include <QLabel>
 #include "QsLog.h"
 
@@ -15,6 +16,9 @@
 #include "touchandholdcontroller.h"
 #include "mainsettings.h"
 
+#include "cdiboxdebugdraw.h"
+#include <QDockWidget>
+
 namespace CDI
 {
 
@@ -22,46 +26,51 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 	:QObject(parent)
 {
 	if (view == NULL || parent == NULL)
-    {
-        QLOG_FATAL() << "Invalid scene and view reference.";
+	{
+		QLOG_FATAL() << "Invalid scene and view reference.";
 		QMessageBox::about(NULL, "Fatal error!",
 						   "Cannot initialize controller. Invalid arguments in the constructor.\n Exiting now...");
 		QApplication::quit();
-    }
+	}
 
-    // Hide display of the model tree...
-	//tree = new ModelViewTreeWidget(parent->playgo);
-	//tree->show();
+	// Display the model tree as one of the docks
+	// tree = new ModelViewTreeWidget(parent->playgo);
+	// tree->show();
+	// QDockWidget* treeDock = new QDockWidget(parent);
+	// treeDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
+	// 					  Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+  //   treeDock->setWidget(tree);
 	tree = NULL;
 
-    _toplevelWindow = parent;
+	_toplevelWindow = parent;
 	_scene = static_cast<SketchScene*>(view->getPage()->scene());
-    _view = view;
-    _viewport = view->viewport();
+	_view = view;
+	_viewport = view->viewport();
 	_page = view->getPage();
 
-    // Do not install event filter on QGraphicsView but on viewport
-    // Installing event on QGraphicsView seems to filter out touch
-    _view->viewport()->installEventFilter(this);
+	// Do not install event filter on QGraphicsView but on viewport
+	// Installing event on QGraphicsView seems to filter out touch
+	_view->viewport()->installEventFilter(this);
 
 	_view->setTransformationAnchor(QGraphicsView::NoAnchor);
 	_view->setOptimizationFlag(QGraphicsView::DontSavePainterState);
 	_view->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
 
-    connect(_view, SIGNAL(viewDrawforeground(QPainter*,const QRectF&)),
-            this, SLOT(drawMenusOnView(QPainter*,const QRectF&)));
+	connect(_view, SIGNAL(viewDrawforeground(QPainter*,const QRectF&)),
+			this, SLOT(drawMenusOnView(QPainter*,const QRectF&)));
 
-    connect(_view, SIGNAL(viewImageDrop(QString, QObject*, QDropEvent*)),
-            this, SLOT(loadImage(QString, QObject*, QDropEvent*)));
+	connect(_view, SIGNAL(viewImageDrop(QString, QObject*, QDropEvent*)),
+			this, SLOT(loadImage(QString, QObject*, QDropEvent*)));
 
-    initController();
+	initController();
 
-    searchView = _toplevelWindow->searchView;
-    if (searchView != NULL)
-    {
-        connect(searchView, SIGNAL(signalOnSearchResultSelect(SearchResult*)),
-                this, SLOT(onSearchItemSelect(SearchResult*)));
-    }
+	searchView = _toplevelWindow->searchView;
+	if (searchView != NULL)
+	{
+		connect(searchView, SIGNAL(signalOnSearchResultSelect(SearchResult*)),
+				this, SLOT(onSearchItemSelect(SearchResult*)));
+	}
+	_searchResultsDisplayed = false;
 
 	QTapAndHoldGesture::setTimeout(2000);
 }
@@ -74,67 +83,73 @@ PlayGoController::~PlayGoController()
 void PlayGoController::initController()
 {
 	// Set the deafult value of other settings
-    _activeMode = UI::Sketch;
-    _device = QTabletEvent::NoDevice;
 
-    _defaultPen = QPen(Qt::black);
-    _defaultPen.setCapStyle(Qt::RoundCap);
-    _defaultPen.setJoinStyle(Qt::RoundJoin);
-    _defaultPen.setStyle(Qt::SolidLine);
-    _defaultPen.setWidthF(3.5f);
+	// Drawing parameters
+	_activeMode = UI::Sketch;
+	_device = QTabletEvent::NoDevice;
 
-    _fillPen = QPen(_defaultPen);
+	_defaultPen = QPen(Qt::black);
+	_defaultPen.setCapStyle(Qt::RoundCap);
+	_defaultPen.setJoinStyle(Qt::RoundJoin);
+	_defaultPen.setStyle(Qt::SolidLine);
+	_defaultPen.setWidthF(3.5f);
 
-    _lassoPen = QPen(QColor(255,50,50,150));
-    _lassoPen.setStyle(Qt::DashLine);
-    _lassoPen.setWidthF(2.5f);
+	_fillPen = QPen(_defaultPen);
 
-    _highlightPen = QPen(QColor(255,0,0,200));
-    _highlightPen.setStyle(Qt::SolidLine);
-    _highlightPen.setWidthF(5.0f);
+	_lassoPen = QPen(QColor(255,50,50,150));
+	_lassoPen.setStyle(Qt::DashLine);
+	_lassoPen.setWidthF(2.5f);
 
-    _defaultBrush = QBrush(Qt::NoBrush);
+	_highlightPen = QPen(QColor(255,0,0,200));
+	_highlightPen.setStyle(Qt::SolidLine);
+	_highlightPen.setWidthF(5.0f);
 
-    _fillBrush = QBrush(QColor(250,150,150,200), Qt::SolidPattern);
-    _lassoBrush = QBrush(Qt::NoBrush);
-    _highlightBrush = QBrush(Qt::NoBrush);
+	_defaultBrush = QBrush(Qt::NoBrush);
+
+	_fillBrush = QBrush(QColor(250,150,150,200), Qt::SolidPattern);
+	_lassoBrush = QBrush(Qt::NoBrush);
+	_highlightBrush = QBrush(Qt::NoBrush);
 
 	_isDrawingStroke = false;
-    _currentStroke = NULL;
-    _currentPolygon = NULL;
+	_currentStroke = NULL;
+	_currentPolygon = NULL;
 
-    _lasso = new QGraphicsPolygonItem();
-    _lasso->setPen(_lassoPen);
-    _lasso->setBrush(_lassoBrush);
-    _scene->addItem(_lasso);
-    _isLassoDisplayed = false;
+	// Lasso parameters
+	_lasso = new QGraphicsPolygonItem();
+	_lasso->setPen(_lassoPen);
+	_lasso->setBrush(_lassoBrush);
+	_scene->addItem(_lasso);
+	_isLassoDisplayed = false;
 
-    _itemHighlighted = false;
+	_itemHighlighted = false;
 
-    ///////////////////////////////////////////////////////
-    // Connection option settings
-    createConnectionsToolbar();
-    hideConnectionsToolbar();
+	// Physics settings.
+	_physicsMask = 0;
+
+	///////////////////////////////////////////////////////
+	// Connection option settings
+	createConnectionsToolbar();
+	hideConnectionsToolbar();
 	_activeConnectionMode = HingeJoint;
 
 	// Gesture recognizer stroke
-    _tmpStrokes = QList<PenStroke*>();
-    _currentConnectStroke = NULL;
+	_tmpStrokes = QList<PenStroke*>();
+	_currentConnectStroke = NULL;
 
 	// Force line
-    forceLine = NULL;
+	forceLine = NULL;
 
-    // Slider variables
-    _sliderComponentA = NULL;
-    _sliderComponentB = NULL;
-    _sliderStartPos = QPointF();
-    _sliderEndPos = QPointF();
-    _sliderLineItem = NULL;
+	// Slider variables
+	_sliderComponentA = NULL;
+	_sliderComponentB = NULL;
+	_sliderStartPos = QPointF();
+	_sliderEndPos = QPointF();
+	_sliderLineItem = NULL;
 
 
-    sketchRecognizer = new PDollarRecognizer(this);		// Will make sure that this gets deleted with the object
-    QString gestureDir = getHomeDirectory() + "/gestures/";
-    sketchRecognizer->loadPDRTemplates(gestureDir);
+	sketchRecognizer = new PDollarRecognizer(this);		// Will make sure that this gets deleted with the object
+	QString gestureDir = getHomeDirectory() + "/gestures/";
+	sketchRecognizer->loadPDRTemplates(gestureDir);
 
 	//////////////////////////////////////////////////////////
 	// Tap and hold options
@@ -151,22 +166,23 @@ void PlayGoController::initController()
 
 void PlayGoController::brushPress(QPointF pos, float pressure, int time)
 {
-	if (_page->currentComponent() == NULL)
+	if (_page->currentComponent() == NULL && false)
 	{
 		Component* currentComponent = _page->createComponent();
 		QTransform t;
 		t = t.translate(pos.x(), pos.y());
 		currentComponent->setTransform(t);
 		_page->setCurrentComponent(currentComponent);
+		_page->currentComponent()->setZValue(Z_COMPONENTVIEW);
 	}
 
-	_page->currentComponent()->setZValue(Z_COMPONENTVIEW);
 	_currentStroke = new Stroke();
 	_currentStroke->setPen(_defaultPen);
 	_currentStroke->setBrush(_defaultBrush);
 
-	_page->currentComponent()->addToComponent(_currentStroke);
+	//_page->currentComponent()->addToComponent(_currentStroke);
 	_currentStroke->push_point(Point2DPT(pos.x(),pos.y(),pressure, time));
+	_scene->addItem(_currentStroke);
 	_isDrawingStroke = true;
 }
 
@@ -191,35 +207,35 @@ void PlayGoController::brushRelease(QPointF pos, float pressure, int time)
 
 void PlayGoController::shapePress(QPointF pos)
 {
-    Component *newComponent = _page->createComponent();
-    _currentPolygon = new Polygon2D();
-    newComponent->addToComponent(_currentPolygon);
-    //		_currentPolygon->setPos(0,0);
-    newComponent->moveBy(pos.x(),pos.y());
+	Component *newComponent = _page->createComponent();
+	_currentPolygon = new Polygon2D();
+	newComponent->addToComponent(_currentPolygon);
+	//		_currentPolygon->setPos(0,0);
+	newComponent->moveBy(pos.x(),pos.y());
 	newComponent->setOpacity(0.75f);
 	_currentPolygon->setOpacity(0.90f);
 	_currentPolygon->push_point(pos);
 
-    _fillPen = _defaultPen;
+	_fillPen = _defaultPen;
 	QColor tmpColor = _fillPen.color().lighter();
 	_fillBrush.setColor(tmpColor);
-    _currentPolygon->setPen(_defaultPen);
-    _currentPolygon->setBrush(_fillBrush);
+	_currentPolygon->setPen(_defaultPen);
+	_currentPolygon->setBrush(_fillBrush);
 	_isDrawingPolygon = true;
 }
 
 void PlayGoController::shapeMove(QPointF pos)
 {
 	if (_currentPolygon && _isDrawingPolygon)
-        _currentPolygon->push_point(pos);
+		_currentPolygon->push_point(pos);
 }
 
 void PlayGoController::shapeRelease(QPointF pos)
 {
 	if (_currentPolygon && _isDrawingPolygon)
-    {
-        _currentPolygon->push_point(pos);
-        _currentPolygon->initializePhysicsShape();
+	{
+		_currentPolygon->push_point(pos);
+		_currentPolygon->initializePhysicsShape();
 		if (_currentPolygon->parentItem())
 		{
 			if (_currentPolygon->parentItem()->type() == Component::Type)
@@ -234,7 +250,7 @@ void PlayGoController::shapeRelease(QPointF pos)
 				_currentPolygon->parentItem()->setOpacity(1.0f);
 			}
 		}
-    }
+	}
 	_toplevelWindow->colorToolbar->slotRandomizeColor();	// randomizes the main color after each selection
 	_currentPolygon = NULL;
 	_isDrawingPolygon = false;
@@ -242,7 +258,7 @@ void PlayGoController::shapeRelease(QPointF pos)
 
 void PlayGoController::eraserPress(QPointF pos)
 {
-    eraserMove(pos);
+	eraserMove(pos);
 }
 
 void PlayGoController::eraserMove(QPointF pos)
@@ -272,170 +288,170 @@ void PlayGoController::eraserMove(QPointF pos)
 
 void PlayGoController::eraserRelease(QPointF pos)
 {
-    eraserMove(pos);
+	eraserMove(pos);
 }
 
 void PlayGoController::lassoPress(QPointF pos)
 {
-    _isLassoDisplayed = true;
-    _lassoPolygon = QPolygonF();
-    _lassoPolygon.push_back(pos);
-    _lasso->setPolygon(_lassoPolygon);
-    _lasso->update(_lasso->boundingRect());
+	_isLassoDisplayed = true;
+	_lassoPolygon = QPolygonF();
+	_lassoPolygon.push_back(pos);
+	_lasso->setPolygon(_lassoPolygon);
+	_lasso->update(_lasso->boundingRect());
 }
 
 void PlayGoController::lassoMove(QPointF pos)
 {
-    _lassoPolygon.push_back(pos);
-    _lasso->setPolygon(_lassoPolygon);
-    _lasso->update(_lasso->boundingRect());
+	_lassoPolygon.push_back(pos);
+	_lasso->setPolygon(_lassoPolygon);
+	_lasso->update(_lasso->boundingRect());
 }
 
 void PlayGoController::lassoRelease(QPointF pos)
 {
-    _lassoPolygon.push_back(pos);
-    //_lasso->setPolygon(_lassoPolygon);
-    _lasso->update(_lasso->boundingRect());
+	_lassoPolygon.push_back(pos);
+	//_lasso->setPolygon(_lassoPolygon);
+	_lasso->update(_lasso->boundingRect());
 
 	QList<Stroke*> selectedStrokes = _page->getSelectedStrokes(_lassoPolygon, 1.0f);
-    if (selectedStrokes.size()) _itemHighlighted = true;
-    for (int i=0; i < selectedStrokes.size(); i++)
-    {
-        selectedStrokes[i]->highlight(true);
-    }
-    _lasso->setPolygon(QPolygonF());
-    _isLassoDisplayed = false;
+	if (selectedStrokes.size()) _itemHighlighted = true;
+	for (int i=0; i < selectedStrokes.size(); i++)
+	{
+		selectedStrokes[i]->highlight(true);
+	}
+	_lasso->setPolygon(QPolygonF());
+	_isLassoDisplayed = false;
 }
 
 void PlayGoController::connectPress(QPointF scenePos)
 {
 	_page->onSimulationStepStart();	// update all pending component positions
 	switch (_activeConnectionMode)
-    {
-    case GestureSketch :
-    {
-        if (_currentConnectStroke)
-        {
-            QLOG_WARN() << "Current stroke should have been NULL.";
-            delete _currentConnectStroke;
-            _currentConnectStroke = NULL;
-        }
+	{
+	case GestureSketch :
+	{
+		if (_currentConnectStroke)
+		{
+			QLOG_WARN() << "Current stroke should have been NULL.";
+			delete _currentConnectStroke;
+			_currentConnectStroke = NULL;
+		}
 
-        _currentConnectStroke = new PenStroke();
-        _scene->addItem(_currentConnectStroke);
-        _currentConnectStroke->push_point(scenePos);	// No transformation for this one
-        QPen strokePen = QPen();
-        strokePen.setWidth(3);
-        strokePen.setColor(Qt::blue);
-        _currentConnectStroke->setPen(strokePen);
-        break;
-    }
-    case HingeJoint :
+		_currentConnectStroke = new PenStroke();
+		_scene->addItem(_currentConnectStroke);
+		_currentConnectStroke->push_point(scenePos);	// No transformation for this one
+		QPen strokePen = QPen();
+		strokePen.setWidth(3);
+		strokePen.setColor(Qt::blue);
+		_currentConnectStroke->setPen(strokePen);
+		break;
+	}
+	case HingeJoint :
 	{
 		// Do on release
 		break;
 	}
-    case SliderJoint :
-    {
-        if (_sliderComponentA && _sliderComponentB)
-        {
-            _sliderStartPos = scenePos;
-            if (_sliderLineItem) delete _sliderLineItem;
-            _sliderLineItem = new QGraphicsLineItem(QLineF(_sliderStartPos, _sliderStartPos));
-            _scene->addItem(_sliderLineItem);
-        }
-        break;
-    }
-    case SpringJoint :
+	case SliderJoint :
 	{
-        break;
+		if (_sliderComponentA && _sliderComponentB)
+		{
+			_sliderStartPos = scenePos;
+			if (_sliderLineItem) delete _sliderLineItem;
+			_sliderLineItem = new QGraphicsLineItem(QLineF(_sliderStartPos, _sliderStartPos));
+			_scene->addItem(_sliderLineItem);
+		}
+		break;
 	}
-    case ApplyForce :
-    {
-        // TODO - Default to application of force
-        QList<QGraphicsItem*> selections = _scene->items(scenePos,
-                                                         Qt::IntersectsItemBoundingRect);
-        if (selections.size() == 0) break;
+	case SpringJoint :
+	{
+		break;
+	}
+	case ApplyForce :
+	{
+		// TODO - Default to application of force
+		QList<QGraphicsItem*> selections = _scene->items(scenePos,
+														 Qt::IntersectsItemBoundingRect);
+		if (selections.size() == 0) break;
 
-        foreach(QGraphicsItem* graphicsitem, selections)
-        {
-            if (graphicsitem->type() != Pixmap::Type) continue;
-            // Must have a component attached
-            if (graphicsitem->parentItem() == NULL) continue;
-            // Pixmap must be of type component
-            if (graphicsitem->parentItem()->type() != Component::Type) continue;
+		foreach(QGraphicsItem* graphicsitem, selections)
+		{
+			if (graphicsitem->type() != Pixmap::Type) continue;
+			// Must have a component attached
+			if (graphicsitem->parentItem() == NULL) continue;
+			// Pixmap must be of type component
+			if (graphicsitem->parentItem()->type() != Component::Type) continue;
 
-            Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
-            // We will use the shape for later stages
-            if (pixmap->contains(pixmap->mapFromScene(scenePos)) == false) continue;
-            Component* component
-                    = qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
-            QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
-            forceLine = new ForceGraphicsItem(0,0,0,0);
-            forceLine->setTransform(t);
-            _scene->addItem(forceLine);
-            component->addToComponent(forceLine);
-            return;
-        }
-        break;
-    }
-    }
+			Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
+			// We will use the shape for later stages
+			if (pixmap->contains(pixmap->mapFromScene(scenePos)) == false) continue;
+			Component* component
+					= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
+			QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
+			forceLine = new ForceGraphicsItem(0,0,0,0);
+			forceLine->setTransform(t);
+			_scene->addItem(forceLine);
+			component->addToComponent(forceLine);
+			return;
+		}
+		break;
+	}
+	}
 }
 
 void PlayGoController::connectMove(QPointF scenePos)
 {
 	switch (_activeConnectionMode)
-    {
-    case GestureSketch :
-    {
-        if (_currentConnectStroke)
-            _currentConnectStroke->push_point(scenePos);
-        break;
-    }
-    case HingeJoint :
-        break;
-    case SliderJoint :
-    {
-        if (_sliderLineItem)
-        {
-            _sliderEndPos = scenePos;
-            _sliderLineItem->setLine(QLineF(_sliderStartPos, _sliderEndPos));
-        }
-        break;
-    }
-    case SpringJoint :
-        break;
-    case ApplyForce :
-    {
-        if (forceLine)
-        {
-            QPointF tPos = forceLine->mapFromScene(scenePos);
-            forceLine->setLine(0,0,tPos.x(),tPos.y());
-        }
-        break;
-    }
-    }
+	{
+	case GestureSketch :
+	{
+		if (_currentConnectStroke)
+			_currentConnectStroke->push_point(scenePos);
+		break;
+	}
+	case HingeJoint :
+		break;
+	case SliderJoint :
+	{
+		if (_sliderLineItem)
+		{
+			_sliderEndPos = scenePos;
+			_sliderLineItem->setLine(QLineF(_sliderStartPos, _sliderEndPos));
+		}
+		break;
+	}
+	case SpringJoint :
+		break;
+	case ApplyForce :
+	{
+		if (forceLine)
+		{
+			QPointF tPos = forceLine->mapFromScene(scenePos);
+			forceLine->setLine(0,0,tPos.x(),tPos.y());
+		}
+		break;
+	}
+	}
 }
 
 void PlayGoController::connectRelease(QPointF scenePos)
 {
 	_page->onSimulationStepStart();
 	switch (_activeConnectionMode)
-    {
-    case GestureSketch :
-    {
-        if (_currentConnectStroke)
-        {
-            _currentConnectStroke->push_point(scenePos);
+	{
+	case GestureSketch :
+	{
+		if (_currentConnectStroke)
+		{
+			_currentConnectStroke->push_point(scenePos);
 
-            sketchRecognizer->addStroke(_currentConnectStroke->points);
-            _tmpStrokes.push_back(_currentConnectStroke);
-            sketchRecognizer->gbRecognize();
+			sketchRecognizer->addStroke(_currentConnectStroke->points);
+			_tmpStrokes.push_back(_currentConnectStroke);
+			sketchRecognizer->gbRecognize();
 
-            _currentConnectStroke = NULL;
-        }
-        break;
-    }
+			_currentConnectStroke = NULL;
+		}
+		break;
+	}
 	case StaticJoint :
 	{
 		QList<Component*> components = getSelectableComponentsByPhysics(scenePos);
@@ -449,7 +465,7 @@ void PlayGoController::connectRelease(QPointF scenePos)
 		}
 		break;
 	}
-    case HingeJoint :
+	case HingeJoint :
 	{
 		QList<Component*> itemsToUse = getSelectableComponentsByPhysics(scenePos);
 
@@ -465,21 +481,6 @@ void PlayGoController::connectRelease(QPointF scenePos)
 					c2 = itemsToUse[2];
 				}
 			}
-
-			/*
-				b2RevoluteJointDef revolutJointDef;
-
-				revolutJointDef.bodyA = c1->physicsBody();
-				revolutJointDef.bodyB = c2->physicsBody();
-				revolutJointDef.collideConnected = false;
-
-				QPointF localPos1 = c1->mapFromScene(scenePos) * c1->scale();
-				QPointF localPos2 = c2->mapFromScene(scenePos) * c2->scale();
-				float physicsScale = getPhysicsScale();
-				revolutJointDef.localAnchorA.Set(localPos1.x()/physicsScale, localPos1.y()/physicsScale);
-				revolutJointDef.localAnchorB.Set(localPos2.x()/physicsScale, localPos2.y()/physicsScale);
-
-				revolutJointDef.enableLimit = false;*/
 
 			bool b_enableMotor = false;
 			float f_motorSpeed = 0;
@@ -503,36 +504,36 @@ void PlayGoController::connectRelease(QPointF scenePos)
 		}
 		break;
 	}
-    case SliderJoint :
-    {
-        if (_sliderComponentA == NULL)
-        {
-            QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
-            if (selection.size())
-            {
-                _sliderComponentA = selection[0];
-                _sliderComponentA->setOpacity(1.0f);
-            }
-        } else if (_sliderComponentB == NULL)
-        {
-            QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
-            if (selection.size())
-            {
-                if (_sliderComponentA == selection[0])
-                {
-                    if (selection.size() > 1)
-                    {
-                        _sliderComponentB = selection[1];
-                        _sliderComponentB->setOpacity(1.0f);
-                    }
-                } else
-                {
-                    _sliderComponentB = selection[0];
-                    _sliderComponentB->setOpacity(1.0f);
-                }
-            }
-        } else
-        {
+	case SliderJoint :
+	{
+		if (_sliderComponentA == NULL)
+		{
+			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
+			if (selection.size())
+			{
+				_sliderComponentA = selection[0];
+				_sliderComponentA->setOpacity(1.0f);
+			}
+		} else if (_sliderComponentB == NULL)
+		{
+			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
+			if (selection.size())
+			{
+				if (_sliderComponentA == selection[0])
+				{
+					if (selection.size() > 1)
+					{
+						_sliderComponentB = selection[1];
+						_sliderComponentB->setOpacity(1.0f);
+					}
+				} else
+				{
+					_sliderComponentB = selection[0];
+					_sliderComponentB->setOpacity(1.0f);
+				}
+			}
+		} else
+		{
 			_sliderEndPos = scenePos;
 			{
 				QGraphicsPathItem* pathitem = new QGraphicsPathItem;
@@ -560,241 +561,255 @@ void PlayGoController::connectRelease(QPointF scenePos)
 				pathitem->setPen(linePen);
 				_scene->addItem(pathitem);
 			}
-            // Check for lines
-            QLineF lineA = QLineF(_sliderComponentA->mapFromScene(_sliderStartPos),
-                                  _sliderComponentA->mapFromScene(_sliderEndPos));
-            QLineF lineB = QLineF(_sliderComponentB->mapFromScene(_sliderStartPos),
-                                  _sliderComponentB->mapFromScene(_sliderEndPos));
+			// Check for lines
+			QLineF lineA = QLineF(_sliderComponentA->mapFromScene(_sliderStartPos),
+								  _sliderComponentA->mapFromScene(_sliderEndPos));
+			QLineF lineB = QLineF(_sliderComponentB->mapFromScene(_sliderStartPos),
+								  _sliderComponentB->mapFromScene(_sliderEndPos));
 
 
 
-            QVector2D vecA = QVector2D(lineA.p2() - lineA.p1());
-            //QVector2D vecB = QVector2D(lineB.p2() - lineB.p1());
-            QVector2D vectorGlobal = QVector2D(_sliderEndPos-_sliderStartPos);
+			QVector2D vecA = QVector2D(lineA.p2() - lineA.p1());
+			//QVector2D vecB = QVector2D(lineB.p2() - lineB.p1());
+			QVector2D vectorGlobal = QVector2D(_sliderEndPos-_sliderStartPos);
 
-            float physicsScale = getPhysicsScale();
+			float physicsScale = getPhysicsScale();
 
-            b2PrismaticJointDef sliderDef;
-            sliderDef.bodyA = _sliderComponentA->physicsBody();
-            sliderDef.bodyB = _sliderComponentB->physicsBody();
-            sliderDef.collideConnected = false;
+			b2PrismaticJointDef sliderDef;
+			sliderDef.bodyA = _sliderComponentA->physicsBody();
+			sliderDef.bodyB = _sliderComponentB->physicsBody();
+			sliderDef.collideConnected = false;
 
-            sliderDef.localAxisA.Set(vecA.x(), vecA.y());
-            sliderDef.localAxisA.Normalize();
+			sliderDef.localAxisA.Set(vecA.x(), vecA.y());
+			sliderDef.localAxisA.Normalize();
 
-            sliderDef.localAnchorA.Set(lineA.p1().x()/physicsScale, lineA.p1().y()/physicsScale);
-            sliderDef.localAnchorB.Set(lineB.p1().x()/physicsScale, lineB.p1().y()/physicsScale);
+			sliderDef.localAnchorA.Set(lineA.p1().x()/physicsScale, lineA.p1().y()/physicsScale);
+			sliderDef.localAnchorB.Set(lineB.p1().x()/physicsScale, lineB.p1().y()/physicsScale);
 
-            sliderDef.enableLimit = true;
-            sliderDef.lowerTranslation = 0;
-            sliderDef.upperTranslation = vectorGlobal.length()/physicsScale;
+			sliderDef.enableLimit = true;
+			sliderDef.lowerTranslation = 0;
+			sliderDef.upperTranslation = vectorGlobal.length()/physicsScale;
 
 //			sliderDef.referenceAngle =
 //					_sliderComponentA->physicsBody()->GetAngle() -
 //					_sliderComponentB->physicsBody()->GetAngle();
 
-            if (enableMotorCheckbox->isChecked())
-            {
-                sliderDef.enableMotor = true;
-                bool ok;
-                int speed = motorSpeed->text().toInt(&ok);
-                if (ok) sliderDef.motorSpeed = speed;
-                int torque = motorTorque->text().toInt(&ok);
-                if (ok)	sliderDef.maxMotorForce = torque;
-            } else
-            {
-                sliderDef.enableMotor = false;
-            }
+			if (enableMotorCheckbox->isChecked())
+			{
+				sliderDef.enableMotor = true;
+				bool ok;
+				int speed = motorSpeed->text().toInt(&ok);
+				if (ok) sliderDef.motorSpeed = speed;
+				int torque = motorTorque->text().toInt(&ok);
+				if (ok)	sliderDef.maxMotorForce = torque;
+			} else
+			{
+				sliderDef.enableMotor = false;
+			}
 
-            b2Joint* joint = _page->getPhysicsManager()->_b2World->CreateJoint(&sliderDef);
-            b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
-            //                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
-            _sliderComponentA->addToComponent(_sliderLineItem);
+			b2Joint* joint = _page->getPhysicsManager()->_b2World->CreateJoint(&sliderDef);
+			b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
+			//                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
+			_sliderComponentA->addToComponent(_sliderLineItem);
 
-            _sliderComponentA->setOpacity(0.5f);
-            _sliderComponentB->setOpacity(0.5f);
+			_sliderComponentA->setOpacity(0.5f);
+			_sliderComponentB->setOpacity(0.5f);
 
-            _sliderLineItem = 0;
-            _sliderComponentA = 0;
-            _sliderComponentB = 0;
-        }
-        break;
-    }
-    case SpringJoint :
-        break;
-    case ApplyForce :
-    {
+			_sliderLineItem = 0;
+			_sliderComponentA = 0;
+			_sliderComponentB = 0;
+		}
+		break;
+	}
+	case SpringJoint :
+		break;
+	case ApplyForce :
+	{
 
-        if (forceLine == NULL)
-        {
-            QLOG_ERROR() << "ERROR!! forceLine should not be NULL.";
-            return;
-        }
+		if (forceLine == NULL)
+		{
+			QLOG_ERROR() << "ERROR!! forceLine should not be NULL.";
+			return;
+		}
 
-        QPointF tPos = forceLine->mapFromScene(scenePos);
-        forceLine->setLine(0,0,tPos.x(),tPos.y());
+		QPointF tPos = forceLine->mapFromScene(scenePos);
+		forceLine->setLine(0,0,tPos.x(),tPos.y());
 
-        if (forceLine->parentItem())
-        {
-            if (forceLine->parentItem()->type() == Component::Type)
-            {
-                Component* parentComponent = qgraphicsitem_cast<Component*>(forceLine->parentItem());
-                if (parentComponent->physicsBody())
-                {
-                    QPointF forceorigin = forceLine->mapToParent(QPointF(0,0));
-                    QPointF forcevector = forceorigin - forceLine->mapToParent(tPos);
-                    /*float forceScale = 1.0f;
-                        float physicsScale = getPhysicsScale();
-                        parentComponent->physicsBody()->ApplyForce
-                                (b2Vec2(forcevector.x()/forceScale, forcevector.y()/forceScale),
-                                 b2Vec2(forceorigin.x()/physicsScale, forceorigin.y()/physicsScale),
-                                 true);
-                        */
-                    parentComponent->physicsBody()->SetLinearVelocity(b2Vec2(forcevector.x(), forcevector.y()));
+		if (forceLine->parentItem())
+		{
+			if (forceLine->parentItem()->type() == Component::Type)
+			{
+				Component* parentComponent = qgraphicsitem_cast<Component*>(forceLine->parentItem());
+				if (parentComponent->physicsBody())
+				{
+					QPointF forceorigin = forceLine->mapToParent(QPointF(0,0));
+					QPointF forcevector = forceorigin - forceLine->mapToParent(tPos);
+					/*float forceScale = 1.0f;
+						float physicsScale = getPhysicsScale();
+						parentComponent->physicsBody()->ApplyForce
+								(b2Vec2(forcevector.x()/forceScale, forcevector.y()/forceScale),
+								 b2Vec2(forceorigin.x()/physicsScale, forceorigin.y()/physicsScale),
+								 true);
+						*/
+					parentComponent->physicsBody()->SetLinearVelocity(b2Vec2(forcevector.x(), forcevector.y()));
 
-                    qDebug() << "Force output" << forceorigin << forcevector;
-                }
-            }
-        }
-        delete forceLine;
-        forceLine = NULL;
-        break;
-    }
-    }
+					qDebug() << "Force output" << forceorigin << forcevector;
+				}
+			}
+		}
+		delete forceLine;
+		forceLine = NULL;
+		break;
+	}
+	}
 }
 
 void PlayGoController::createConnectionsToolbar()
 {
-    QActionGroup * actionGroup = new QActionGroup(this);
-    QAction* scribbleModeSelection = new QAction(QIcon(":/images/scribble.png"), tr("Recognizer mode"), actionGroup);
-    scribbleModeSelection->setCheckable(true);
+	QActionGroup * actionGroup = new QActionGroup(this);
+	QAction* scribbleModeSelection = new QAction(QIcon(":/images/scribble.png"), tr("Recognizer mode"), actionGroup);
+	scribbleModeSelection->setCheckable(true);
 	scribbleModeSelection->setChecked(false);
 
 	QAction* lockItemAction = new QAction(QIcon(":/images/joints/lock-joint.png"), tr("Fix item"), actionGroup);
 	lockItemAction->setCheckable(true);
 	lockItemAction->setChecked(false);
 
-    QAction* hingeSelectAction = new QAction(QIcon(":/images/joints/hinge-joint.png"), tr("Create hinge joint"), actionGroup);
-    hingeSelectAction->setCheckable(true);
+	QAction* hingeSelectAction = new QAction(QIcon(":/images/joints/hinge-joint.png"), tr("Create hinge joint"), actionGroup);
+	hingeSelectAction->setCheckable(true);
 	hingeSelectAction->setChecked(true);
 
-    QAction* sliderSelectAction = new QAction(QIcon(":/images/joints/slider.png"), tr("Create slider joint"), actionGroup);
-    sliderSelectAction->setCheckable(true);
-    sliderSelectAction->setChecked(false);
+	QAction* sliderSelectAction = new QAction(QIcon(":/images/joints/slider.png"), tr("Create slider joint"), actionGroup);
+	sliderSelectAction->setCheckable(true);
+	sliderSelectAction->setChecked(false);
 
-    QAction* springSelectAction = new QAction(QIcon(":/images/joints/spring-joint.png"), tr("Connect using springs"), actionGroup);
-    springSelectAction->setCheckable(true);
-    springSelectAction->setChecked(false);
+	QAction* springSelectAction = new QAction(QIcon(":/images/joints/spring-joint.png"), tr("Connect using springs"), actionGroup);
+	springSelectAction->setCheckable(true);
+	springSelectAction->setChecked(false);
 
-    QAction* forceSelectAction = new QAction(QIcon(":/images/joints/force.png"), tr("Apply force"), actionGroup);
-    forceSelectAction->setCheckable(true);
-    forceSelectAction->setChecked(false);
+	QAction* forceSelectAction = new QAction(QIcon(":/images/joints/force.png"), tr("Apply force"), actionGroup);
+	forceSelectAction->setCheckable(true);
+	forceSelectAction->setChecked(false);
 
-    connectionOptionsToolbar = new QToolBar(tr("Connect mode toolbar"), _toplevelWindow);
+	connectionOptionsToolbar = new QToolBar(tr("Connect mode toolbar"), _toplevelWindow);
 
-    connectionOptionsToolbar->addAction(scribbleModeSelection);
+	connectionOptionsToolbar->addAction(scribbleModeSelection);
 	connectionOptionsToolbar->addAction(lockItemAction);
-    connectionOptionsToolbar->addAction(hingeSelectAction);
-    connectionOptionsToolbar->addAction(sliderSelectAction);
-    connectionOptionsToolbar->addAction(springSelectAction);
-    connectionOptionsToolbar->addAction(forceSelectAction);
+	connectionOptionsToolbar->addAction(hingeSelectAction);
+	connectionOptionsToolbar->addAction(sliderSelectAction);
+	connectionOptionsToolbar->addAction(springSelectAction);
+	connectionOptionsToolbar->addAction(forceSelectAction);
 
-    connectionOptionsToolbar->setIconSize(QSize(48,48));
+	connectionOptionsToolbar->setIconSize(QSize(48,48));
 
-    _toplevelWindow->addToolBar(Qt::TopToolBarArea, connectionOptionsToolbar);
+	_toplevelWindow->addToolBar(Qt::TopToolBarArea, connectionOptionsToolbar);
 
-    connect(scribbleModeSelection, SIGNAL(triggered()),
-            this, SLOT(setModeScribble()));
+	connect(scribbleModeSelection, SIGNAL(triggered()),
+			this, SLOT(setModeScribble()));
 	connect(lockItemAction, SIGNAL(triggered()),
 			this, SLOT(setModeLockItem()));
-    connect(hingeSelectAction, SIGNAL(triggered()),
-            this, SLOT(setModeHingeJoint()));
-    connect(sliderSelectAction, SIGNAL(triggered()),
-            this, SLOT(setModeSliderJoint()));
-    connect(springSelectAction, SIGNAL(triggered()),
-            this, SLOT(setModeSpringJoint()));
-    connect(forceSelectAction, SIGNAL(triggered()),
-            this, SLOT(setModeForce()));
+	connect(hingeSelectAction, SIGNAL(triggered()),
+			this, SLOT(setModeHingeJoint()));
+	connect(sliderSelectAction, SIGNAL(triggered()),
+			this, SLOT(setModeSliderJoint()));
+	connect(springSelectAction, SIGNAL(triggered()),
+			this, SLOT(setModeSpringJoint()));
+	connect(forceSelectAction, SIGNAL(triggered()),
+			this, SLOT(setModeForce()));
 
-    /////---------------------------
-    /// Create entry boxes
-    connectionOptionsToolbar->addSeparator();
-    enableMotorCheckbox = new QCheckBox(QString("Enable motor"));
-    connectionOptionsToolbar->addWidget(enableMotorCheckbox);
-    enableMotorCheckbox->setChecked(true);
-    connectionOptionsToolbar->addSeparator();
+	/////---------------------------
+	/// Create entry boxes
+	connectionOptionsToolbar->addSeparator();
+	enableMotorCheckbox = new QCheckBox(QString("Enable motor"));
+	connectionOptionsToolbar->addWidget(enableMotorCheckbox);
+	enableMotorCheckbox->setChecked(true);
+	connectionOptionsToolbar->addSeparator();
 
-    motorSpeed = new QLineEdit();
+	motorSpeed = new QLineEdit();
 	QValidator *speedvalidator = new QIntValidator(-500,5000, motorSpeed);
-    motorSpeed->setValidator(speedvalidator);
-    QLabel *speedlabel = new QLabel(QString("Motor speed:"));
-    connectionOptionsToolbar->addWidget(speedlabel);
-    connectionOptionsToolbar->addWidget(motorSpeed);
-    motorSpeed->setText(QString("100"));
+	motorSpeed->setValidator(speedvalidator);
+	QLabel *speedlabel = new QLabel(QString("Motor speed:"));
+	connectionOptionsToolbar->addWidget(speedlabel);
+	connectionOptionsToolbar->addWidget(motorSpeed);
+	motorSpeed->setText(QString("100"));
 
-    connectionOptionsToolbar->addSeparator();
+	connectionOptionsToolbar->addSeparator();
 
-    motorTorque = new QLineEdit();
+	motorTorque = new QLineEdit();
 	QValidator *torqueValidator = new QIntValidator(-10000,10000, motorTorque);
-    motorTorque->setValidator(torqueValidator);
-    QLabel *torqueLabel = new QLabel(QString("Torque"));
-    connectionOptionsToolbar->addWidget(torqueLabel);
-    connectionOptionsToolbar->addWidget(motorTorque);
-    motorTorque->setText(QString("150"));
+	motorTorque->setValidator(torqueValidator);
+	QLabel *torqueLabel = new QLabel(QString("Torque"));
+	connectionOptionsToolbar->addWidget(torqueLabel);
+	connectionOptionsToolbar->addWidget(motorTorque);
+	motorTorque->setText(QString("150"));
 }
 
 void PlayGoController::showConnectionsToolbar()
 {
-    if (connectionOptionsToolbar) connectionOptionsToolbar->show();
+	if (connectionOptionsToolbar) connectionOptionsToolbar->show();
 }
 
 void PlayGoController::hideConnectionsToolbar()
 {
-    if (connectionOptionsToolbar) connectionOptionsToolbar->hide();
+	if (connectionOptionsToolbar) connectionOptionsToolbar->hide();
 }
 
 bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 {
-    bool retval = true;
-    if (oldmode == UI::Select)
-    {
-        if (newmode == UI::Erase) // delete highlight
-        {
+	bool retval = true;
+	if (oldmode == UI::Select)
+	{
+		if (newmode == UI::Erase) // delete highlight
+		{
 			QList<Stroke*> highlihghtedItems = _page->getHighlightedStrokes();
-            for (int i=0; i < highlihghtedItems.size(); i++)
-                delete highlihghtedItems[i];
-        }
-        if (_itemHighlighted)
-			_page->clearStrokeHighlight();
-        _isLassoDisplayed = false;
-        _lassoPolygon.clear();
-        _lasso->setPolygon(_lassoPolygon);
-    }
+			for (int i=0; i < highlihghtedItems.size(); i++)
+				delete highlihghtedItems[i];
+		}
+		if (_itemHighlighted)
+				_page->clearStrokeHighlight();
+		_isLassoDisplayed = false;
+		_lassoPolygon.clear();
+		_lasso->setPolygon(_lassoPolygon);
+	}
 
-    if (oldmode == UI::Sketch)
-    {
-        _currentStroke = NULL;
-		_isDrawingStroke = false;
-    }
+	if (oldmode == UI::Sketch)
+	{
+		_currentStroke = NULL;
+				_isDrawingStroke = false;
+	}
 
-    if (oldmode == UI::Connect)
-    {
-        QList<Component*> components = _page->getComponents();
-        foreach (Component* component, components)
-            component->setOpacity(1.0f);
-        hideConnectionsToolbar();
-        connectionModeReset();
-    }
+	if (oldmode == UI::Connect)
+	{
+		QList<Component*> components = _page->getComponents();
+		foreach (Component* component, components)
+			component->setOpacity(1.0f);
+		hideConnectionsToolbar();
+		connectionModeReset();
+	}
 
-    if (newmode == UI::Connect)
-    {
-        QList<Component*> components = _page->getComponents();
-        foreach (Component* component, components)
-            component->setOpacity(0.5f);
-        showConnectionsToolbar();
-        connectionModeReset();
-    }
-    return retval;
+	if (newmode == UI::Connect)
+	{
+		QList<Component*> components = _page->getComponents();
+		foreach (Component* component, components)
+			component->setOpacity(0.75f);
+		showConnectionsToolbar();
+		connectionModeReset();
+
+		// In UI connect mode, keep physics engine ON but disable many options
+		PhysicsManager* physicsManager = _page->getPhysicsManager();
+		physicsManager->start(100);	// keep it super slow. Do not hamper the interactions
+		physicsManager->setEnableGravity(false);
+		physicsManager->setEnableMotor(false);
+
+	}
+
+	if (newmode == UI::None)
+	{
+		// In this case we are mostly entering the
+		// physics state whether play/pause
+
+	}
+	return retval;
 }
 
 bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
@@ -803,51 +818,26 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 
 	if (_tapOverrideEnabled) return touchholdController->handleTapAndHold(event);
 
-    // Test out auto generated mouse events
-    switch (event->type())
-    {
-        case QEvent::MouseButtonDblClick :
-        case QEvent::MouseButtonPress :
-        case QEvent::MouseButtonRelease :
-        case QEvent::MouseMove :
-        {
-            QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
-            // \todo This does not capture the mouse events generated by mouse
-            if ( (mouseEvent != NULL ) && (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized/*Qt::MouseEventSource::MouseEventSynthesizedBySystem*/))
-            {
-                qDebug() << "[ARTIFICIAL MOUSE EVENT] ------ [IGNORE]";
-                event->ignore();
-                return true;
-            }
-        }
-    }
-
-    //  Only for logging purposes
+	// Test out auto generated mouse events
 	switch (event->type())
 	{
-	case QEvent::TouchBegin :
-	{ qDebug() << "Touch begin"; break; }
-	case QEvent::TouchUpdate :
-	{ qDebug() << "Touch update"; break; }
-	case QEvent::TouchEnd :
-	{ qDebug() << "Touch end"; break; }
-	case QEvent::TouchCancel :
-	{ qDebug() << "Touch cancel"; break; }
-	case QEvent::TabletPress :
-	{ qDebug() << "Tablet press"; break; }
-	case QEvent::TabletMove :
-	{ qDebug() << "Tablet move"; break; }
-	case QEvent::TabletRelease :
-	{ qDebug() << "Tablet release"; break; }
-	case QEvent::MouseButtonDblClick :
-	{ qDebug() << "Mouse button double click"; break; }
-	case QEvent::MouseButtonPress :
-	{ qDebug() << "Mouse button press "; break; }
-	case QEvent::MouseButtonRelease :
-	{ qDebug() << "Mouse button release"; break; }
-	case QEvent::MouseMove :
-	{qDebug() << "Mouse move"; break;	}
+		case QEvent::MouseButtonDblClick :
+		case QEvent::MouseButtonPress :
+		case QEvent::MouseButtonRelease :
+		case QEvent::MouseMove :
+		case QEvent::Wheel :
+		{
+			QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
+			// \todo This does not capture the mouse events generated by pen
+			if ( (mouseEvent != NULL ) && (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized/*Qt::MouseEventSource::MouseEventSynthesizedBySystem*/))
+			{
+				event->ignore();
+				return true;
+			}
+		}
 	}
+	//QString msg = getEventname(event);
+	//if (!msg.isEmpty()) qDebug() << msg;
 
 	switch(event->type())
 	{
@@ -866,30 +856,30 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 	case QEvent::MouseButtonRelease :
 	case QEvent::MouseMove :
 	{
-        if (!_isStylusNearby)
-                onMouseEventFromView(static_cast<QMouseEvent*>(event), _view);
-        return false;
+		if (!_isStylusNearby)
+				onMouseEventFromView(static_cast<QMouseEvent*>(event), _view);
+		return false;
 	}
 	case QEvent::TabletPress :
 	case QEvent::TabletMove :
 	case QEvent::TabletRelease :
 	{
 		onTabletEventFromView(static_cast<QTabletEvent*>(event), _view);
-        // Let's try sending these to scene
-        return false;
+		// Let's try sending these to scene
+		return false;
 	}
 	case QEvent::Gesture :
 	{
 		QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(event);
 		onGestureEventFromView(gestureEvent);
 		return false;     // Let the scene handle the gesture as well.
-        break;
+		break;
 	}
 	case QEvent::KeyPress :
 	case QEvent::KeyRelease :
 	{
-        // Currently no use of keypress
-        return false;
+		// Currently no use of keypress
+		return false;
 	}
 	}
 	return false;
@@ -897,236 +887,236 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 
 QList<Component*> PlayGoController::getSelectableComponentsByPhysics(QPointF scenePos)
 {
-    QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect);
-    QList<Component*> itemsToUse;
-    if (selectedItems.size() == 0) return itemsToUse;
-    foreach (QGraphicsItem* graphicsitem, selectedItems)
-    {
-        if (graphicsitem->parentItem() == NULL) continue;
-        if (graphicsitem->parentItem()->type() != Component::Type) continue;
-        if (graphicsitem->type() == Pixmap::Type
-                || graphicsitem->type() == Polygon2D::Type  ) // Replace to accomodate other widgets
-        {
-            if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
-            {
-                Component* c = qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
-                itemsToUse.push_back(c);
-            }
-        }
-    }
-    return itemsToUse;
+	QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect);
+	QList<Component*> itemsToUse;
+	if (selectedItems.size() == 0) return itemsToUse;
+	foreach (QGraphicsItem* graphicsitem, selectedItems)
+	{
+		if (graphicsitem->parentItem() == NULL) continue;
+		if (graphicsitem->parentItem()->type() != Component::Type) continue;
+		if (graphicsitem->type() == Pixmap::Type
+				|| graphicsitem->type() == Polygon2D::Type  ) // Replace to accomodate other widgets
+		{
+			if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
+			{
+				Component* c = qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
+				itemsToUse.push_back(c);
+			}
+		}
+	}
+	return itemsToUse;
 }
 
 void PlayGoController::sketchAction(QTabletEvent *event)
 {
-	float pressure = event->pressure();
+	float pressure = 0.75f; //event->pressure();
 	QPointF sceneMappedPos = _view->mapToScene(event->pos());
 	int time = 0;
 	switch (event->type())
-    {
-    case QEvent::TabletPress :
-        brushPress(sceneMappedPos, pressure, time);
-        break;
-    case QEvent::TabletMove :
-        brushMove(sceneMappedPos, pressure, time);
-        break;
-    case QEvent::TabletRelease :
-        brushRelease(sceneMappedPos, pressure, time);
-        break;
-    }
+	{
+	case QEvent::TabletPress :
+		brushPress(sceneMappedPos, pressure, time);
+		break;
+	case QEvent::TabletMove :
+		brushMove(sceneMappedPos, pressure, time);
+		break;
+	case QEvent::TabletRelease :
+		brushRelease(sceneMappedPos, pressure, time);
+		break;
+	}
 }
 
 void PlayGoController::sketchAction(QMouseEvent *event)
 {
-    float pressure = 1.0f;
-    QPointF sceneMappedPos = _view->mapToScene(event->pos());
-    int time = 0;
+	float pressure = 0.75f; // In case of mouse, set it to 75% of max value
+	QPointF sceneMappedPos = _view->mapToScene(event->pos());
+	int time = 0;
 
-    switch (event->type())
-    {
-        case QEvent::MouseButtonPress :
-        {
-            brushPress(sceneMappedPos, pressure, time);
-            break;
-        }
-        case QEvent::MouseMove :
-        {
-            brushMove(sceneMappedPos, pressure, time);
-            break;
-        }
-        case QEvent::MouseButtonRelease :
-        {
-            brushRelease(sceneMappedPos, pressure, time);
-            break;
-        }
-    }
+	switch (event->type())
+	{
+		case QEvent::MouseButtonPress :
+		{
+			brushPress(sceneMappedPos, pressure, time);
+			break;
+		}
+		case QEvent::MouseMove :
+		{
+			brushMove(sceneMappedPos, pressure, time);
+			break;
+		}
+		case QEvent::MouseButtonRelease :
+		{
+			brushRelease(sceneMappedPos, pressure, time);
+			break;
+		}
+	}
 }
 
 void PlayGoController::shapeAction(QTabletEvent *event)
 {
-    QPointF scenePos = _view->mapToScene(event->pos());
-    switch (event->type())
-    {
-    case QEvent::TabletPress :
-        shapePress(scenePos);
-        break;
-    case QEvent::TabletMove :
-        shapeMove(scenePos);
-        break;
-    case QEvent::TabletRelease :
-        shapeRelease(scenePos);
-        break;
-    }
+	QPointF scenePos = _view->mapToScene(event->pos());
+	switch (event->type())
+	{
+	case QEvent::TabletPress :
+		shapePress(scenePos);
+		break;
+	case QEvent::TabletMove :
+		shapeMove(scenePos);
+		break;
+	case QEvent::TabletRelease :
+		shapeRelease(scenePos);
+		break;
+	}
 }
 
 void PlayGoController::shapeAction(QMouseEvent *event)
 {
-    QPointF scenePos = _view->mapToScene(event->pos());
+	QPointF scenePos = _view->mapToScene(event->pos());
 
-    switch (event->type())
-    {
-        case QEvent::MouseButtonPress :
-        {
-            shapePress(scenePos);
-            break;
-        }
-        case QEvent::MouseMove :
-        {
-            shapeMove(scenePos);
-            break;
-        }
-        case QEvent::MouseButtonRelease :
-        {
-            shapeRelease(scenePos);
-            break;
-        }
-    }
+	switch (event->type())
+	{
+		case QEvent::MouseButtonPress :
+		{
+			shapePress(scenePos);
+			break;
+		}
+		case QEvent::MouseMove :
+		{
+			shapeMove(scenePos);
+			break;
+		}
+		case QEvent::MouseButtonRelease :
+		{
+			shapeRelease(scenePos);
+			break;
+		}
+	}
 }
 
 // \todo what is the eraser strength varies based on pressure value?
 void PlayGoController::eraseAction(QTabletEvent *event)
 {
-    QPointF pos = _view->mapToScene(event->pos());
+	QPointF pos = _view->mapToScene(event->pos());
 
-    switch (event->type())
-    {
-    case QEvent::TabletPress :
-        eraserPress(pos);
-        break;
-    case QEvent::TabletMove :
-        eraserMove(pos);
-        break;
-    case QEvent::TabletRelease :
-        eraserRelease(pos);
-        break;
-    }
+	switch (event->type())
+	{
+	case QEvent::TabletPress :
+		eraserPress(pos);
+		break;
+	case QEvent::TabletMove :
+		eraserMove(pos);
+		break;
+	case QEvent::TabletRelease :
+		eraserRelease(pos);
+		break;
+	}
 }
 
 void PlayGoController::eraseAction(QMouseEvent *event)
 {
-    QPointF pos = _view->mapToScene(event->pos());
+	QPointF pos = _view->mapToScene(event->pos());
 
-    switch (event->type())
-    {
-        case QEvent::MouseButtonPress :
-        {
-            eraserPress(pos);
-            break;
-        }
-        case QEvent::MouseMove :
-        {
-            eraserMove(pos);
-            break;
-        }
-        case QEvent::MouseButtonRelease :
-        {
-            eraserRelease(pos);
-            break;
-        }
-    }
+	switch (event->type())
+	{
+		case QEvent::MouseButtonPress :
+		{
+			eraserPress(pos);
+			break;
+		}
+		case QEvent::MouseMove :
+		{
+			eraserMove(pos);
+			break;
+		}
+		case QEvent::MouseButtonRelease :
+		{
+			eraserRelease(pos);
+			break;
+		}
+	}
 }
 
 void PlayGoController::selectAction(QTabletEvent *event)
 {
-    QPointF pos = _view->mapToScene(event->pos());
+	QPointF pos = _view->mapToScene(event->pos());
 
-    switch (event->type())
-    {
-    case QEvent::TabletPress :
-        lassoPress(pos);
-        break;
-    case QEvent::TabletMove :
-        lassoMove(pos);
-        break;
-    case QEvent::TabletRelease :
-        lassoRelease(pos);
-        break;
-    }
+	switch (event->type())
+	{
+	case QEvent::TabletPress :
+		lassoPress(pos);
+		break;
+	case QEvent::TabletMove :
+		lassoMove(pos);
+		break;
+	case QEvent::TabletRelease :
+		lassoRelease(pos);
+		break;
+	}
 }
 
 void PlayGoController::selectAction(QMouseEvent *event)
 {
-    QPointF pos = _view->mapToScene(event->pos());
+	QPointF pos = _view->mapToScene(event->pos());
 
-    switch (event->type())
-    {
-        case QEvent::MouseButtonPress :
-        {
-            lassoPress(pos);
-            break;
-        }
-        case QEvent::MouseMove :
-        {
-            lassoMove(pos);
-            break;
-        }
-        case QEvent::MouseButtonRelease :
-        {
-            lassoRelease(pos);
-            break;
-        }
-    }
+	switch (event->type())
+	{
+		case QEvent::MouseButtonPress :
+		{
+			lassoPress(pos);
+			break;
+		}
+		case QEvent::MouseMove :
+		{
+			lassoMove(pos);
+			break;
+		}
+		case QEvent::MouseButtonRelease :
+		{
+			lassoRelease(pos);
+			break;
+		}
+	}
 }
 
 void PlayGoController::connectAction(QTabletEvent *event)
 {
-    QPointF sceneMappedPos = _view->mapToScene(event->pos());
-    switch (event->type())
-    {
-    case QEvent::TabletPress :
-        connectPress(sceneMappedPos);
-        break;
-    case QEvent::TabletMove :
-        connectMove(sceneMappedPos);
-        break;
-    case QEvent::TabletRelease :
-        connectRelease(sceneMappedPos);
-        break;
-    }
+	QPointF sceneMappedPos = _view->mapToScene(event->pos());
+	switch (event->type())
+	{
+	case QEvent::TabletPress :
+		connectPress(sceneMappedPos);
+		break;
+	case QEvent::TabletMove :
+		connectMove(sceneMappedPos);
+		break;
+	case QEvent::TabletRelease :
+		connectRelease(sceneMappedPos);
+		break;
+	}
 }
 
 void PlayGoController::connectAction(QMouseEvent *event)
 {
-    QPointF sceneMappedPos = _view->mapToScene(event->pos());
+	QPointF sceneMappedPos = _view->mapToScene(event->pos());
 
-    switch (event->type())
-    {
-        case QEvent::MouseButtonPress :
-        {
-            connectPress(sceneMappedPos);
-            break;
-        }
-        case QEvent::MouseMove :
-        {
-            connectMove(sceneMappedPos);
-            break;
-        }
-        case QEvent::MouseButtonRelease :
-        {
-            connectRelease(sceneMappedPos);
-            break;
-        }
-    }
+	switch (event->type())
+	{
+		case QEvent::MouseButtonPress :
+		{
+			connectPress(sceneMappedPos);
+			break;
+		}
+		case QEvent::MouseMove :
+		{
+			connectMove(sceneMappedPos);
+			break;
+		}
+		case QEvent::MouseButtonRelease :
+		{
+			connectRelease(sceneMappedPos);
+			break;
+		}
+	}
 }
 
 void PlayGoController::searchAction()
@@ -1204,32 +1194,69 @@ void PlayGoController::searchAction()
 
 		return;
 	}
-    // We are searching if at least one of the strokes is highlighted
-    if (!_itemHighlighted) return;
-    // Do not use lasso polygon to find the selected strokes because selection can be done in
-    // multiple iterations
-    QImage inputImage =
-            //				_scene->getSelectionImage(_lassoPolygon);
+	// We are searching if at least one of the strokes is highlighted
+	if (!_itemHighlighted) return;
+	// Do not use lasso polygon to find the selected strokes because selection can be done in
+	// multiple iterations
+	QImage inputImage =
+			//				_scene->getSelectionImage(_lassoPolygon);
 			_page->getSelectionImageFromHighlight();
-    QList<Stroke*> selectedStrokes =
+	QList<Stroke*> selectedStrokes =
 			_page->getHighlightedStrokes();
 
-    if (selectedStrokes.size() == 0) return;
+	if (selectedStrokes.size() == 0) return;
 
-    QList<SearchResult*> searchResults =
+	QList<SearchResult*> searchResults =
 			_page->getSearchManager()->search(inputImage, 20);
 
-    if (searchResults.size())
-    {
+	if (searchResults.size())
+	{
 
-        searchView->LoadSearchData(selectedStrokes, searchResults);
-        emit onSearchComplete();
-    } else
-    {
-        QMessageBox::about(_view,
-                           QString("Search result"),
-                           QString("No result found!"));
-    }
+		searchView->LoadSearchData(selectedStrokes, searchResults);
+		emit onSearchComplete();
+	} else
+	{
+		QMessageBox::about(_view,
+						   QString("Search result"),
+						   QString("No result found!"));
+	}
+}
+
+unsigned int PlayGoController::getPhysicsMask() const
+{
+	return _physicsMask;
+}
+
+void PlayGoController::setPhysicsMask(unsigned int newMask)
+{
+	if (newMask == _physicsMask) return;	// Do nothing
+
+	PhysicsManager *physicsmanager = _page->getPhysicsManager();
+
+	if (newMask == 0)
+	{
+		physicsmanager->pause();
+		_physicsMask = newMask;
+		return;
+	}
+	if (newMask & noGravity)	// Default: Gravity = ON
+	{
+//		physicsmanager->disableGravity();
+	} else
+	{
+//		physicsmanager->enableGravity();
+	}
+
+	if (newMask & noCollision)	// Default: Collision = ON
+	{
+
+	} else
+	{
+
+	}
+
+	if (newMask & noMotor) // Default: Motor = Enabled
+	_physicsMask = newMask;
 }
 
 bool PlayGoController::isTapOverrideEnabled() const
@@ -1370,124 +1397,124 @@ void PlayGoController::setAcceptComponentTouch(bool value)
 // Slot functions
 void PlayGoController::setBrushWidth(int size)
 {
-    _defaultPen.setWidth(size);
+	_defaultPen.setWidth(size);
 }
 
 void PlayGoController::setBrushColor(QColor color)
 {
-    _defaultPen.setColor(color);
+	_defaultPen.setColor(color);
 }
 
 void PlayGoController::onSearchBegin()
 {
-    emit signalSearchBegin();
+	emit signalSearchBegin();
 }
 
 void PlayGoController::onSearchComplete()
 {
-    emit signalSearchComplete();
+	emit signalSearchComplete();
 }
 
 void PlayGoController::onSearchItemSelect(SearchResult *result)
 {
 	QList<Stroke*> selectedStrokes = _page->getHighlightedStrokes();
-    if (selectedStrokes.size() == 0)
-    {
-        // If selected strokes are empty.. this will create
-        QMessageBox::about
-                (_toplevelWindow, "Select search",
-                 "No stroke selected for replacing");
-        return;
-    }
+	if (selectedStrokes.size() == 0)
+	{
+		// If selected strokes are empty.. this will create
+		QMessageBox::about
+				(_toplevelWindow, "Select search",
+				 "No stroke selected for replacing");
+		return;
+	}
 
-    QList<QGraphicsItem*> graphicsitems;
-    for (int i=0; i < selectedStrokes.size(); i++)
-        graphicsitems.push_back(selectedStrokes[i]);
+	QList<QGraphicsItem*> graphicsitems;
+	for (int i=0; i < selectedStrokes.size(); i++)
+		graphicsitems.push_back(selectedStrokes[i]);
 
 	QRectF itemRect = _page->getBoundingBox(graphicsitems);
-    qDeleteAll(selectedStrokes);
-    selectedStrokes.clear();
-    graphicsitems.clear();
+	qDeleteAll(selectedStrokes);
+	selectedStrokes.clear();
+	graphicsitems.clear();
 
-    // Always set component position before adding objects to it
+	// Always set component position before adding objects to it
 
-    /*for (int i=0; i < selectedStrokes.size(); i++)
-            {
-                newComponent->addToComponent(selectedStrokes[i]);
-                selectedStrokes[i]->highlight(false);
-                selectedStrokes[i]->hide();
-            }*/
-    QPixmap _pixmap = QPixmap();
-    _pixmap.load(result->resultFilePath);
-    Pixmap *pixmap = new Pixmap(_pixmap, result->resultFilePath);
+	/*for (int i=0; i < selectedStrokes.size(); i++)
+			{
+				newComponent->addToComponent(selectedStrokes[i]);
+				selectedStrokes[i]->highlight(false);
+				selectedStrokes[i]->hide();
+			}*/
+	QPixmap _pixmap = QPixmap();
+	_pixmap.load(result->resultFilePath);
+	Pixmap *pixmap = new Pixmap(_pixmap, result->resultFilePath);
 
-    Component * newComponent = _page->createComponent();
-    newComponent->addToComponent(pixmap);   // Physics shape is initialized here
-    //			pixmap->setTransform(QTransform());
-    //			pixmap->setPos(0,0);
-    //newComponent->setTransform(QTransform().translate(itemRect.left(), itemRect.top()));
-    newComponent->moveBy(itemRect.left(), itemRect.top());
+	Component * newComponent = _page->createComponent();
+	newComponent->addToComponent(pixmap);   // Physics shape is initialized here
+	//			pixmap->setTransform(QTransform());
+	//			pixmap->setPos(0,0);
+	//newComponent->setTransform(QTransform().translate(itemRect.left(), itemRect.top()));
+	newComponent->moveBy(itemRect.left(), itemRect.top());
 
-    QSize pixmapSize = _pixmap.size();//   ->boundingRect();
+	QSize pixmapSize = _pixmap.size();//   ->boundingRect();
 
-    float scale = itemRect.width()/pixmapSize.width() < itemRect.height()/pixmapSize.height() ?
-                itemRect.width()/pixmapSize.width() : itemRect.height()/pixmapSize.height();
-    newComponent->setScale(scale);	// scaling ruins the fixtures. needs regeneration
-    newComponent->internalTransformChanged();
-    newComponent->requiresRegeneration = true;
+	float scale = itemRect.width()/pixmapSize.width() < itemRect.height()/pixmapSize.height() ?
+				itemRect.width()/pixmapSize.width() : itemRect.height()/pixmapSize.height();
+	newComponent->setScale(scale);	// scaling ruins the fixtures. needs regeneration
+	newComponent->internalTransformChanged();
+	newComponent->requiresRegeneration = true;
 }
 
 void PlayGoController::onTabletEventFromView(QTabletEvent *event,
-                                             QGraphicsView *view)
+											 QGraphicsView *view)
 {
 	Q_UNUSED(view);
-    if (event->pointerType() == QTabletEvent::Pen)
-    {
-        switch (_activeMode)
-        {
-        case UI::Sketch :
-            sketchAction(event);
-            break;
-        case UI::Shapes :
-            shapeAction(event);
-            break;
-        case UI::Erase :
-            eraseAction(event);
-            break;
-        case UI::Select :
-            selectAction(event);
-            break;
-        case UI::Connect :
-            connectAction(event);
-            break;
-        }
+	if (event->pointerType() == QTabletEvent::Pen)
+	{
+		switch (_activeMode)
+		{
+		case UI::Sketch :
+			sketchAction(event);
+			break;
+		case UI::Shapes :
+			shapeAction(event);
+			break;
+		case UI::Erase :
+			eraseAction(event);
+			break;
+		case UI::Select :
+			selectAction(event);
+			break;
+		case UI::Connect :
+			connectAction(event);
+			break;
+		}
 	} else if (event->pointerType() == QTabletEvent::Eraser)
-    {
+	{
 		eraseAction(event);	// Let the eraser decide what action to take based on mode.
-    }
+	}
 }
 
 void PlayGoController::onMouseEventFromView(QMouseEvent *event, QGraphicsView *view)
 {
-    Q_UNUSED(view)
-    switch (_activeMode)
-    {
-    case UI::Sketch :
-        sketchAction(event);
-        break;
-    case UI::Shapes :
-        shapeAction(event);
-        break;
-    case UI::Erase :
-        eraseAction(event);
-        break;
-    case UI::Select :
-        selectAction(event);
-        break;
-    case UI::Connect :
-        connectAction(event);
-        break;
-    }
+	Q_UNUSED(view)
+	switch (_activeMode)
+	{
+	case UI::Sketch :
+		sketchAction(event);
+		break;
+	case UI::Shapes :
+		shapeAction(event);
+		break;
+	case UI::Erase :
+		eraseAction(event);
+		break;
+	case UI::Select :
+		selectAction(event);
+		break;
+	case UI::Connect :
+		connectAction(event);
+		break;
+	}
 }
 
 bool eventAcceptedByJoint = false;
@@ -1496,24 +1523,9 @@ QPointF initialPos;
 
 bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 {
-    /*if (event->type() == QEvent::TouchBegin)
-        {
-
-        } else if (event->type() == QEvent::TouchUpdate)
-        {
-
-        } else if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
-        {
-            if (eventAcceptedByComponent) {
-
-            }
-            eventAcceptedByComponent = false;
-            touchEventOwner = NULL;
-        }*/
-
-    QTransform inverted = _view->transform().inverted();
-    if (event->touchPoints().count() == 1)
-    {
+	QTransform inverted = _view->transform().inverted();
+	if (event->touchPoints().count() == 1)
+	{
 		if (_activeMode == UI::Connect)
 		{
 			if (event->type() == QEvent::TouchBegin)
@@ -1521,11 +1533,11 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 				eventAcceptedByJoint = false;
 				touchEventOwner = 0;
 				const QTouchEvent::TouchPoint &tp = event->touchPoints().first();
-                QPointF scenePos = _view->mapToScene(tp.pos().toPoint());//tp.scenePos();
-                qDebug() << scenePos << tp.scenePos();
+				QPointF scenePos = _view->mapToScene(tp.pos().toPoint());//tp.scenePos();
+				qDebug() << scenePos << tp.scenePos();
 
-                QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
-                                                                    Qt::DescendingOrder, _view->transform());
+				QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
+																	Qt::DescendingOrder, _view->transform());
 				JointGraphics* jointGraphics = 0;
 				foreach(QGraphicsItem* graphicsitem, selectedItems)
 				{
@@ -1571,56 +1583,56 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 			}
 			return false;
 		}
-    }
-    else if (event->touchPoints().count() == 2)
-    {
-        return false;
-    }
-    else if (event->touchPoints().count() == 3)
-    {
-        QList<QTouchEvent::TouchPoint> touchpoints = event->touchPoints();
-        // 1. Scaling by increase in radius
-        QPointF previousCenter = QPointF();
-        QPointF currentCenter = QPointF();
+	}
+	else if (event->touchPoints().count() == 2)
+	{
+		return false;
+	}
+	else if (event->touchPoints().count() == 3)
+	{
+		QList<QTouchEvent::TouchPoint> touchpoints = event->touchPoints();
+		// 1. Scaling by increase in radius
+		QPointF previousCenter = QPointF();
+		QPointF currentCenter = QPointF();
 
-        const QTouchEvent::TouchPoint &tp1 = touchpoints[0];
-        const QTouchEvent::TouchPoint &tp2 = touchpoints[1];
-        const QTouchEvent::TouchPoint &tp3 = touchpoints[2];
+		const QTouchEvent::TouchPoint &tp1 = touchpoints[0];
+		const QTouchEvent::TouchPoint &tp2 = touchpoints[1];
+		const QTouchEvent::TouchPoint &tp3 = touchpoints[2];
 
-        foreach(QTouchEvent::TouchPoint touch, touchpoints)
-        {
-            previousCenter += touch.lastPos();
-            currentCenter += touch.pos();
-        }
+		foreach(QTouchEvent::TouchPoint touch, touchpoints)
+		{
+			previousCenter += touch.lastPos();
+			currentCenter += touch.pos();
+		}
 
-        previousCenter = previousCenter /3;
-        currentCenter = currentCenter /3;
+		previousCenter = previousCenter /3;
+		currentCenter = currentCenter /3;
 
-        QPointF difference = inverted.map(currentCenter) - inverted.map(previousCenter);
-        //			_view->translate(difference.x(), difference.y());
+		QPointF difference = inverted.map(currentCenter) - inverted.map(previousCenter);
+		//			_view->translate(difference.x(), difference.y());
 		QTransform t;
 		t.translate(difference.x(), difference.y());
-        {
-            //scaling
-            QPointF a0 = tp1.lastPos(); QPointF a1 = tp1.pos();
-            QPointF b0 = tp2.lastPos(); QPointF b1 = tp2.pos();
-            QPointF c0 = tp3.lastPos(); QPointF c1 = tp3.pos();
+		{
+			//scaling
+			QPointF a0 = tp1.lastPos(); QPointF a1 = tp1.pos();
+			QPointF b0 = tp2.lastPos(); QPointF b1 = tp2.pos();
+			QPointF c0 = tp3.lastPos(); QPointF c1 = tp3.pos();
 
-            float d0 = diameterOfCircumcircle(euclideanDistance(&a0,&b0),
-                                              euclideanDistance(&b0,&c0),
-                                              euclideanDistance(&c0,&a0));
+			float d0 = diameterOfCircumcircle(euclideanDistance(&a0,&b0),
+											  euclideanDistance(&b0,&c0),
+											  euclideanDistance(&c0,&a0));
 
-            float d1 = diameterOfCircumcircle(euclideanDistance(&a1,&b1),
-                                              euclideanDistance(&b1,&c1),
-                                              euclideanDistance(&c1,&a1));
+			float d1 = diameterOfCircumcircle(euclideanDistance(&a1,&b1),
+											  euclideanDistance(&b1,&c1),
+											  euclideanDistance(&c1,&a1));
 			//qDebug() << d0 << d1 << "SearchView";
 
-            if ((qFuzzyCompare(d0,0) == false && qFuzzyCompare(d1,0)) == false)
+			if ((qFuzzyCompare(d0,0) == false && qFuzzyCompare(d1,0)) == false)
 			{
 				t.scale(d1/d0,d1/d0);
-                //_view->scale(d1/d0,d1/d0);
-            }
-        }
+				//_view->scale(d1/d0,d1/d0);
+			}
+		}
 		QPointF currentSceneCenter = _view->mapToScene(currentCenter.toPoint());
 
 		_view->setTransform(t, true);
@@ -1632,7 +1644,7 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 		_view->setTransform(t, true);
 
 		event->accept();
-        return true;
+		return true;
 	}
 	return false;
 }
@@ -1668,7 +1680,8 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 			overrideOnTapAndHold(tap_and_hold);
 		}
 	}
-	return;	// Do not care about rest of the gestures
+
+	// Print gesture info
 
 	QString msg =  "Gesture received>>";
 	if (QTapGesture *tap = static_cast<QTapGesture*>(event->gesture(Qt::TapGesture)))
@@ -1730,44 +1743,49 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 	QLOG_INFO() << msg;
 }
 
+void PlayGoController::onPhysicsMaskUpdate()
+{
+
+}
+
 void PlayGoController::connectionModeReset()
 {
-    forceLine = NULL;
+	forceLine = NULL;
 
-    _sliderComponentA = NULL;
-    _sliderComponentB = NULL;
-    _sliderStartPos = QPointF();
-    _sliderEndPos = QPointF();
-    _sliderLineItem = NULL;
+	_sliderComponentA = NULL;
+	_sliderComponentB = NULL;
+	_sliderStartPos = QPointF();
+	_sliderEndPos = QPointF();
+	_sliderLineItem = NULL;
 }
 
 void PlayGoController::setToDraw()
 {
-    setMode(UI::Sketch);
+	setMode(UI::Sketch);
 }
 
 void PlayGoController::setToShape()
 {
-    setMode(UI::Shapes);	// allow drawing of polygons
+	setMode(UI::Shapes);	// allow drawing of polygons
 }
 
 void PlayGoController::setToConnectorMode()
 {
-    setMode(UI::Connect);
+	setMode(UI::Connect);
 }
 
 void PlayGoController::setToErase()
 {
-    setMode(UI::Erase);
+	setMode(UI::Erase);
 }
 void PlayGoController::setToSelect()
 {
-    setMode(UI::Select);
+	setMode(UI::Select);
 }
 
 void PlayGoController::setToEdit()
 {
-    setMode(UI::Edit);
+	setMode(UI::Edit);
 }
 
 void PlayGoController::setModeScribble()
@@ -1783,28 +1801,28 @@ void PlayGoController::setModeLockItem()
 
 void PlayGoController::setModeHingeJoint()
 {
-    //		QMessageBox::about(NULL, "MSG", "Set to hinge mode");
-    connectionModeReset();
+	//		QMessageBox::about(NULL, "MSG", "Set to hinge mode");
+	connectionModeReset();
 	_activeConnectionMode = HingeJoint;
 }
 
 void PlayGoController::setModeSliderJoint()
 {
-    connectionModeReset();
+	connectionModeReset();
 	_activeConnectionMode = SliderJoint;
 }
 
 void PlayGoController::setModeSpringJoint()
 {
-    //		QMessageBox::about(NULL, "MSG", "Set to spring mode");
-    connectionModeReset();
+	//		QMessageBox::about(NULL, "MSG", "Set to spring mode");
+	connectionModeReset();
 	_activeConnectionMode = SpringJoint;
 }
 
 void PlayGoController::setModeForce()
 {
-    //		QMessageBox::about(NULL, "MSG", "Set to force mode");
-    connectionModeReset();
+	//		QMessageBox::about(NULL, "MSG", "Set to force mode");
+	connectionModeReset();
 	_activeConnectionMode = ApplyForce;
 }
 
@@ -1813,19 +1831,18 @@ void PlayGoController::setMode(UI::MODE newMode)
 	if (_tapOverrideEnabled)
 		touchholdController->signalCloseOverlay();
 
-    onModeChange(_activeMode, newMode);
-    if (_activeMode == newMode)
-    {
-        return;
-    }
-	pauseSimulation();	// TODO - Might not be the best place to begin with
-    _activeMode = newMode;
+	onModeChange(_activeMode, newMode);
+	if (_activeMode == newMode)
+	{
+		return;
+	}
+	_activeMode = newMode;
 }
 
 void PlayGoController::clearCurrentScene()
 {
-    _page->deleteAll();
-    _currentStroke = NULL;
+	_page->deleteAll();
+	_currentStroke = NULL;
 }
 
 void PlayGoController::drawMenusOnView(QPainter * painter, const QRectF & rect)
@@ -1835,28 +1852,28 @@ void PlayGoController::drawMenusOnView(QPainter * painter, const QRectF & rect)
 
 void PlayGoController::onExternalImageAdd(const QString &path)
 {
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(_toplevelWindow,
-                                  "New image found",
-                                  "Load image" + path + "?",
-                                  QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::Yes)
-    {
-        grabcut_process_image(this, path.toStdString(), "Cropped.png");
-    }
+	QMessageBox::StandardButton reply;
+	reply = QMessageBox::question(_toplevelWindow,
+								  "New image found",
+								  "Load image" + path + "?",
+								  QMessageBox::Yes | QMessageBox::No);
+	if (reply == QMessageBox::Yes)
+	{
+		grabcut_process_image(this, path.toStdString(), "Cropped.png");
+	}
 }
 
 void PlayGoController::loadImage(QString imagePath)
 {
-    QPixmap _pixmap = QPixmap();
-    _pixmap.load(imagePath);
-    if (_pixmap.width() > 500 || _pixmap.height() > 500)
-    {
-        _pixmap = _pixmap.scaled(QSize(500,500), Qt::KeepAspectRatio);
-    }
-    Pixmap* pixmap = new Pixmap(_pixmap, imagePath);
-    Component* component = _page->createComponent();
-    component->addToComponent(pixmap);
+	QPixmap _pixmap = QPixmap();
+	_pixmap.load(imagePath);
+	if (_pixmap.width() > 500 || _pixmap.height() > 500)
+	{
+		_pixmap = _pixmap.scaled(QSize(500,500), Qt::KeepAspectRatio);
+	}
+	Pixmap* pixmap = new Pixmap(_pixmap, imagePath);
+	Component* component = _page->createComponent();
+	component->addToComponent(pixmap);
 }
 
 int depth = 1;
@@ -1904,19 +1921,20 @@ void PlayGoController::loadImage(QString imagePath, QObject* obj, QDropEvent* ev
 
 void PlayGoController::startSimulation()
 {
-    if (_page)
-    {
-        if (_page->scene() && _page->getPhysicsManager()->debugView)
-            _page->getPhysicsManager()->debugView->scene = _page->scene();
+	if (_page)
+	{
+		if (_page->scene() && _page->getPhysicsManager()->debugView)
+			_page->getPhysicsManager()->debugView->scene = _page->scene();
 		setMode(UI::None);
-        _page->getPhysicsManager()->start(20);
-    }
+		_page->getPhysicsManager()->start(20);
+		_page->getPhysicsManager()->setEnableMotor(true);
+	}
 }
 
 void PlayGoController::pauseSimulation()
 {
-    if (_page)
-        _page->getPhysicsManager()->pause();
+	if (_page)
+		_page->getPhysicsManager()->pause();
 }
 
 void PlayGoController::loadCamera()

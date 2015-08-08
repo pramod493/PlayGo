@@ -110,6 +110,8 @@ namespace CDI
 
 	float getPhysicsScale();
 
+	QString getEventname(QEvent *event);
+
 	QUuid uniqueHash();
 
 	int currentTime();

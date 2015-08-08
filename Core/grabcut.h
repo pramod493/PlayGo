@@ -15,13 +15,7 @@ namespace CDI
 {
 	class PlayGoController;
 
-	void mouseHandler(int event, int x, int y, int flags, void* param);
-
-	int grabcut_load_camera(string outputfile);
-
 	cv::Mat grabCutBackground(cv::Rect rectangle, cv::Mat& image, string outputfile, vector<vector<cv::Point> > &outerContours, vector<vector<vector<cv::Point> > > &innerContours);
-
-	int grabcut_process_image(cv::Mat& image, string outputfile);
 
 	int grabcut_process_image(PlayGoController* controller, string imagepath, string outputfile);
 }

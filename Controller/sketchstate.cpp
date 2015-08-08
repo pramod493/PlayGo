@@ -1,7 +1,12 @@
 #include "sketchstate.h"
 
-SketchState::SketchState()
+namespace CDI
 {
+	SketchState::SketchState
+	(PlayGoController* parentController, QState *parentState)
+		: cdState(parentController, parentState)
+	{
+		Q_UNUSED(parentController)
+	}
 
 }
-
