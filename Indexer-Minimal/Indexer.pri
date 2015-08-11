@@ -1,7 +1,5 @@
 INCLUDEPATH += $$PWD
 
-include ($$PWD/External Libraries.pri)
-
 #Add source files
 SOURCES += \
     $$PWD/wb2dshapedescriptor.cpp \

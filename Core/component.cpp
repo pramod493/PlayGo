@@ -18,15 +18,16 @@
 
 namespace CDI
 {
-    Component::Component(QGraphicsItem *parent)
-        : QGraphicsObject(parent)
-    {
-        _id = uniqueHash();
-        
-        _physicsBody = NULL;		// Creation is done outside but deletion is performed internally
+		Component::Component(QGraphicsItem *parent)
+				: QGraphicsObject(parent)
+		{
+		_id = uniqueHash();
+
+		_physicsBody = NULL;		// Creation is done outside but deletion is performed internally
 		_fixtures	= QList<b2Fixture*>();
 		_jointlist = QList<PhysicsJoint*>();
 
+		// Disabling touch makes it hard to interact because one-touch pan is also disabled
 		setAcceptTouchEvents(true);
 
 		// Capture all the events sent to child items here
@@ -34,7 +35,7 @@ namespace CDI
 
 		// TODO - Check if we really need this option set up. We can avoid this by
 		// gettting rid of all event to the component so its not a big issue
-        //setFlag(QGraphicsItem::ItemIsMovable);
+		//setFlag(QGraphicsItem::ItemIsMovable);
 
 		setZValue(Z_COMPONENTVIEW);
 
@@ -55,7 +56,7 @@ namespace CDI
 		categoryBits	= 0x0000;
 
 		_anchorItem		= NULL;
-        _lockScaleItem	= NULL;
+				_lockScaleItem	= NULL;
 
 		_lockItem = false;
 
@@ -198,37 +199,37 @@ namespace CDI
 		}
 	}
 
-    void Component::setHighlight(bool value)
-    {
-        if (graphicsEffect() == NULL)
-        {
-            QGraphicsColorizeEffect* effect = new QGraphicsColorizeEffect(this);
-            effect->setColor(QColor(255,100,100,255));
-            effect->setStrength(0.75f);
-            setGraphicsEffect(effect);
-        }
-//        if (value == false)
-//        {
-//            if (_highlightEffect)
-//                _highlightEffect->setEnabled(false);
-//        } else
-//        {
-//            if (_highlightEffect)
-//            {
-//                _highlightEffect->setEnabled(true);
-//            } else
-//            {
+		void Component::setHighlight(bool value)
+		{
+				if (graphicsEffect() == NULL)
+				{
+						QGraphicsColorizeEffect* effect = new QGraphicsColorizeEffect(this);
+						effect->setColor(QColor(255,100,100,255));
+						effect->setStrength(0.75f);
+						setGraphicsEffect(effect);
+				}
+//				if (value == false)
+//				{
+//						if (_highlightEffect)
+//								_highlightEffect->setEnabled(false);
+//				} else
+//				{
+//						if (_highlightEffect)
+//						{
+//								_highlightEffect->setEnabled(true);
+//						} else
+//						{
 
-//            }
-//        }
-    }
+//						}
+//				}
+		}
 
 	bool Component::isHighlighted() const
-    {
+		{
 		if (graphicsEffect())
 			return graphicsEffect()->isEnabled();
-        return false;
-    }
+				return false;
+		}
 
 	bool Component::isLocked() const
 	{
@@ -697,7 +698,7 @@ namespace CDI
 		// removal of components form the component because we do not
 		// b2Fixture and item mapping
 
-		if (graphicsitem->isVisible() == false)  return;	// Hidden components do not contribute to the generation of components
+		if (graphicsitem->isVisible() == false)	return;	// Hidden components do not contribute to the generation of components
 		PhysicsShape* shape = 0;
 		QSize r;
 		if (graphicsitem->type() == Pixmap::Type)
@@ -709,7 +710,7 @@ namespace CDI
 		if (graphicsitem->type() == Polygon2D::Type)
 		{
 			Polygon2D* polygon = qgraphicsitem_cast<Polygon2D*>(graphicsitem);
-			polygon->initializePhysicsShape();  // Lets go it again
+			polygon->initializePhysicsShape();	// Lets go it again
 			shape = polygon->physicsShape();
 			r = polygon->boundingRect().toRect().size();
 		}
@@ -720,7 +721,7 @@ namespace CDI
 			QString f(QString("SaveShape")+uniqueHash().toString()+QString(".png"));
 			//QRectF r = graphicsitem->boundingRect().toRect();
 			QImage image = QImage(r.width(), r.height(),
-								  QImage::Format_ARGB32_Premultiplied);
+									QImage::Format_ARGB32_Premultiplied);
 			image.fill(Qt::transparent);
 			QPainter painter(&image);
 			painter.setPen(QPen(Qt::black));

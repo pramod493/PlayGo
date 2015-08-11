@@ -69,7 +69,8 @@ QTuio::~QTuio()
 void QTuio::run()
 {
     running = true;
-    screenRect = QApplication::desktop()->rect();
+    //screenRect = QApplication::desktop()->rect(); // Issues with multi-screen
+    screenRect = QApplication::desktop()->screenGeometry(QApplication::desktop()->primaryScreen());
 //    tuioClient = new TUIO::TuioClient::TuioClient(3333);
     tuioClient = new TUIO::TuioClient(3333);
     tuioClient->addTuioListener(this);
@@ -89,9 +90,10 @@ bool QTuio::tuioToQt(TUIO::TuioCursor *tcur, QEvent::Type eventType)
 {
     const QPointF normPos(tcur->getX(), tcur->getY());
 
-	qDebug() << "Screen" << screenRect << "Touch" << normPos << "Offset" << OFFSETX << OFFSETY;
+	const QPointF screenPos(screenRect.width() * normPos.x() - OFFSETX,
+                          screenRect.height() * normPos.y() - OFFSETY);
 
-	const QPointF screenPos(screenRect.width() * normPos.x() - OFFSETX, screenRect.height() * normPos.y() - OFFSETY);
+  qDebug() << "Screen" << screenRect << "Touch" << normPos << "Offset" << OFFSETX << OFFSETY << "Screen pos" << screenPos;
 
     QTouchEvent::TouchPoint touchPoint(tcur->getSessionID());
 

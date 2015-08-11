@@ -3,7 +3,7 @@
 #include <QList>
 #include "QsLog.h"
 #include "scenebutton.h"
-#include <QGraphicsWebView>
+//#include <QGraphicsWebView>
 #include <QGraphicsItemGroup>
 #include <QUrl>
 
@@ -67,6 +67,7 @@ namespace CDI
 		bool retval = QGraphicsScene::event(sceneEvent);
 		// Delete this section
 		// Only for priniting logs
+		if (false)
 		{
 			switch (sceneEvent->type())
 			{
@@ -107,7 +108,6 @@ namespace CDI
 			case QEvent::TouchEnd :
 			case QEvent::TouchCancel :
 			{
-				qDebug() << "Touch scene";
 				//qDebug() << "Return:" << retval << "Accept:" << sceneEvent->isAccepted();
 				emit signalUnacceptedTouchEvent(static_cast<QTouchEvent*>(sceneEvent));
 				sceneEvent->accept();
@@ -117,7 +117,6 @@ namespace CDI
 			case QEvent::TabletMove :
 			case QEvent::TabletRelease :
 			{
-				qDebug() << "Tablet scene";
 				sceneEvent->accept();
 				return true;
 			}
@@ -126,7 +125,6 @@ namespace CDI
 			case QEvent::MouseButtonRelease :
 			case QEvent::MouseMove :
 			{
-				qDebug() << "Mouse scene";
 				sceneEvent->accept();
 				return true;
 			}

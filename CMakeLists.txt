@@ -1,8 +1,22 @@
 project(PlayGo)
 cmake_minimum_required(VERSION 3.0.2)
 
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+# Instruct CMake to run moc automatically when needed.
+set(CMAKE_AUTOMOC ON)
+
+
 # Find the QtWidgets library
-find_package(Qt5Widgets)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Gui REQUIRED)
+find_package(Qt5Multimedia REQUIRED)
+find_package(Qt5MultimediaWidgets REQUIRED)
+find_package(Qt5Network REQUIRED)
+find_package(Qt5WebKitWidgets REQUIRED)
+find_package(Qt5Sensors)
+find_package(Qt5PrintSupport REQUIRED)
 
 set (PlayGo_src ${PROJECT_SOURCE_DIR}/miscfunctions.cpp ${PROJECT_SOURCE_DIR}/converttopolygons.cpp)
 set (PlayGo_hdr ${PROJECT_SOURCE_DIR}/converttopolygons.h)
@@ -26,7 +40,8 @@ add_library(PlayGo_lib SHARED
 # add ${PlayGo_ui_moc} to include UIs
 
 add_executable(PlayGo ${PlayGo_bin_src})
-target_link_libraries(PlayGo PlayGo_lib)
+target_link_libraries(PlayGo PlayGo_lib
+						Qt5::Widgets Qt5::Multimedia Qt5::Gui Qt5::Network)
 
 qt5_use_modules(PlayGo_lib Core Gui Widgets)
 

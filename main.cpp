@@ -18,7 +18,7 @@
 #include "batchpolygonize.h"
 #include "reconizerwindow.h"
 
-#include <QGraphicsWebView>
+//#include <QGraphicsWebView>
 #include <QUrl>
 #include <QSsl>
 #include <QGraphicsView>
