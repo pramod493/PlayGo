@@ -330,20 +330,7 @@ void PlayGoController::connectPress(QPointF scenePos)
 	{
 	case GestureSketch :
 	{
-		if (_currentConnectStroke)
-		{
-			QLOG_WARN() << "Current stroke should have been NULL.";
-			delete _currentConnectStroke;
-			_currentConnectStroke = NULL;
-		}
-
-		_currentConnectStroke = new PenStroke();
-		_scene->addItem(_currentConnectStroke);
-		_currentConnectStroke->push_point(scenePos);	// No transformation for this one
-		QPen strokePen = QPen();
-		strokePen.setWidth(3);
-		strokePen.setColor(Qt::blue);
-		_currentConnectStroke->setPen(strokePen);
+		gestureSketchModeFilter(scenePos, UI::Began);
 		break;
 	}
 	case HingeJoint :
@@ -404,8 +391,7 @@ void PlayGoController::connectMove(QPointF scenePos)
 	{
 	case GestureSketch :
 	{
-		if (_currentConnectStroke)
-			_currentConnectStroke->push_point(scenePos);
+		gestureSketchModeFilter(scenePos, UI::Began);
 		break;
 	}
 	case HingeJoint :
@@ -501,6 +487,13 @@ void PlayGoController::connectRelease(QPointF scenePos)
 						0, 0);
 			JointGraphics* jointView = new PinJointGraphics(physicsJoint, c1);
 			jointView->setPos(c1->mapFromScene(scenePos));
+
+			// Disable motor because we are not in the play mode. Motor might ruin things
+			if (b_enableMotor)
+			{
+				b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
+				revoluteJoint->EnableMotor(false);
+			}
 		}
 		break;
 	}
@@ -664,6 +657,296 @@ void PlayGoController::connectRelease(QPointF scenePos)
 	}
 }
 
+void PlayGoController::gestureSketchModeFilter(QPointF scenePos, UI::EventState eventState)
+{
+	switch (eventState)
+	{
+	case UI::Began :
+	{
+		if (_currentConnectStroke)
+		{
+			QLOG_WARN() << "Current stroke should have been NULL.";
+			delete _currentConnectStroke;
+			_currentConnectStroke = NULL;
+		}
+
+		_currentConnectStroke = new PenStroke();
+		_scene->addItem(_currentConnectStroke);
+		_currentConnectStroke->push_point(scenePos);	// No transformation for this one
+		QPen strokePen = QPen();
+		strokePen.setWidth(3);
+		strokePen.setColor(Qt::blue);
+		_currentConnectStroke->setPen(strokePen);
+		break;
+	}
+	case UI::Update :
+	{
+		if (_currentConnectStroke)
+			_currentConnectStroke->push_point(scenePos);
+		break;
+	}
+	case UI::End :
+	{
+		if (_currentConnectStroke == NULL) break;
+		_currentConnectStroke->push_point(scenePos);
+
+		sketchRecognizer->addStroke(_currentConnectStroke->points);
+		_tmpStrokes.push_back(_currentConnectStroke);
+		sketchRecognizer->gbRecognize();
+
+		_currentConnectStroke = NULL;
+		break;
+	}
+	case UI::Cancel :
+	{
+		// Delete the stroke
+	}
+	}
+}
+
+void PlayGoController::staticJointModeFilter(QPointF scenePos, UI::EventState eventState)
+{
+	switch(eventState)
+	{
+	case UI::Began :
+	{
+		break;
+	}
+	case UI::Update :
+	{
+		break;
+	}
+	case UI::End :
+	{
+		QList<Component*> components = getSelectableComponentsByPhysics(scenePos);
+		if (components.size() == 0) break;
+
+		Component* component = components[0];
+		if (component->isStatic())
+			component->setStatic(false);
+		else
+			component->setStatic(true);
+		break;
+	}
+	case UI::Cancel :
+	{
+		break;
+	}
+	}
+}
+
+void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eventState)
+{
+	switch(eventState)
+	{
+	case UI::Began :
+	{
+		break;
+	}
+	case UI::Update :
+	{
+		break;
+	}
+	case UI::End :
+	{
+		QList<Component*> itemsToUse = getSelectableComponentsByPhysics(scenePos);
+
+		if (itemsToUse.size() < 2) break;
+		// Ignore all other components under selection
+		Component *c1 = itemsToUse[0];
+		Component *c2 = itemsToUse[1];
+
+		if (c1->id() == c2->id())
+		{
+			if (itemsToUse.size() > 2)
+			{
+				c2 = itemsToUse[2];
+			}
+		}
+
+		bool b_enableMotor = false;
+		float f_motorSpeed = 0;
+		float f_motorTorque = 0;
+		if (enableMotorCheckbox->isChecked())
+		{
+			b_enableMotor = true;
+			bool ok;
+			int speed = motorSpeed->text().toInt(&ok);
+			if (ok) f_motorSpeed = speed;		//revolutJointDef.motorSpeed = speed * 2.0f *3.14f;
+			int torque = motorTorque->text().toInt(&ok);
+			if (ok)	 f_motorTorque = torque;	//revolutJointDef.maxMotorTorque = torque;
+		}
+		PhysicsJoint* physicsJoint = _page->getPhysicsManager()->createPinJoint(
+					c1, c2, scenePos,
+					b_enableMotor, false,
+					f_motorSpeed, f_motorTorque,
+					0, 0);
+		JointGraphics* jointView = new PinJointGraphics(physicsJoint, c1);
+		jointView->setPos(c1->mapFromScene(scenePos));
+
+		// Disable motor because we are not in the play mode. Motor might ruin things
+		if (b_enableMotor)
+		{
+			b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
+			revoluteJoint->EnableMotor(false);
+		}
+		break;
+	}
+	case UI::Cancel :
+	{
+		break;
+	}
+	}
+}
+
+void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState eventState)
+{
+	switch(eventState)
+	{
+	case UI::Began :
+	{
+		if (_sliderComponentA && _sliderComponentB)
+		{
+			_sliderStartPos = scenePos;
+			if (_sliderLineItem) delete _sliderLineItem;
+			_sliderLineItem = new QGraphicsLineItem(QLineF(_sliderStartPos, _sliderStartPos));
+			_scene->addItem(_sliderLineItem);
+		}
+		break;
+	}
+	case UI::Update :
+	{
+		if (_sliderLineItem)
+		{
+			_sliderEndPos = scenePos;
+			_sliderLineItem->setLine(QLineF(_sliderStartPos, _sliderEndPos));
+		}
+		break;
+	}
+	case UI::End :
+	{
+		if (_sliderComponentA == NULL)
+		{
+			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
+			if (selection.size())
+			{
+				_sliderComponentA = selection[0];
+				_sliderComponentA->setOpacity(1.0f);
+			}
+		} else if (_sliderComponentB == NULL)
+		{
+			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
+			if (selection.size())
+			{
+				if (_sliderComponentA == selection[0])
+				{
+					if (selection.size() > 1)
+					{
+						_sliderComponentB = selection[1];
+						_sliderComponentB->setOpacity(1.0f);
+					}
+				} else
+				{
+					_sliderComponentB = selection[0];
+					_sliderComponentB->setOpacity(1.0f);
+				}
+			}
+		} else
+		{
+			_sliderEndPos = scenePos;
+			{
+				QGraphicsPathItem* pathitem = new QGraphicsPathItem;
+				QPainterPath path;
+				int width = 30;
+				QLineF line = QLineF(_sliderStartPos, _sliderEndPos);
+				int n = static_cast<int>(line.length()/width);
+				line.setLength(width);
+				QPointF movePos = line.p2() - line.p1();
+				QLineF normal = line.normalVector();
+				normal.setLength(width);
+				QPointF normalPos = normal.p2() - normal.p1();
+
+				path.moveTo(_sliderStartPos);
+				for (int i=0; i < n; i++)
+				{
+					path.lineTo(line.x2()+normalPos.x(), line.y2()+normalPos.y());
+					line.translate(movePos);
+					path.lineTo(line.x2(), line.y2());
+				}
+				pathitem->setPath(path);
+
+				QPen linePen = QPen(Qt::red);
+				linePen.setWidth(3);
+				pathitem->setPen(linePen);
+				_scene->addItem(pathitem);
+			}
+			// Check for lines
+			QLineF lineA = QLineF(_sliderComponentA->mapFromScene(_sliderStartPos),
+								  _sliderComponentA->mapFromScene(_sliderEndPos));
+			QLineF lineB = QLineF(_sliderComponentB->mapFromScene(_sliderStartPos),
+								  _sliderComponentB->mapFromScene(_sliderEndPos));
+
+
+
+			QVector2D vecA = QVector2D(lineA.p2() - lineA.p1());
+			//QVector2D vecB = QVector2D(lineB.p2() - lineB.p1());
+			QVector2D vectorGlobal = QVector2D(_sliderEndPos-_sliderStartPos);
+
+			float physicsScale = getPhysicsScale();
+
+			b2PrismaticJointDef sliderDef;
+			sliderDef.bodyA = _sliderComponentA->physicsBody();
+			sliderDef.bodyB = _sliderComponentB->physicsBody();
+			sliderDef.collideConnected = false;
+
+			sliderDef.localAxisA.Set(vecA.x(), vecA.y());
+			sliderDef.localAxisA.Normalize();
+
+			sliderDef.localAnchorA.Set(lineA.p1().x()/physicsScale, lineA.p1().y()/physicsScale);
+			sliderDef.localAnchorB.Set(lineB.p1().x()/physicsScale, lineB.p1().y()/physicsScale);
+
+			sliderDef.enableLimit = true;
+			sliderDef.lowerTranslation = 0;
+			sliderDef.upperTranslation = vectorGlobal.length()/physicsScale;
+
+//			sliderDef.referenceAngle =
+//					_sliderComponentA->physicsBody()->GetAngle() -
+//					_sliderComponentB->physicsBody()->GetAngle();
+
+			if (enableMotorCheckbox->isChecked())
+			{
+				sliderDef.enableMotor = true;
+				bool ok;
+				int speed = motorSpeed->text().toInt(&ok);
+				if (ok) sliderDef.motorSpeed = speed;
+				int torque = motorTorque->text().toInt(&ok);
+				if (ok)	sliderDef.maxMotorForce = torque;
+			} else
+			{
+				sliderDef.enableMotor = false;
+			}
+
+			b2Joint* joint = _page->getPhysicsManager()->_b2World->CreateJoint(&sliderDef);
+			b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
+			//                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
+			_sliderComponentA->addToComponent(_sliderLineItem);
+
+			_sliderComponentA->setOpacity(0.5f);
+			_sliderComponentB->setOpacity(0.5f);
+
+			_sliderLineItem = 0;
+			_sliderComponentA = 0;
+			_sliderComponentB = 0;
+		}
+		break;
+	}
+	case UI::Cancel :
+	{
+		break;
+	}
+	}
+}
+
 void PlayGoController::createConnectionsToolbar()
 {
 	QActionGroup * actionGroup = new QActionGroup(this);
@@ -816,8 +1099,6 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 {
 	if (obj != _viewport) return false;
 
-	if (_tapOverrideEnabled) return touchholdController->handleTapAndHold(event);
-
 	// Test out auto generated mouse events
 	switch (event->type())
 	{
@@ -829,13 +1110,19 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		{
 			QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
 			// \todo This does not capture the mouse events generated by pen
-			if ( (mouseEvent != NULL ) && (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized/*Qt::MouseEventSource::MouseEventSynthesizedBySystem*/))
+			// Doing this at parent level will disrupt touch to m ouse conversions to other widgets too
+			if ( (mouseEvent != NULL ) &&
+				 (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized))
 			{
 				event->ignore();
 				return true;
 			}
 		}
 	}
+
+	//if (_tapOverrideEnabled) return touchholdController->handleTapAndHold(event);
+	touchholdController->handleTapAndHold(event);	// Do not cancel events
+
 	//QString msg = getEventname(event);
 	//if (!msg.isEmpty()) qDebug() << msg;
 
@@ -857,7 +1144,9 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 	case QEvent::MouseMove :
 	{
 		if (!_isStylusNearby)
-				onMouseEventFromView(static_cast<QMouseEvent*>(event), _view);
+		{
+			onMouseEventFromView(static_cast<QMouseEvent*>(event), _view);
+		}
 		return false;
 	}
 	case QEvent::TabletPress :
@@ -1266,7 +1555,13 @@ bool PlayGoController::isTapOverrideEnabled() const
 
 void PlayGoController::setTapOverride(bool value)
 {
+	if (_tapOverrideEnabled == value) return;
+
 	_tapOverrideEnabled = value;
+	QList<Component*> components = _page->getComponents();
+	bool touchEnable = (_tapOverrideEnabled ? false : true);
+	foreach (Component* component, components)
+		component->setAcceptTouchEvents(touchEnable);
 }
 
 void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
@@ -1437,13 +1732,7 @@ void PlayGoController::onSearchItemSelect(SearchResult *result)
 	graphicsitems.clear();
 
 	// Always set component position before adding objects to it
-
-	/*for (int i=0; i < selectedStrokes.size(); i++)
-			{
-				newComponent->addToComponent(selectedStrokes[i]);
-				selectedStrokes[i]->highlight(false);
-				selectedStrokes[i]->hide();
-			}*/
+	// Delete the strokes once done with adding
 	QPixmap _pixmap = QPixmap();
 	_pixmap.load(result->resultFilePath);
 	Pixmap *pixmap = new Pixmap(_pixmap, result->resultFilePath);
@@ -1681,7 +1970,28 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 		}
 	}
 
-	// Print gesture info
+	if (QTapGesture *tap = static_cast<QTapGesture*>(event->gesture(Qt::TapGesture)))
+	{
+		switch (tap->state())
+		{
+		case Qt::GestureStarted :
+		{
+			break;
+		}
+		case Qt::GestureUpdated :
+		{
+			break;
+		}
+		case Qt::GestureFinished :
+		{
+			break;
+		}
+		case Qt::GestureCanceled :
+		{
+			break;
+		}
+		}
+	}
 
 	QString msg =  "Gesture received>>";
 	if (QTapGesture *tap = static_cast<QTapGesture*>(event->gesture(Qt::TapGesture)))
@@ -1703,14 +2013,11 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 		if (tap_and_hold->state() == Qt::GestureStarted)
 		{
 			msg += "Started>>";
-			tap_and_hold->setGestureCancelPolicy(QGesture::CancelAllInContext);
-			event->accept();
 		}
 		if (tap_and_hold->state() == Qt::GestureUpdated)
 			msg += "Updated>>";
 		if (tap_and_hold->state() == Qt::GestureFinished)
 		{
-			overrideOnTapAndHold(tap_and_hold);
 			msg += "Finished>>";
 		}
 		if (tap_and_hold->state() == Qt::GestureCanceled)
@@ -1740,7 +2047,7 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 		if (swipe->state() == Qt::GestureCanceled)
 			msg += "Canceled>>";
 	}
-	QLOG_INFO() << msg;
+	qDebug() << msg;
 }
 
 void PlayGoController::onPhysicsMaskUpdate()
@@ -1829,7 +2136,7 @@ void PlayGoController::setModeForce()
 void PlayGoController::setMode(UI::MODE newMode)
 {
 	if (_tapOverrideEnabled)
-		touchholdController->signalCloseOverlay();
+		touchholdController->slotCloseOverlay();
 
 	onModeChange(_activeMode, newMode);
 	if (_activeMode == newMode)

@@ -28,6 +28,14 @@ namespace CDI
 		UI_SELECTABLE_ACTIONS
 	};
 
+	namespace UI
+	{
+		enum MODE {None, Sketch, Shapes, Erase, Transform,
+					 Edit, Select, Connect};
+
+		enum EventState {Began = 1, Update, End, Cancel};
+	}
+
 	const float Z_UIVIEW			= 2.5f;
 	const float Z_COMPONENTVIEW		= 1.0f;
 	const float Z_IMAGEVIEW			= 0.1f;
@@ -39,7 +47,7 @@ namespace CDI
 	// functions which will be helpful in rendering
 	// joint and other items on screen. Its painting
 	// will be completely dictated by parent items
-	
+
 	/**
 	 * @brief The PaintSettings struct contain a collection of different style pen/brushes
 	 */
@@ -64,7 +72,7 @@ namespace CDI
 			painter->setBrush(brush);
 		}
 	};
-	
+
 
 	class CommonDrawFunctions
 	{

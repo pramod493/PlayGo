@@ -42,14 +42,6 @@ namespace CDI
 	class ConnectController;
 	class TouchAndHoldController;
 	class cdState;
-	namespace UI
-	{
-		enum MODE {None, Sketch, Shapes, Erase, Transform,
-				   Edit, Select, Connect};
-
-		enum EventState {Began = 1, Update, End, Cancel};
-	}
-
 	/**
 	 * @brief Main controller object. This receives input events from View and Scene
 	 * and modifies the view as well as scene based on that.
@@ -152,6 +144,7 @@ namespace CDI
 
 	private:
 		ForceGraphicsItem* forceLine;
+		Component* _currentTouchEnabledComponent;
 		bool _isStylusNearby;
 
 		unsigned int p_physicsmask;
@@ -200,6 +193,11 @@ namespace CDI
 		virtual void connectPress(QPointF scenePos);
 		virtual void connectMove(QPointF scenePos);
 		virtual void connectRelease(QPointF scenePos);
+
+		virtual void gestureSketchModeFilter(QPointF scenePos, UI::EventState eventState);
+		virtual void staticJointModeFilter(QPointF scenePos, UI::EventState eventState);
+		virtual void hingeJointModeFilter(QPointF scenePos, UI::EventState eventState);
+		virtual void sliderJointModeFilter(QPointF scenePos, UI::EventState eventState);
 
 		void createConnectionsToolbar();
 		void showConnectionsToolbar();
