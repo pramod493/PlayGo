@@ -2,7 +2,7 @@
 # Pramod Kumar
 # Purdue University
 #----------------------------------------------------------------------
-QT       += core gui widgets multimedia network webkitwidgets
+QT       += core gui widgets multimedia network #webkitwidgets
 
 QT      += sensors printsupport
 
@@ -25,6 +25,8 @@ include ($$PWD/P-Dollar-Recognizer/P_Dollar.pri)
 include ($$PWD/UI/PlayGoUI.pri)
 
 include ($$PWD/Controller/Controller.pri)
+
+include ($$PWD/Indexer-Minimal/External Libraries.pri)
 
 SOURCES += $$PWD/main.cpp \
         $$PWD/miscfunctions.cpp \
