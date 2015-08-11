@@ -1,23 +1,21 @@
-#include <QtWidgets>
 #include "tabletapplication.h"
-#include <QMessageBox>
+
 #include <QString>
-#include <QEvent>
-#include <QString>
-#include <iostream>
+#include <QDebug>
+#include "QsLog.h"
 
 namespace CDI
 {
-    bool TabletApplication::event(QEvent *event)
-    {
-        if (event->type() == QEvent::TabletEnterProximity ||
-                event->type() == QEvent::TabletLeaveProximity) {
-
-            _device = static_cast<QTabletEvent *>(event)->device();
-            emit OnStylusProximity(event);
-            return true;
-        }
-        return QApplication::event(event);
-    }
-
+	bool TabletApplication::event(QEvent *event)
+	{
+		if (event->type() == QEvent::TabletEnterProximity )
+		{
+			emit signalStylusEnter();
+		}
+		else if (event->type() == QEvent::TabletLeaveProximity)
+		{
+			emit signalStylusLeave();
+		}
+		return QApplication::event(event);
+	}
 }

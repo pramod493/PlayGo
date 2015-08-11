@@ -6,32 +6,66 @@
 #include <QFile>
 #include "commonfunctions.h"
 #include "abstractmodelitem.h"
+#include <QRectF>
 
 namespace CDI
 {
-	class Image : public AbstractModelItem
+	class Component;
+
+	/* TODO
+	 * The Image itself is not enough and we need to add metadata information
+	 * to it as well
+	 * */
+
+	/**
+     * @brief Represents Image information for display, triangulation,
+     * and metadata container.
+	 * @remarks: QRectF class need not be public since we are
+	 * not supposed to change any of its attributes from outside
+	 * Its dimensions must be set based on image dimensions ONLY.
+	 */
+    class Image : public AbstractModelItem
 	{
 	protected:
-		QPixmap _pixmap;
+        QPixmap* _pixmap;
 		QString _filepath;
 		QTransform _transform;
+		QTransform _inverseTransform;
 
 	public:
-		inline Image();
-		Image(const QString filename);
-		inline Image(const Image & image);
-		inline Image(const QPixmap & pixmap, QString filename);
+		//-----------------------------------------------
+		// Constructors/Destructors
+		//-----------------------------------------------
+		Image(Component* component);
+		Image(Component* component, const QString filename);
+		Image(const Image & image);
+		Image(Component* component, const QPixmap & pixmap, QString filename);
 
-		inline QPixmap pixmap() const;
-		inline QString filepath() const;
-		inline QTransform transform() const;
+        virtual ~Image();
 
-		inline void setPixmap(QPixmap& pixmap);
-		inline void setFilepath(QString filepath);
-		inline void setTransform(QTransform& transform);
+		//-----------------------------------------------
+		// Query/Set functions(same order in derived class)
+		// Non-virtual
+		//-----------------------------------------------
+        QPixmap* pixmap() const;
+		QString filepath() const;
 
-		// Virtual functions
-		virtual ItemType type() const;
+        void setPixmap(QPixmap* pixmap);
+        void setFilepath(QString filepath, bool updateImage = true);
+
+		//-----------------------------------------------
+		// Virtual functions (same order in derived class)
+		//-----------------------------------------------
+		virtual QRectF boundingRect() const;
+
+		ItemType type() const;
+
+		QTransform transform() const;
+
+		void setTransform(QTransform transform);
+
+		QTransform inverseTransform() const;
+
 		QDataStream& serialize(QDataStream& stream) const;
 		QDataStream& deserialize(QDataStream& stream);
 	};
@@ -39,49 +73,4 @@ namespace CDI
 	/************************************************************
 	 *  QImage inline functions
 	 **********************************************************/
-	inline Image::Image()
-		: _filepath(""), _pixmap()
-	{
-	}
-
-	inline Image::Image(const Image & image)
-		: _pixmap(image.pixmap()), _filepath("")
-	{}
-
-	inline Image::Image(const QPixmap &pixmap, QString filename)
-		: _pixmap(pixmap), _filepath(filename)
-	{}
-
-	inline QPixmap Image::pixmap() const
-	{
-		return _pixmap;
-	}
-
-	inline QString Image::filepath() const
-	{
-		return _filepath;
-	}
-
-	inline QTransform Image::transform() const
-	{
-		return _transform;
-	}
-
-	inline void Image::setPixmap(QPixmap& pixmap)
-	{
-		_pixmap = pixmap;
-		mask |= isModified;
-	}
-
-	inline void Image::setFilepath(QString filepath)
-	{
-		_filepath = filepath;
-		mask |= isModified;
-	}
-
-	inline void Image::setTransform(QTransform& transform)
-	{
-		_transform = transform;
-		mask |= isTransformed;
-	}
 }

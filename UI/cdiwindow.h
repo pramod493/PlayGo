@@ -1,24 +1,31 @@
 #pragma once
 #include <QMainWindow>
+#include <QSplitter>
+#include <QColorDialog>
+#include <QDir>
+#include <QFile>
 #include <QObject>
 #include <QAction>
 #include <QActionGroup>
-#include <QMainWindow>
-#include <QMenuBar>
-#include <QMenu>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QToolBar>
 #include <QIcon>
 #include <QStatusBar>
 #include <QSlider>
+#include <QStackedLayout>
+#include <QGridLayout>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QTabletEvent>
-
-#include "playgo.h"
+#include "colorselectortoolbar.h"
 
 #include "sketchview.h"
 #include "sketchscene.h"
+#include "PlayGoController.h"
+#include "searchview.h"
+#include "playgocore.h"
+
+class QDockWidget;
 
 namespace CDI
 {
@@ -27,55 +34,51 @@ namespace CDI
 		Q_OBJECT
 
 	public:
-        //// datastructure components
-        PlayGo *playgo;
+		//// datastructure components
+		PlayGo *playgo;
 
-        //// Datastructure components end
+		//// Datastructure components end
 		QSize windowSize;
 
 		QString title;
-		// TODO - Create action groups in order to simplify interactions as well as menus
-		// actions
+		// TODO - Create action groups in order to simplify interactions as well
+		//as menus actions
 
 		// File operations
-		QAction* openPageAction;
-		QAction* closePageAction;
-		QAction* saveImageAction;
+		QAction *newAction,*openPageAction,*closePageAction,*saveImageAction,
+				*closeAction, *cameraLoadAction;
 
 		// Sketching related operations
-		QAction* brushSelectAction;
-		QAction* eraseSelectAction;
-		QAction* marqueeAction;
-        //QAction* selectorAction;        // Enable selection of components.
-		QAction* searchAction;          // Search the marqueed region
-        //QAction* marqueeEnableAction;   // Enable the marquee widget
+		QAction *brushSelectAction, *polygonSelectAction, *eraseSelectAction, *marqueeAction,						*searchAction,*connectModeAction;
+
+		//QAction* selectorAction;        // Enable selection of components.
+		//QAction* marqueeEnableAction;   // Enable the marquee widget
 
 		// Simulation managed actions
 		QAction *playAction, *pauseAction, *resetAction;
 
 		// Toolbars
-		QToolBar* mainToolbar;
+		QToolBar *mainToolbar;
+		ColorSelectorToolbar* colorToolbar;
 
-		// menus
+		// MENUS
 		// TODO - Menus are not needed even though they are good to have
-		QMenuBar* menubar;
-		QMenu* editMenu;
-		QMenu* helpmenu;
+		QMenuBar *menubar, *editMenu, *helpmenu;
 
 		QSlider* brushWidthSlider;
 
-		QVBoxLayout* mainLayout;
+		QSplitter *splitter;
+
+		QDockWidget* searchDock;
+
 		// Sketching related widgets
-		SketchView* sketchView;          // Primarily use this one. Skip the other ones...
-		SketchScene* sketchScene;
+		SketchView* sketchView;			// Primarily use this one. Skip the
+										// other ones...
 
-		QGraphicsView* searchView;
-		QGraphicsView* gestureView;
+		SearchView* searchView;
 		QGraphicsScene* searchScene;
-		QGraphicsScene* gestureScene;
 
-		// Status bar displaye hints and user actions
-		QStatusBar* statusBar;
+		PlayGoController* controller;
 
 	protected:
 		QTabletEvent::TabletDevice tabletDevice;
@@ -85,27 +88,66 @@ namespace CDI
 
 		~CDIWindow();
 
-		void InitWidgets();
+		void initWidgets();
+
+		void loadPage(Page* page);
 
 	protected:
-		void CreateActions();
+		void createActions();
 
-		void SetupToolbar();
+		void setupToolbar();
 
-		void CreateStatusbar();
+		void createStatusbar();
+
+		void connectActions();
 
 		void closeEvent(QCloseEvent *event);
 
 	signals:
-
-		void signalBrushSizeChanged(int size);
+		void onBrushSizeChanged(int size);
 
 	public slots:
-		void setBrushValue(int size);
+		/**
+		 * @brief Clear removes all the items from the scene.
+		 * \todo Also prompt user to save the current scene
+		 */
+		void clear();
 
-		void slotOnSignalProximity(QEvent* event);
+		/**
+		 * @brief save triggers saving of the current scene
+		 * \todo Implement this feature
+		 */
+		void save();
 
-        void Save();
+		void exit();
 
+		void setToDraw();
+
+		void setToShape();
+
+		void setToConnectorMode();
+
+		void setToErase();
+
+		void setToSelect();
+
+		void setBrushWidth(int size);
+
+		void setBrushColor(QString, QColor);
+
+		void onSearchTrigger();
+		/**
+		 * @brief onStylusEnter is called when a tablet device is near
+		 * Use this to disable mouse input as well as other tasks
+		 */
+		void onStylusEnter();
+
+		void onStylusLeave();
+
+		void startSimulation();
+
+		void pauseSimulation();
+
+		void cameraLoad();
 	};
 }

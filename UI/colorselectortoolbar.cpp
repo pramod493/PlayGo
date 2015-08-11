@@ -1,7 +1,9 @@
 #include "colorselectortoolbar.h"
 #include <QDebug>
+#include "QsLog.h"
 #include <QPixmap>
 #include "commonfunctions.h"
+#include <stdlib.h>
 
 namespace CDI
 {
@@ -15,21 +17,21 @@ namespace CDI
         toolbarColors.append(Qt::green);
         toolbarColors.append(Qt::darkGreen);
         toolbarColors.append(Qt::blue);
-        toolbarColors.append(Qt::blue);
         toolbarColors.append(Qt::darkBlue);
         toolbarColors.append(Qt::magenta);
-        toolbarColors.append(Qt::darkYellow);
-        toolbarColors.append(QColor(1,1,1,0));
+		toolbarColors.append(Qt::darkYellow);
+
+		srand(111111);	// initialize randomizer
     }
 
     void ColorSelectorToolbar::InitToolbarItems()
     {
-        // Create actions and add them at the same time
-        QActionGroup* colorGroup = new QActionGroup(this);
+        int iconSize = 32;
+		colorGroup = new QActionGroup(this);
         for (int i=0; i< toolbarColors.size(); i++)
         {
             QColor color = toolbarColors[i];
-            QPixmap image(96,96);
+            QPixmap image(iconSize,iconSize);
             image.fill(color);
             ColorAction* action = new ColorAction(QIcon(image),
                                                   QString::number(color.red())+QString::number(color.green())+QString::number(color.blue()),
@@ -41,7 +43,8 @@ namespace CDI
             connect(action, SIGNAL(ColorSelected(QString,QColor)),
                     this, SLOT(slotColorChange(QString,QColor)));
         }
-        setIconSize(QSize(64,64));
+		actions = colorGroup->actions();
+        setIconSize(QSize(iconSize,iconSize));
         current_color = toolbarColors[0];
     }
 
@@ -54,6 +57,14 @@ namespace CDI
        }
     }
 
+	void ColorSelectorToolbar::slotRandomizeColor()
+	{
+		int size = actions.size();
+		int index = rand() % size;
+		QAction* action = actions[index];
+		action->trigger();
+		action->setChecked(true);
+	}
 
     /*------------------------------------------------------
      * ------------------------------------------------------*/

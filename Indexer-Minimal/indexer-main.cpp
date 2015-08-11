@@ -6,6 +6,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#include <vector>
+#include <QDebug>
+#include <QString>
 
 using namespace std;
 
@@ -19,17 +22,29 @@ int main(int argc, char *argv[])
 
     std::cout << "Running correctly\n";
 
+#ifdef Q_OS_LINUX
+    path data("/home/pramod/Junks/database/");
+#else
     //WINDOWS
     path data("C:/Database/");
+#endif
 
     wbBICE * bicedescriptor = new wbBICE();
     wbSearchEngine * engine = new wbSearchEngine(data,bicedescriptor);
 
+#ifdef Q_OS_LINUX
+    file = "/home/pramod/Junks/database/Input.png";
+#else
     file = "C:/Database/Input.png";
+#endif
 
     engine->Index();
     engine->Load();
-    engine->Query(file,40);
+	vector<string> names = engine->Query(file,40);
+	for(int i =0; i< names.size(); i++)
+	{
+		qDebug() << QString::fromStdString(names[i]);
+	}
     return EXIT_SUCCESS;
 }
 

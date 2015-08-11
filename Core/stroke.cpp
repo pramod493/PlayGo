@@ -1,43 +1,117 @@
 #include "stroke.h"
-#include "commonfunctions.h"
-#include "ramerdouglaspeucker.h"
-#include "vector"
+#include "component.h"
+#include "QsLog.h"
+
+using namespace std;
 
 namespace CDI
 {
-	void Stroke::translate(const Point2D &offset)
+	Stroke::Stroke(QGraphicsItem* parent)
+		:QGraphicsPathItem(parent)
 	{
-		if (offset.isNull())
-			return;
+		init();
+		_points = QVector<Point2DPT*>();
+		recalculateAABB();
 
-		mask |= isTransformed;
+		setZValue(Z_STROKEVIEW);
 
-		Point2DPT *p = data();
-		int i = size();
-		while (i--) {
-			*p += offset;
-			++p;
-		}
+		_isStrokeFinalized = false;
 	}
 
-	bool Stroke::containsPoint(const Point2D &pt, SelectionType rule, float margin)
+	Stroke::Stroke(QVector<Point2DPT*> points, QGraphicsItem* parent)
+		:QGraphicsPathItem(parent)
 	{
-		Q_UNUSED(rule)
+		_points = QVector<Point2DPT*>();
+		// Perform deep copy
+		QVector<Point2DPT*>::const_iterator iter;
+		_points.reserve(_points.size());
+		for(iter = points.constBegin();
+			iter != points.constEnd();
+			++iter)
+		{
+			Point2DPT* pt = (*iter);
+			Point2DPT* copy = new Point2DPT(*pt);
+			_points.push_back(copy);
+		}
+		recalculateAABB();
 
-		Point2D relPos = inverseTransform().map(pt);
+		setZValue(Z_STROKEVIEW);
 
-		qDebug() << "Before" << pt << "After" << relPos;
-		float width = _thickness + margin;
+		_isStrokeFinalized = false;
+	}
+
+	Stroke::~Stroke()
+    {
+		if (parentItem()!= NULL)
+		{
+			QGraphicsItem* graphicsitem = parentItem();
+			if (graphicsitem->type() == Component::Type)
+			{
+				Component* component =
+						qgraphicsitem_cast<Component*>(graphicsitem);
+				component->removeFromComponent(this);
+			}
+		}
+		qDeleteAll(_points);
+    }
+
+	void Stroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+    {
+		Q_UNUSED(widget)
+		Q_UNUSED(option)
+		// Hide when hidden
+		if (isVisible() == false) return;
+		if (_points.size() < 3) return;
+
+		painter->setBrush(brush());
+		QPen _pen = QPen(pen());
+		float width = _pen.widthF();
+		// TODO - Get const_iterator
+		Point2DPT** data = _points.data();		// gives out the data. Careful not to overwrite that information
+		int num_points = _points.size();
+        if (_highlighted)
+        {
+			QPen highlighter = QPen(_pen);
+            highlighter.setWidthF(width * 1.5f);
+            highlighter.setColor(Qt::red);
+            painter->setPen(highlighter);
+            for (int i=1; i< num_points; i++)
+            {
+				Point2DPT* p1 = data[i-1]; Point2DPT* p2 = data[i];
+				painter->drawLine(*p1, *p2);
+            }
+        }
+		for (int i=1; i< num_points; i++)
+		{
+			Point2DPT* p1 = data[i-1]; Point2DPT* p2 = data[i];
+			_pen.setWidthF(width * p1->pressure()); painter->setPen(_pen);
+			painter->drawLine(*p1, *p2);
+		}
+#ifdef CDI_DEBUG_DRAW_SHAPE
+		painter->setPen((_pen.setWidth(0),_pen.setStyle(Qt::DashDotLine), _pen));
+		painter->drawRect(boundingRect());
+#endif
+    }
+
+	bool Stroke::contains(const QPointF &point) const
+	{
+		return contains(point, 0.0f);
+	}
+
+	bool Stroke::contains(const QPointF& point, float margin) const
+	{
+		Point2D pt = point;
+		float width = pen().widthF() + margin;
 		float sqrWidth = width*width;
-		int num_points = size() - 1;
-		Point2DPT* points = data();
+		int num_points = _points.size() - 1;
+//		Point2DPT** points = _points.data();
 		for (int i=0; i< num_points; i++)
 		{
-			Point2DPT p1 = points[i];
-			Point2DPT p2 = points[i+1];
+			Point2DPT* p1 = _points[i];
+			Point2DPT* p2 = _points[i+1];
 
-			Point2D v1 = Point2D(relPos-p1);
-			Point2D v2 = Point2D(p2-p1);
+			Point2D v1 = Point2D(pt - (*p1));
+			Point2D v2 = Point2D((*p2)-(*p1));
 			float v2SqrMag = sqrMagnitude(&v2);
 
 			float t = dotProduct(&v1, &v2) / v2SqrMag;
@@ -49,95 +123,177 @@ namespace CDI
 		return false;
 	}
 
+	bool Stroke::isContainedWithin(QPolygonF *polygon, float percentmatch)
+	{
+		Q_UNUSED(percentmatch)
+		QVector<Point2DPT*>::const_iterator iter;
+		for (iter = _points.constBegin();
+			 iter != _points.constEnd();
+			 ++iter)
+		{
+			Point2DPT* pt = (*iter);
+			if (polygon->containsPoint(*pt, Qt::WindingFill) == false) return false;
+		}
+		return true;
+	}
+
+	QRectF Stroke::boundingRect() const
+	{
+		if (!_isStrokeFinalized)
+		{
+			if (_points.size() == 0) return QRectF();
+			if (isVisible()== false) return QRectF();
+			return aabb;
+		}
+
+		return QGraphicsPathItem::boundingRect();
+	}
+
+	void Stroke::push_point(QPointF point, float pressure, int time)
+	{
+		Point2D pt = mapFromScene(point);
+		_points.push_back(new Point2DPT(pt.x(),pt.y(), pressure, time));
+		updateAABB(pt.x(),pt.y());
+    }
+
+	void Stroke::push_point(Point2DPT point)
+    {
+		Point2D pt = mapFromScene(point);
+		_points.push_back
+				(new Point2DPT(pt.x(), pt.y(), point.pressure(), point.time()));
+		updateAABB(pt.x(),pt.y());
+    }
+
 	void Stroke::applySmoothing(int order)
-	{
-		if (0) {
-			std::vector<Point2D> ptvec;
-			Point2DPT* points = data();
-			int num_points = size();
-			for (int i=0; i<num_points; i++)
+    {
+		int num_points = _points.size()-1;
+		Point2DPT** points = _points.data();
+		for (int j =0; j< order; j++)
+			for (int index = 1;index < num_points; index++)
 			{
-				ptvec.push_back(Point2D(points[i].x(),points[i].y()));
-
-			}
-			RamerDouglas rdp;
-
-			qDebug() << "Initial size" << ptvec.size();
-			ptvec = rdp.simplifyWithRDP(ptvec, 3);
-			qDebug() << "Final size" << ptvec.size();
-
-			clear();
-			for (int i=0; i<ptvec.size(); i++)
-			{
-				Point2D p = ptvec[i];
-				push_back(Point2DPT(p.x(),p.y(),1.0f,0));
+				points[index]->setX(0.5f *(points[index-1]->x() + points[index+1]->x()));
+				points[index]->setY(0.5f *(points[index-1]->y() + points[index+1]->y()));
+				points[index]->setPressure
+						(0.5f *(points[index-1]->pressure() + points[index+1]->pressure()) );
 			}
 
+		QPainterPath localPath = QPainterPath();
+		localPath.moveTo(*_points[0]);
+		for (int index = 0;index < num_points; index++)
+		{
+			localPath.lineTo(*_points[index]);
 		}
+		setPath(localPath);
+		_isStrokeFinalized = true;
+		recalculateAABB();
+    }
 
-		if (1) {
-			int num_points = size()-1;
-			Point2DPT* points = data();
-			for (int j =0; j< order; j++)
-				for (int index = 1;index < num_points; index++)
-				{
-					points[index] = 0.5f * (points[index-1] + points[index+1]);
-				}
-		}
-	}
+	bool Stroke::isHighlighted() const
+    {
+        return _highlighted;
+    }
 
-	ItemType Stroke::type() const
-	{
-		return ItemType::STROKE;
-	}
+	void Stroke::highlight(bool value)
+    {
+        if (_highlighted == value) return;
+        _highlighted = value;
+        update(boundingRect());
+    }
 
 	QDataStream& Stroke::serialize(QDataStream &stream) const
 	{
-		int len = this->size();
-		int i;
-		stream << color();
-		stream << float(thickness());
+		stream << _id;
+		stream << static_cast<int>(_points.size());
+		for(QVector<Point2DPT*>::const_iterator iter = _points.constBegin();
+			iter != _points.constEnd(); ++iter)
+		{
+			Point2DPT *point = (*iter);
+			stream << *point;
+		}
+		stream << sceneTransform();
 		stream << transform();
-		stream << qint32(len);
-		for (i=0; i< len; i++)
-			stream << this->at(i);
 		return stream;
 	}
 
 	QDataStream& Stroke::deserialize(QDataStream &stream)
-	{		
-		qint32 len =0;
-		QTransform t;
-
-		stream >> _color;
-		stream >> _thickness;
-		stream >> t;
-		stream >> len;
-
-		Point2DPT p;
-		for (int i=0; i< len; i++)
-		{
-			stream >> p;
-			push_back(p);
-		}
-		setTransform(t);
-
-		mask |= isModified;
-
+	{
+		stream >> _id;
 		return stream;
+//		qint32 len =0;
+//		QTransform t;
+//		QPen _pen;
+//
+//		stream >> _pen;		setPen(_pen);
+//		stream >> t;		setTransform(t);
+//		stream >> len;
+
+//		Point2DPT p;
+//		for (int i=0; i< len; i++)
+//		{
+//			stream >> p;
+//			_points.push_back(new Point2DPT(p));
+//		}
+//		recalculateAABB();
+//		return stream;
 	}
 
-	QDebug operator <<(QDebug d, const Stroke &stroke)
+	void Stroke::init()
 	{
-		d.nospace() << "Stroke id: " << stroke.id().toString();
-		d.nospace() << "\n";
-		d.nospace() << "[Color:"<<stroke.color()<<"Thickness:"
-					<< stroke.thickness() << "Size:"<<stroke.size() << "]";
-		d.nospace() << "\n";
-		d.nospace() << stroke.transform();
-		d << "\n";
-		QVector<Point2DPT> v = stroke;
-		d.nospace() << v;
-		return d.space();
+		_id = uniqueHash();
+		QPen _pen = QPen(Qt::black);
+		_pen.setWidthF(3.0f);
+		setPen(_pen);
+
+		QBrush _brush = QBrush(Qt::NoBrush);
+		setBrush(_brush);
+
+		_highlighted = false;
+	}
+
+	void Stroke::updateAABB(float x, float y)
+	{
+		prepareGeometryChange();
+
+		_x_min = (_x_min < x ? _x_min : x);
+		_x_max = (_x_max > x ? _x_max : x);
+		_y_min = (_y_min < y ? _y_min : y);
+		_y_max = (_y_max > y ? _y_max : y);
+
+		float margin = pen().widthF();
+		aabb = QRectF(_x_min - margin, _y_min - margin,
+					  _x_max - _x_min + 2.0f * margin, _y_max - _y_min + 2.0f * margin);
+		update();
+	}
+
+	void Stroke::recalculateAABB()
+	{
+		if (_points.size() == 0)
+		{
+			_x_max = _y_max = _x_min = _y_min = 0;
+			aabb = QRectF();
+			return;
+		}
+		prepareGeometryChange();
+		int num_points = _points.size();
+		Point2DPT** points = _points.data();
+
+		_x_min=points[0]->x(); _y_min=points[0]->y();
+		_x_max=points[0]->x(); _y_max=points[0]->y();
+
+		for (int i=0; i< num_points; i++)
+		{
+			float px = points[i]->x();
+			float py = points[i]->y();
+			// if either if _x_min or _y_min is true, we do have to check the other one
+			// A faster method can be thought of
+			_x_min = (_x_min < px ? _x_min : px);
+			_x_max = (_x_max > px ? _x_max : px);
+			_y_min = (_y_min < py ? _y_min : py);
+			_y_max = (_y_max > py ? _y_max : py);
+		}
+		float margin = pen().widthF();
+		aabb = QRectF(_x_min - margin, _y_min - margin,
+					  _x_max - _x_min + 2.0f * margin, _y_max - _y_min + 2.0f * margin);
+
 	}
 }

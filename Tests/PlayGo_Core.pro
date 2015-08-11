@@ -1,9 +1,12 @@
-QT       += core gui
+QT       += core gui widgets
 
 TARGET = PlayGoTest
 
 CONFIG   += console
 
-#include (../Core/PlayGoCore.pri)
+TEMPLATE = app
 
-SOURCES += $$PWD/testpixmapmask.cpp
+include (../Core/PlayGoCore.pri)
+
+SOURCES += \
+            $$PWD/testcoremain.cpp

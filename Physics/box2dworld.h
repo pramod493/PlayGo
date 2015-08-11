@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QHash>
+#include <QDebug>
 #include <QTimer>
 #include <QTimerEvent>
 #include <Box2D/Box2D.h>

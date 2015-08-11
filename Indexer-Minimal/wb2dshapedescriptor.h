@@ -4,7 +4,6 @@
 #include <opencv2/opencv.hpp>
 #include <boost/filesystem.hpp>
 
-using namespace cv;
 using namespace boost::filesystem;
 
 class wb2DShapeDescriptor

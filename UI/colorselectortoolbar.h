@@ -11,7 +11,7 @@
 
 namespace CDI
 {
-    class ColorSelectorToolbar : public QToolBar
+	class ColorSelectorToolbar : public QToolBar
     {
         Q_OBJECT
     public:
@@ -19,6 +19,8 @@ namespace CDI
 
     protected:
        QColor current_color;
+	   QActionGroup* colorGroup;
+	   QList<QAction*> actions;
 
     public:
         explicit ColorSelectorToolbar(QWidget *parent = 0);
@@ -27,8 +29,11 @@ namespace CDI
 
     signals:
         void signalColorChange(QString name, QColor color);
+
     public slots:
        void slotColorChange(QString name, QColor color);
+
+	   void slotRandomizeColor();
     };
 
 

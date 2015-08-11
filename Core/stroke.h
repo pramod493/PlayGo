@@ -1,117 +1,79 @@
 #pragma once
-#include <commonfunctions.h>
-#include <abstractmodelitem.h>
-#include <QDataStream>
-#include <point2dpt.h>
+
+#include <QGraphicsPathItem>
+#include <QPainterPath>
+#include <QPainter>
+#include <QStyleOptionGraphicsItem>
 #include <QVector>
-#include <QColor>
+#include <QVectorIterator>
+#include "point2dpt.h"
+#include "commonfunctions.h"
+#include "cdi2qtwrapper.h"
 
 namespace CDI
 {
-	/**
-	 * @brief The Stroke class
-	 * Stroke the points, color and thickness information for stroke
-	 */
-	class Stroke : public QVector<Point2DPT>, public AbstractModelItem
+	class Stroke : public QGraphicsPathItem
 	{
-	protected:
-		QColor _color;				/**< Stroke color */
-		float _thickness;			/**< Maximum thickness of stroke */
-		QTransform _transform;		/**< Current stroke transform w.r.t. its parent */
-		QTransform _inverseTransform;
-
 	public:
-		inline Stroke();
-		inline Stroke(QColor color, float thickness);
-		inline Stroke(const Stroke& s);
-		inline Stroke(const QVector<Point2DPT>& points, QColor color, float thickness);
+		enum { Type = UserType + STROKEVIEW };
+
+	protected:
+        bool _highlighted;
+		QUuid _id;
+		QVector<Point2DPT*> _points;
+
+		// For bounding box calculations
+		float _x_min, _x_max, _y_min, _y_max;
+		QRectF aabb;
+		bool _isStrokeFinalized;
+	public:
 
 		/**
-		 * @brief Get Color of stroke
-		 * @return Stroke color
+		 * @brief Create a new GraphicsPathItem object based on Stroke object
+		 * @param parent parent QGraphicsItem object
+		 * @param stroke Stroke object
 		 */
-		inline QColor color() const;
-		inline float thickness() const;
-		inline QTransform transform() const;
-		inline QTransform inverseTransform() const;
+		Stroke(QGraphicsItem* parent = 0);
 
-		inline void setColor(QColor color);
-		inline void setThickness(float thickness);
-		inline void setTransform(QTransform& transform);
+		Stroke(QVector<Point2DPT*> points, QGraphicsItem* parent = 0);
 
-		inline void translate(float x, float y);
-		void translate(const Point2D& offset);
+		virtual ~Stroke();
 
-		bool containsPoint(const Point2D &pt, SelectionType rule, float margin);
-		void applySmoothing(int order);// TODO - Implement
+		int type() const { return Type; }
 
-		// Virtual functions
-		virtual ItemType type() const;
+		QUuid id() const { return _id; }
+
+		void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
+
+		int size() { return _points.size(); }
+
+		bool contains(const QPointF& point) const;
+
+		virtual bool contains(const QPointF& point, float margin) const;
+
+		virtual bool isContainedWithin(QPolygonF* polygon, float percentmatch = 1.0f);
+
+		QRectF boundingRect() const;
+
+		void push_point(QPointF point, float pressure=1.0, int time = 0);
+
+		void push_point(Point2DPT point);
+
+		void applySmoothing(int order);
+
+        bool isHighlighted() const;
+
+        void highlight(bool value);
+
 		QDataStream& serialize(QDataStream& stream) const;
+
 		QDataStream& deserialize(QDataStream& stream);
 
-		friend QDebug operator <<(QDebug d, const Stroke &stroke);
+	protected:
+		virtual void init();
+
+		virtual void updateAABB(float x, float y);
+
+		virtual void recalculateAABB();
 	};
-
-	/******************************************************
-	 * Stroke inline functions
-	 *****************************************************/
-	inline Stroke::Stroke()
-		: _color(Qt::black), _thickness(3.0f)
-	{}
-
-	inline Stroke::Stroke(QColor color, float thickness)
-		: _color(color), _thickness(thickness)
-	{}
-
-	inline Stroke::Stroke(const Stroke &s)
-		: QVector<Point2DPT>(s) , _color(s.color()), _thickness(s.thickness())
-	{}
-
-	inline Stroke::Stroke(const QVector<Point2DPT>& points, QColor color, float thickness)
-		: QVector<Point2DPT> (points), _color(color), _thickness(thickness)
-	{}
-
-	inline QColor Stroke::color() const
-	{
-		return _color;
-	}
-
-	inline float Stroke::thickness() const
-	{
-		return _thickness;
-	}
-
-	inline QTransform Stroke::transform() const
-	{
-		return _transform;
-	}
-
-	inline QTransform Stroke::inverseTransform() const
-	{
-		return _inverseTransform;
-	}
-
-	inline void Stroke::setColor(QColor color)
-	{
-		_color = color;
-	}
-
-	inline void Stroke::setThickness(float thickness)
-	{
-		mask |= isModified;
-		_thickness = thickness;
-	}
-
-	inline void Stroke::setTransform(QTransform& transform)
-	{
-		mask |= isTransformed;
-		_transform = transform;
-		_inverseTransform = transform.inverted();
-	}
-
-	inline void Stroke::translate(float x, float y)
-	{
-		translate(QPointF(x,y));
-	}
 }

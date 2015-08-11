@@ -2,131 +2,85 @@
 
 namespace CDI
 {
-	Assembly::Assembly()
+	Assembly::Assembly(QGraphicsItem* parent)
+		: QGraphicsItemGroup(parent)
 	{
-		_rootPtr = NULL;
-		_assemblyFilepath = id().toString();
+		_id = uniqueHash();
+		_data = new AssemblyData;
 	}
 
 	Assembly::~Assembly()
 	{
-		QHash<QUuid, Component*>::const_iterator iter;
-		for(iter = constBegin(); iter != constEnd(); ++iter)
+		delete _data;
+	}
+
+	void Assembly::addComponent(Component* component)
+	{
+		if (_data->components.contains(component->id()) == false)
 		{
-			Component* component = iter.value();
-			delete component;
+			_data->components.insert(component->id(), component);
+		}
+		addToGroup(component);
+	}
+
+	void Assembly::removeComponent(Component* component)
+	{
+		if (_data->components.contains(component->id()))
+		{
+			_data->components.remove(component->id());
+		}
+		removeFromGroup(component);
+	}
+
+	void Assembly::removeComponent(QUuid componentId)
+	{
+		if (_data->components.contains(componentId))
+		{
+			Component* component = _data->components.value(componentId);
+			_data->components.remove(componentId);
+			removeFromGroup(component);
 		}
 	}
 
-	QTransform Assembly::transform() const
+	bool Assembly::containsComponent(QUuid componentId)
 	{
-		return _transform;
+		return _data->components.contains(componentId);
 	}
 
-	/*************************************************************
-	 * Query functions
-	 ************************************************************/
-	ItemType Assembly::type() const
+	QList<Component*> Assembly::components()
 	{
-		return ItemType::ASSEMBLY;
+		return _data->components.values();
 	}
 
-	void Assembly::addItem(Component *component)
+	bool Assembly::mergeAssembly(Assembly *a)
 	{
-		if (contains(component->id())) return;
-		insert(component->id(), component);
-	}
-
-	void Assembly::removeItem(Component *component)
-	{
-		removeItem(component->id());
-	}
-
-	void Assembly::removeItem(QUuid uid)
-	{
-		if (contains(uid))
-		{
-			remove(uid);
-		}
-	}
-
-	void Assembly::deleteitem(Component *component)
-	{
-		removeItem(component);
-		delete component;
-	}
-
-	bool Assembly::containsItem(AbstractModelItem* key, bool searchRecursive)
-	{
-		return containsItem(key->id(), searchRecursive);
-	}
-
-	bool Assembly::containsItem(QUuid key, bool searchRecursive)
-	{
-		if (contains(key)) return true;
-		if (searchRecursive)
-		{
-			QHash<QUuid, Component*>::const_iterator iter;
-			for (iter = constBegin(); iter != constEnd(); ++iter)
-			{
-				Component* component = iter.value();
-				if (component->containsItem(key))
-					return true;
-			}
-		}
+		Q_UNUSED(a)
 		return false;
 	}
 
-	bool Assembly::containsItem(QString key, bool searchRecursive)
+	Component* Assembly::getComponentById(QUuid componentId)
 	{
-		QUuid uid = QUuid(key);
-		if (uid.isNull()) return false;
-		return containsItem(uid, searchRecursive);
+		if (_data->components.contains(componentId))
+			return _data->components.value(componentId);
+		return NULL;
 	}
 
-	bool Assembly::readFromFile(QFile &file)
+	void Assembly::addJoint(Component *c1, Component *c2)
 	{
-		Q_UNUSED(file);
-		// TODO - feature not implemented
-		return false;
-	}
-
-	bool Assembly::writeToFile(QFile& file)
-	{
-		Q_UNUSED(file);
-		// TODO - feature not implemented
-		return false;
+		Q_UNUSED(c1)
+		Q_UNUSED(c2)
 	}
 
 	QDataStream& Assembly::serialize(QDataStream& stream) const
 	{
-		stream << size();
-		if (!isEmpty())
-		{
-			QHash<QUuid, Component*>::const_iterator iter;
-			for(iter = constBegin(); iter != constEnd(); ++iter)
-			{
-				Component* component = iter.value();
-				stream << *component;
-			}
-		}
+		stream << _id;
 		return stream;
 	}
 
 	QDataStream& Assembly::deserialize(QDataStream& stream)
 	{
-		int num_items;
-		stream >> num_items;
-		if (num_items != 0)
-		{
-			reserve(num_items);
-			for (int i =0; i< num_items; i++)
-			{
-				Component* component = new Component();
-				stream >> *component;
-				insert(component->id(), component);
-			}
-		}
+		stream >> _id;
 		return stream;
 	}
+
 }

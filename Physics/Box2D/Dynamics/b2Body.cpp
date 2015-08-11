@@ -24,6 +24,7 @@
 
 b2Body::b2Body(const b2BodyDef* bd, b2World* world)
 {
+	playgoCollisionEnabled = true;
 	b2Assert(bd->position.IsValid());
 	b2Assert(bd->linearVelocity.IsValid());
 	b2Assert(b2IsValid(bd->angle));
@@ -393,6 +394,11 @@ void b2Body::SetMassData(const b2MassData* massData)
 
 bool b2Body::ShouldCollide(const b2Body* other) const
 {
+	// This overrides all the checks for collision.
+	// Set this to false to prevent collisions
+
+	if (!playgoCollisionEnabled) return false;
+
 	// At least one body should be dynamic.
 	if (m_type != b2_dynamicBody && other->m_type != b2_dynamicBody)
 	{

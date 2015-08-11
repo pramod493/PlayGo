@@ -2,7 +2,9 @@
 # Pramod Kumar
 # Purdue University
 #----------------------------------------------------------------------
-QT       += core gui widgets winextras svg
+QT       += core gui widgets multimedia network #webkitwidgets
+
+QT      += sensors printsupport
 
 TARGET = PlayGo
 
@@ -10,16 +12,35 @@ CONFIG   += console
 
 TEMPLATE = app
 
-RESOURCES += images.qrc
+RESOURCES += images.qrc \
+    overlayimages.qrc
+unix {
+include ($$PWD/QtTuio/qTUIO.pri)
+}
 
-include (Core/PlayGoCore.pri)
+include ($$PWD/Core/PlayGoCore.pri)
 
-include (Indexer-Minimal/Indexer.pri)
+include ($$PWD/P-Dollar-Recognizer/P_Dollar.pri)
 
-#include (P-Dollar-Recognizer/P_Dollar.pri)
+include ($$PWD/UI/PlayGoUI.pri)
 
-include (Physics/QBox2D.pri)
+include ($$PWD/Controller/Controller.pri)
 
-include (UI/PlayGoUI.pri)
+include ($$PWD/Indexer-Minimal/External Libraries.pri)
 
-SOURCES += $$PWD/main.cpp
+SOURCES += $$PWD/main.cpp \
+        $$PWD/miscfunctions.cpp \
+        $$PWD/converttopolygons.cpp \
+        $$PWD/batchpolygonize.cpp
+HEADERS += \
+        $$PWD/converttopolygons.h \
+        $$PWD/batchpolygonize.h
+
+CONFIG += c++11
+
+QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
+
+RC_FILE = PlayGoIcon.rc
+
+FORMS += \
+    $$PWD/batchpolygonize.ui

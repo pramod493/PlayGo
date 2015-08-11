@@ -1,36 +1,57 @@
 #pragma once
 #include <QGraphicsView>
-#include <QTabletEvent>
-#include <QBrush>
-#include <QString>
 #include <QGraphicsScene>
+#include <QTabletEvent>
+#include <QTouchEvent>
+#include <QWheelEvent>
+#include "sketchscene.h"
+
+#include "page.h"
 
 namespace CDI
 {
 	class SketchView : public QGraphicsView
 	{
 		Q_OBJECT
-//	protected:
-//		QGraphicsScene* scene;
+	protected:
+		Page* _page;
 
 	public:
-		SketchView(QWidget* parent = 0);
+		SketchView(Page* page, QWidget* parent = 0);
 
-		~SketchView();
+		virtual ~SketchView();
 
-		void SaveScene();
+		void setPage(Page* page);
+
+		Page* getPage() const;
+
+		void drawBackground(QPainter * painter, const QRectF & rect);
+
+		void drawForeground(QPainter * painter, const QRectF & rect);
 
 	protected:
 		void resizeEvent(QResizeEvent *event);
 
-		bool event(QEvent* event);
+		void wheelEvent(QWheelEvent* event);
 
-		void tabletEvent(QTabletEvent *event);
+		void dragEnterEvent(QDragEnterEvent * event);
+
+		void dragLeaveEvent(QDragLeaveEvent * event);
+
+		void dragMoveEvent(QDragMoveEvent * event);
+
+		void dropEvent(QDropEvent *event);
 
 	signals:
-		void signalViewTabletEvent(QTabletEvent *tabletEvent, QPointF scenePos);
+		/**
+		 * @brief Connect with appropriate function in order to draw on background
+		 * @param painter
+		 * @param rect
+		 */
+		void viewDrawbackground(QPainter* painter, const QRectF & rect);
 
+		void viewDrawforeground(QPainter* painter, const QRectF & rect);
+
+		void viewImageDrop(QString imagepath, QObject* view, QDropEvent* event);
 	};
-
-
 }

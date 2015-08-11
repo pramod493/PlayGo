@@ -390,7 +390,7 @@ private:
 	friend class b2ContactManager;
 	friend class b2ContactSolver;
 	friend class b2Contact;
-	
+
 	friend class b2DistanceJoint;
 	friend class b2FrictionJoint;
 	friend class b2GearJoint;
@@ -464,6 +464,9 @@ private:
 	float32 m_sleepTime;
 
 	void* m_userData;
+
+public:
+	bool playgoCollisionEnabled;
 };
 
 inline b2BodyType b2Body::GetType() const

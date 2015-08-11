@@ -19,5 +19,14 @@
         <file>images/paste.png</file>
         <file>images/save.png</file>
         <file>images/search.png</file>
+        <file>images/turn-off.png</file>
+        <file>images/Camera.png</file>
+        <file>images/connect.png</file>
+        <file>images/joints/force.png</file>
+        <file>images/joints/hinge-joint.png</file>
+        <file>images/joints/spring-joint.png</file>
+        <file>images/scribble.png</file>
+        <file>images/joints/slider.png</file>
+        <file>images/joints/lock-joint.png</file>
     </qresource>
 </RCC>

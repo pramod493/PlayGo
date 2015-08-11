@@ -9,15 +9,19 @@
 #include <cstdlib>
 #include <vector>
 #include <cmath>
+#include "poly2tri.h"	// For less conversion required for poly2tri
 
 namespace CDI
 {
 	class RamerDouglas
 	{
-		const std::pair<int, double> findMaximumDistance(const std::vector<Point2D>& Points)const;
+		const std::pair<int, float> findMaximumDistance(const std::vector<Point2D>& Points)const;
+		
+		const std::pair<int, float> findMaximumDistance(const std::vector<p2t::Point>& Points) const;
 
-		//"simplifyWithRDP" returns the simplified path with a Point vector. The function takes in the paths to be simplified and a customerized thresholds for the simplication.
+		//"simplifyWithRDP" returns the simplified path with a Point vector. The function takes in the paths to be simplified and a customized thresholds for the simplification.
 	public:
-		std::vector<Point2D> simplifyWithRDP(std::vector<Point2D>& Points, double epsilon)const;
+		std::vector<Point2D> simplifyWithRDP(std::vector<Point2D>& Points, float epsilon)const;
+		std::vector<p2t::Point> simplifyWithRDP(std::vector<p2t::Point>& Points, float epsilon)const;
 	};
 }
