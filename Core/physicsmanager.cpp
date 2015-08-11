@@ -131,7 +131,7 @@ namespace CDI
 		jointDef->motorSpeed = motorSpeed;
 		jointDef->maxMotorTorque = motorTorque;
 
-		b2Joint* joint = createJoint(*jointDef);
+		b2RevoluteJoint* joint = static_cast<b2RevoluteJoint *>(createJoint(*jointDef));
 
 		PhysicsJoint *physicsJoint = new PhysicsJoint(this);
 		physicsJoint->componentA = c1;
@@ -147,6 +147,7 @@ namespace CDI
 		c2->addJoint(physicsJoint);
 
 		_jointList.push_back(physicsJoint);
+		joint->EnableMotor(false);		// All motors are started as disabled
 
 		return physicsJoint;
 	}
