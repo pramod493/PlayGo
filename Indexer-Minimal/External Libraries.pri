@@ -27,3 +27,16 @@ win32 {
     Debug: LIBS += "-L$$PWD/tbb/lib/intel64/vc12/" -ltbb_debug
     Debug: LIBS += "-L$$PWD/opencv/build/x64/vc12/lib" -lopencv_ts300d -lopencv_world300d
 }
+
+android {
+    #-------------------------------------------------------------
+    #       ANDROID SPECIFIC OPTIONS
+    INCLUDEPATH += $$PWD/boost_1_58_0/
+    INCLUDEPATH += $$PWD/tbb/include/
+    INCLUDEPATH += $$PWD/opencv/build/include/
+
+    LIBS += "-L/home/pramod/NVPACK/OpenCV-2.4.8.2-Tegra-sdk/sdk/native/libs/x86" -lopencv_core -lopencv_features2d -lopencv_ts -lopencv_imgproc -lopencv_photo -lopencv_objdetect
+    LIBS += "-L/home/pramod/NVPACK/OpenCV-2.4.8.2-Tegra-sdk/sdk/native/3rdparty/libs/x86" -llibpng -llibjpeg
+    LIBS += -lboost_filesystem -lboost_system
+    LIBS += "-L/home/pramod/Dropbox/CDI_PlayGo-Final/Indexer-Minimal/Runtime_Libraries/tbb_android" -ltbb
+}
