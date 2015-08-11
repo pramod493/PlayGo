@@ -6,7 +6,8 @@ SOURCES += \
     $$PWD/touchandholdcontroller.cpp \
     $$PWD/mainsettings.cpp \
     $$PWD/cdState.cpp \
-    $$PWD/sketchstate.cpp
+    $$PWD/sketchstate.cpp \
+    $$PWD/SelectableActions.cpp
 
 HEADERS += \
     $$PWD/PlayGoController.h \
@@ -14,7 +15,8 @@ HEADERS += \
     $$PWD/touchandholdcontroller.h \
     $$PWD/mainsettings.h \
     $$PWD/cdState.cpp \
-    $$PWD/sketchstate.h
+    $$PWD/sketchstate.h \
+    $$PWD/SelectableActions.h
 
 FORMS += \
     $$PWD/mainsettings.ui

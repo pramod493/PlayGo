@@ -1,50 +1,12 @@
 #include "touchandholdcontroller.h"
 #include "PlayGoController.h"
 #include <QRadialGradient>
+#include <QAction>
+#include "QsLog.h"
+#include "SelectableActions.h"
 
 namespace CDI
 {
-	int SelectableActions::dim = 48;
-	SelectableActions::SelectableActions(QAction *action, QGraphicsItem *parent)
-		:QGraphicsEllipseItem(parent)
-	{
-		_action = action;
-		_text = _action->text();
-		QIcon tmpIcon = _action->icon();
-		int _dim = SelectableActions::dim;
-		float ellipseDim = _dim*1.45f;
-		QPixmap tmpPixmap = tmpIcon.pixmap(QSize(_dim,_dim));
-		setRect(-ellipseDim/2, -ellipseDim/2, ellipseDim, ellipseDim);
-		QRadialGradient radialGradient = QRadialGradient(QPointF(0,0), ellipseDim/2.0f);
-		radialGradient.setColorAt(0, Qt::white);
-		radialGradient.setColorAt(0.80f, QColor(255,255,255,200));
-		radialGradient.setColorAt(0.99f, QColor(255,255,255,0));
-		radialGradient.setSpread(QGradient::PadSpread);
-		setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		setBrush(QBrush(radialGradient));
-		setPen(QPen(Qt::NoPen));
-
-		QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(tmpPixmap, this);
-		pixmapItem->setPos(-_dim/2,-_dim/2);
-		pixmapItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		QGraphicsSimpleTextItem* textItem = new QGraphicsSimpleTextItem(_action->text(), this);
-		textItem->setPos(-_dim/2, _dim/2);
-	}
-
-//	QRectF SelectableActions::boundingRect() const
-//	{
-//		return QGraphicsRectItem::boundingRect().adjusted(-5,-5,5,5);
-//	}
-
-	void SelectableActions::trigger()
-	{
-		if (_action)
-		{
-			qDebug() << _action->text() << "triggered";
-			_action->trigger();
-		}
-	}
-
 	TouchAndHoldController::TouchAndHoldController(QObject *parent) : QObject(parent)
 	{
 		_mainController = NULL;
@@ -79,40 +41,40 @@ namespace CDI
 
 		// Connect actions to slots
 		connect(_closeOverlayAction, SIGNAL(triggered()),
-				this, SLOT(signalCloseOverlay()));
+				this, SLOT(slotCloseOverlay()));
 		connect(_componentLockAction, SIGNAL(triggered()),
-				this, SLOT(signalComponentLockAction()));
+				this, SLOT(slotComponentLockAction()));
 		connect(_componentUnlockAction, SIGNAL(triggered()),
-				this, SLOT(signalComponentUnlockAction()));
+				this, SLOT(slotComponentUnlockAction()));
 		connect(_componentEditAction, SIGNAL(triggered()),
-				this, SLOT(signalComponentEditAction()));
+				this, SLOT(slotComponentEditAction()));
 		connect(_componentDisableScaleAction, SIGNAL(triggered()),
-				this, SLOT(signalComponentDisableScaleAction()));
+				this, SLOT(slotComponentDisableScaleAction()));
 		connect(_componentDeleteAction, SIGNAL(triggered()),
-				this, SLOT(signalComponentDeleteAction()));
+				this, SLOT(slotComponentDeleteAction()));
 
 		connect(_enableComponentCollision, SIGNAL(triggered()),
-				this, SLOT(signalEnableCollisionAction()));
+				this, SLOT(slotEnableCollisionAction()));
 		connect(_disableComponentCollision, SIGNAL(triggered()),
-				this, SLOT(signalDisableCollisionAction()));
+				this, SLOT(slotDisableCollisionAction()));
 
 		connect(_jointDeleteAction, SIGNAL(triggered()),
-				this, SLOT(signalJointDelete()));
+				this, SLOT(slotJointDelete()));
 
 		connect(_enableMotorAction, SIGNAL(triggered()),
-				this, SLOT(signalEnableMotor()));
+				this, SLOT(slotEnableMotor()));
 		connect(_disableMotorAction, SIGNAL(triggered()),
-				this, SLOT(signalDisableMotor()));
+				this, SLOT(slotDisableMotor()));
 
 		connect(_enableLimitsAction, SIGNAL(triggered()),
-				this, SLOT(signalEnableLimits()));
+				this, SLOT(slotEnableLimits()));
 		connect(_disableLimitsAction, SIGNAL(triggered()),
-				this, SLOT(signalDisableLimits()));
+				this, SLOT(slotDisableLimits()));
 
 		connect(_editJointSpeedAction, SIGNAL(triggered()),
-				this, SLOT(signalEditJointSpeed()));
+				this, SLOT(slotEditJointSpeed()));
 		connect(_editJointTorque, SIGNAL(triggered()),
-				this, SLOT(signalEditJointTorque()));
+				this, SLOT(slotEditJointTorque()));
 
 	}
 
@@ -179,43 +141,44 @@ namespace CDI
 
 		// Add actual stuff
 		float angle = 0;
+		float delta = 60;	// deg
 		float length = 0.75f * dpi;
 
 		SelectableActions* lockItem = new SelectableActions
 				((isItemLocked ? _componentUnlockAction : _componentLockAction), parentGroup);
 		lockItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		lockItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
+		angle += delta;
 
 		SelectableActions* collisionItem = new SelectableActions
 				((itemCollides ? _disableComponentCollision : _enableComponentCollision), parentGroup);
 		collisionItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		collisionItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
+		angle += delta;
 
 		SelectableActions* scaleLockItem = new SelectableActions
 				(_componentDisableScaleAction, parentGroup);
 		scaleLockItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		scaleLockItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
+		angle += delta;
 
 		SelectableActions* deleteItem = new SelectableActions
 				(_componentDeleteAction, parentGroup);
 		deleteItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		deleteItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
+		angle += delta;
 
 		SelectableActions* closeItem = new SelectableActions
 				(_closeOverlayAction, parentGroup);
 		closeItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
+		angle += delta;
 
 		SelectableActions* layerItem = new SelectableActions
 				(_startLayerManager, parentGroup);
 		layerItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		layerItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
+		angle += delta;
 
 		parentGroup->setPos(scenePos);
 		parentGroup->setZValue(Z_UIVIEW);
@@ -281,8 +244,20 @@ namespace CDI
 
 			parentGroup->setPos(scenePos);
 			parentGroup->setZValue(Z_UIVIEW);
+			parentGroup->setPanelModality(QGraphicsItem::SceneModal);
+			parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
 			_mainController->setTapOverride(true);
 		}
+	}
+
+	void TouchAndHoldController::overlayComponentOptions(Component* component)
+	{
+
+	}
+
+	void TouchAndHoldController::overlayJointOptions(JointGraphics *jointgraphics)
+	{
+
 	}
 
 	bool TouchAndHoldController::handleTapAndHold(QEvent *event)
@@ -292,11 +267,29 @@ namespace CDI
 		case QEvent::TouchBegin :
 		{
 			event->accept();
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
+			const QTouchEvent::TouchPoint &tp = touchpoints.first();
+			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			handleSelection(scenePos, UI::Began);
 			return true;
 		}
 		case QEvent::TouchUpdate :
+		{
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
+			const QTouchEvent::TouchPoint &tp = touchpoints.first();
+			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			handleSelection(scenePos, UI::Update);
+			return true;
+		}
 		case QEvent::TouchCancel :
 		{
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
+			const QTouchEvent::TouchPoint &tp = touchpoints.first();
+			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			handleSelection(scenePos, UI::Cancel);
 			return true;
 		}
 		case QEvent::TouchEnd :
@@ -305,12 +298,19 @@ namespace CDI
 			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
 			const QTouchEvent::TouchPoint &tp = touchpoints.first();
 			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
-			handleSelection(scenePos);
+			handleSelection(scenePos, UI::End);
 			return true;
-			break;
 		}
 		case QEvent::MouseButtonDblClick :
+		{
+			break;
+		}
 		case QEvent::MouseButtonPress :
+		{
+			QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+			handleSelection(_mainController->_view->mapToScene(mouseEvent->pos()), UI::Began);
+			return true;
+		}
 		case QEvent::MouseMove :
 		{
 			return true;
@@ -319,20 +319,20 @@ namespace CDI
 		case QEvent::MouseButtonRelease :
 		{
 			QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-			handleSelection(_mainController->_view->mapToScene(mouseEvent->pos()));
+			handleSelection(_mainController->_view->mapToScene(mouseEvent->pos()), UI::End);
 		}
 		case QEvent::TabletPress :
 		case QEvent::TabletMove :
 		{
-			return true;
-			break;
+				QTabletEvent* tabletEvent = static_cast<QTabletEvent*>(event);
+				handleSelection(_mainController->_view->mapToScene(tabletEvent->pos()), UI::Update);
+				return true;
 		}
 		case QEvent::TabletRelease :
 		{
 			QTabletEvent* tabletEvent = static_cast<QTabletEvent*>(event);
-			handleSelection(_mainController->_view->mapToScene(tabletEvent->pos()));
+			handleSelection(_mainController->_view->mapToScene(tabletEvent->pos()), UI::End);
 			return true;
-			break;
 		}
 		case QEvent::Gesture :
 		{
@@ -343,31 +343,49 @@ namespace CDI
 		return false;
 	}
 
-	void TouchAndHoldController::handleSelection(QPointF scenePos)
+	void TouchAndHoldController::handleSelection(QPointF scenePos, UI::EventState inputState)
 	{
 		if (!(_componentEditMode || _jointEditMode))
 		{
-			signalCloseOverlay();
+			slotCloseOverlay();
 			return;
 		}
 
-		QGraphicsScene *scene = _mainController->_scene;
-		QList<QGraphicsItem*> items = scene->items(scenePos, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder,
-					 _mainController->_view->transform());
-		for (QList<QGraphicsItem*>::const_iterator it = items.constBegin();
-			 it != items.constEnd(); ++it)
+		switch (inputState)
 		{
-			QGraphicsItem* graphicsitem = (*it);
-			if (graphicsitem->type() == SelectableActions::Type)
+			case UI::Began :
 			{
-				SelectableActions* selectableAction = qgraphicsitem_cast<SelectableActions*>(graphicsitem);
-				selectableAction->trigger();
-				return;
+				break;
+			}
+			case UI::Update :
+			{
+				break;
+			}
+			case UI::End :
+			{
+				QGraphicsScene *scene = _mainController->_scene;
+				QList<QGraphicsItem*> items = scene->items(scenePos, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder,
+							 _mainController->_view->transform());
+				for (QList<QGraphicsItem*>::const_iterator it = items.constBegin();
+					 it != items.constEnd(); ++it)
+				{
+					QGraphicsItem* graphicsitem = (*it);
+					if (graphicsitem->type() == SelectableActions::Type)
+					{
+						SelectableActions* selectableAction = qgraphicsitem_cast<SelectableActions*>(graphicsitem);
+						selectableAction->trigger();
+						return;
+					}
+				}
+			}
+			case UI::Cancel :
+			{
+				// This might not be meaningful in many cases
 			}
 		}
 	}
 
-	void TouchAndHoldController::signalCloseOverlay()
+	void TouchAndHoldController::slotCloseOverlay()
 	{
 		if (parentGroup)
 			delete parentGroup;
@@ -382,103 +400,100 @@ namespace CDI
 		_mainController->setTapOverride(false);
 	}
 
-	void TouchAndHoldController::signalComponentLockAction()
+	void TouchAndHoldController::slotComponentLockAction()
 	{
 		if (_componentEditMode)
 		{
 			_selectedComponent->setStatic(true);
-			signalCloseOverlay();
+			slotCloseOverlay();
 		}
 	}
 
-	void TouchAndHoldController::signalComponentUnlockAction()
+	void TouchAndHoldController::slotComponentUnlockAction()
 	{
-		if (_componentEditMode)
-		{
-			_selectedComponent->setStatic(false);
-			signalCloseOverlay();
-		}
+		if (!_componentEditMode) return;
+		_selectedComponent->setStatic(false);
+		slotCloseOverlay();
 	}
 
-	void TouchAndHoldController::signalComponentEditAction()
+	void TouchAndHoldController::slotComponentEditAction()
 	{
-
+			if (!_componentEditMode) return;
+			// TODO - launch edit window
 	}
 
-	void TouchAndHoldController::signalComponentDisableScaleAction()
+	void TouchAndHoldController::slotComponentDisableScaleAction()
 	{
-		if (_componentEditMode)
-		{
-			_selectedComponent->disableScaling = !(_selectedComponent->disableScaling);
-			signalCloseOverlay();
-		}
+		if (!_componentEditMode) return;
+		_selectedComponent->disableScaling = !(_selectedComponent->disableScaling);
+		slotCloseOverlay();
 	}
 
-	void TouchAndHoldController::signalComponentDeleteAction()
+	void TouchAndHoldController::slotComponentDeleteAction()
 	{
-        if (_componentEditMode)
+    if (_componentEditMode)
 		{
 			_mainController->_page->destroyComponent(_selectedComponent);
-			signalCloseOverlay();
+			slotCloseOverlay();
 		}
 	}
 
-	void TouchAndHoldController::signalEnableCollisionAction()
+	void TouchAndHoldController::slotEnableCollisionAction()
 	{
 		if (_componentEditMode)
 		{
 			_selectedComponent->groupIndex = 1;
 			_selectedComponent->onCollisionBitsUpdate();
-			signalCloseOverlay();
+			slotCloseOverlay();
 		}
 	}
 
-	void TouchAndHoldController::signalDisableCollisionAction()
+	void TouchAndHoldController::slotDisableCollisionAction()
 	{
 		if (_componentEditMode)
 		{
 			_selectedComponent->groupIndex = -1;
 			_selectedComponent->onCollisionBitsUpdate();
-			signalCloseOverlay();
+			slotCloseOverlay();
 		}
 	}
 
-	void TouchAndHoldController::signalJointDelete()
+	void TouchAndHoldController::slotJointDelete()
 	{
 		if (_jointDeleteAction)
 		{
 			_mainController->_page->getPhysicsManager()->deleteJoint(_selectedJoint->getPhysicsJoint());
 			delete _selectedJoint;
-			signalCloseOverlay();
+			slotCloseOverlay();
 		}
 	}
 
-	void TouchAndHoldController::signalEnableMotor()
+	void TouchAndHoldController::slotEnableMotor()
 	{
 
 	}
 
-	void TouchAndHoldController::signalDisableMotor()
+	void TouchAndHoldController::slotDisableMotor()
 	{
 
 	}
 
-	void TouchAndHoldController::signalEnableLimits()
+	void TouchAndHoldController::slotEnableLimits()
 	{
 
 	}
 
-	void TouchAndHoldController::signalDisableLimits()
+	void TouchAndHoldController::slotDisableLimits()
 	{
 
 	}
 
-	void TouchAndHoldController::signalEditJointSpeed()
+	void TouchAndHoldController::slotEditJointSpeed()
 	{
 
 	}
 
-	void TouchAndHoldController::signalEditJointTorque()
+	void TouchAndHoldController::slotEditJointTorque()
 	{
 
 	}

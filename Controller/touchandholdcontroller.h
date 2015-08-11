@@ -2,38 +2,20 @@
 #define TOUCHANDHOLDCONTROLLER_H
 
 #include <QObject>
-#include <QAction>
 #include <QGraphicsItem>
 #include <QGraphicsItemGroup>
 #include "cdi2qtwrapper.h"
 #include "commonfunctions.h"
 #include "physicsjoint.h"
+#include "SelectableActions.h"
 
 class QGraphicsView;
+class QAction;
 namespace CDI
 {
 	class PlayGoController;
 	class Component;
 	class PhysicsJoint;
-	class SelectableActions : public QGraphicsEllipseItem
-	{
-	protected:
-		QAction *_action;
-		QString _text;
-
-	public:
-		enum {Type = UserType + UI_SELECTABLE_ACTIONS };
-		static int dim;
-	public :
-		SelectableActions(QAction *action, QGraphicsItem* parent);
-
-//		QRectF boundingRect() const;
-
-		int type() const { return Type; }
-
-		virtual void trigger();
-	};
-
 	class TouchAndHoldController : public QObject
 	{
 		Q_OBJECT
@@ -77,31 +59,33 @@ namespace CDI
 
 		void enableOverlay(Component* component, QPointF scenePos);
 		void enableOverlay(JointGraphics* jointGraphics, QPointF scenePos);
+		void overlayComponentOptions(Component* component);
+		void overlayJointOptions(JointGraphics *jointgraphics);
 
 		bool handleTapAndHold(QEvent *event);
 
 	protected:
-		void handleSelection(QPointF scenePos);
+		void handleSelection(QPointF scenePos, UI::EventState inputState);
 
 	signals:
 
 	public slots:
-		void signalCloseOverlay();
-		void signalComponentLockAction();
-		void signalComponentUnlockAction();
-		void signalComponentEditAction();
-		void signalComponentDisableScaleAction();
-		void signalComponentDeleteAction();
-		void signalEnableCollisionAction();
-		void signalDisableCollisionAction();
+		void slotCloseOverlay();
+		void slotComponentLockAction();
+		void slotComponentUnlockAction();
+		void slotComponentEditAction();
+		void slotComponentDisableScaleAction();
+		void slotComponentDeleteAction();
+		void slotEnableCollisionAction();
+		void slotDisableCollisionAction();
 
-		void signalJointDelete();
-		void signalEnableMotor();
-		void signalDisableMotor();
-		void signalEnableLimits();
-		void signalDisableLimits();
-		void signalEditJointSpeed();
-		void signalEditJointTorque();
+		void slotJointDelete();
+		void slotEnableMotor();
+		void slotDisableMotor();
+		void slotEnableLimits();
+		void slotDisableLimits();
+		void slotEditJointSpeed();
+		void slotEditJointTorque();
 
 	};
 }
