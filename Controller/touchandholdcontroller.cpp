@@ -428,12 +428,18 @@ namespace CDI
 		RangeSelector* startSelector = new RangeSelector(parentGroup);
 		startSelector->setPen(pen);
 		startSelector->setBrush(QBrush(QColor(255,100,100)));
-		startSelector->setAngle(0);
+		startSelector->setAngle(0);	// start angle
 
 		RangeSelector* endSelector = new RangeSelector(parentGroup);
 		endSelector->setPen(pen);
 		endSelector->setBrush(QBrush(QColor(100,100,255)));
-		endSelector->setAngle(45);
+		endSelector->setAngle(45);	// end angle
+
+		// Close button
+		SelectableActions* closeItem = new SelectableActions
+				(_closeOverlayAction, parentGroup);
+		closeItem->setPos(0,0);
+		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
 		parentGroup->setPos(scenePos);
 		parentGroup->setZValue(Z_UIVIEW);
