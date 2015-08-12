@@ -1,8 +1,100 @@
 #include "cdi2qtwrapper.h"
 #include "commonfunctions.h"
+#include <QTouchEvent>
+#include <QTouchDevice>
+#include <QMap>
 
 namespace CDI
 {
+	int sessionId = 0;
+	bool touchConvertInit = false;
+	QMap<int, QTouchEvent::TouchPoint> *cdTouchPointMap;
+
+	QTouchEvent* convertToTouchEvent(QGraphicsView* view,
+			 QGraphicsScene* scene, QPointF viewPos, UI::EventState eventState)
+	{
+		if (!touchConvertInit)
+		{
+			cdTouchPointMap = new QMap<int, QTouchEvent::TouchPoint>();
+			touchConvertInit = true;
+		}
+
+		// Use QTuio approach to convert cursor info to touch
+		if (sessionId == 0 || eventState == UI::Began) sessionId = 1;	// Always use this ID
+
+		QEvent::Type eventType = QEvent::None;
+
+		QTouchEvent::TouchPoint touchPoint(sessionId);
+
+		touchPoint.setPressure(1.0);
+		touchPoint.setPos(viewPos);
+		touchPoint.setScenePos(view->mapToScene(viewPos.toPoint()));
+		touchPoint.setSceneRect(scene->sceneRect());
+
+		Qt::TouchPointStates touchPointStates;
+
+		switch (eventState)
+		{
+			case UI::Began :
+			{
+				touchPoint.setState(Qt::TouchPointPressed);
+				touchPointStates = Qt::TouchPointPressed;
+				eventType = QEvent::TouchBegin;
+
+				// Since it is start, set the last frame value to be same as current one
+				touchPoint.setLastPos(viewPos);
+				touchPoint.setLastScenePos(touchPoint.scenePos());
+
+				touchPoint.setStartPos(viewPos);
+				touchPoint.setStartScenePos(touchPoint.scenePos());
+
+				cdTouchPointMap->insert(sessionId, touchPoint);
+				break;
+			}
+			case UI::Update :
+			{
+				touchPointStates = Qt::TouchPointMoved;	// Need to add stationary options too
+				touchPoint.setState(Qt::TouchPointMoved);
+
+				touchPoint.setStartPos(cdTouchPointMap->value(sessionId).startPos());
+				touchPoint.setStartScenePos(cdTouchPointMap->value(sessionId).startScenePos());
+
+				touchPoint.setLastPos(cdTouchPointMap->value(sessionId).pos());
+				touchPoint.setLastScenePos(cdTouchPointMap->value(sessionId).scenePos());
+
+				cdTouchPointMap->insert(sessionId, touchPoint);	// clear last one
+				break;
+			}
+			case UI::End :
+			{
+				touchPointStates = Qt::TouchPointReleased;	// Need to add stationary options too
+				touchPoint.setState(Qt::TouchPointReleased);
+
+				touchPoint.setStartPos(cdTouchPointMap->value(sessionId).startPos());
+				touchPoint.setStartScenePos(cdTouchPointMap->value(sessionId).startScenePos());
+
+				touchPoint.setLastPos(cdTouchPointMap->value(sessionId).pos());
+				touchPoint.setLastScenePos(cdTouchPointMap->value(sessionId).scenePos());
+
+				cdTouchPointMap->insert(sessionId, touchPoint);	// clear last one
+
+				sessionId = 0;
+				break;
+			}
+			case UI::Cancel :
+			{
+				break;
+			}
+		}
+
+		QTouchDevice touchDevice = QTouchDevice();
+		touchDevice.setType(QTouchDevice::TouchScreen);
+
+		QList<QTouchEvent::TouchPoint> points; points.push_back(touchPoint);	// It's only one
+		//QTouchEvent* touchEvent = new QTouchEvent(1);
+		return NULL;
+	}
+
 	// TODO - Implement
 	// \todo - Implement rendering functions
 	// NOTE - make sure that the paitner is already transformed w.r.t. Item

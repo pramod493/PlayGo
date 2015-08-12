@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __CDI2QTWRAPPER_H__
+#define __CDI2QTWRAPPER_H__
 
 #include <QPainter>
 #include <QPainterPath>
@@ -10,8 +11,11 @@
 #include <vector>
 #include "poly2tri.h"
 
+#include <QGraphicsView>
+
 using namespace std;
 
+class QTouchEvent;
 namespace CDI
 {
 	// create a list of IDs which will be assigned to qgraphicsitem which in turn can be used to
@@ -42,6 +46,9 @@ namespace CDI
 	const float Z_POLYGONVIEW		= 0.2f;
 	const float Z_STROKEVIEW		= 0.3f;
 	const float Z_JOINTVIEW			= 0.9f;
+
+	QTouchEvent* convertToTouchEvent(QGraphicsView* view,
+			 QGraphicsScene* scene, QPointF viewPos, UI::EventState eventState);
 
 	// This section will create various paint
 	// functions which will be helpful in rendering
@@ -112,3 +119,5 @@ namespace CDI
 		static CommonDrawFunctions* _instance;
 	};
 }
+
+#endif //__CDI2QTWRAPPER_H__
