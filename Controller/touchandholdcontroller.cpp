@@ -4,11 +4,84 @@
 #include <QAction>
 #include "QsLog.h"
 #include "SelectableActions.h"
-
+#include <QTouchEvent>
 namespace CDI
 {
+	RangeSelector::RangeSelector(QGraphicsItem *graphicsparent)
+		: QObject(NULL), QGraphicsPathItem(graphicsparent)
+	{
+		// No need to set the pen info here. We will do outside
+		QPainterPath painterPath;
+		int lineLength = 150;
+		int radius = 30;
+		painterPath.moveTo(0,0);
+		painterPath.lineTo(0, lineLength);
+		painterPath.addEllipse(lineLength, -radius, 2*radius, 2*radius);
+		setPath(painterPath);
+
+		setAcceptTouchEvents(true);
+
+		_angle = 0;
+		_itemIsLocked = false;
+		_startPos = QPointF();
+		_prevPos = QPointF();
+	}
+
+	int RangeSelector::currentAngle()
+	{
+		return _angle;
+	}
+
+	void RangeSelector::setAngle(int value)
+	{
+
+	}
+
+	void RangeSelector::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
+	{
+
+	}
+
+	void RangeSelector::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
+	{
+
+	}
+
+	void RangeSelector::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
+	{
+
+	}
+
+	bool RangeSelector::sceneEvent(QEvent* event)
+	{
+		switch (event->type())
+		{
+		case QEvent::TouchBegin :
+		{
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			_itemIsLocked = true;
+			event->accept();
+			return true;
+		}
+		case QEvent::TouchUpdate :
+		case QEvent::TouchEnd :
+		case QEvent::TouchCancel :
+		{
+
+		}
+		default :
+			break;
+		}
+		// handle rest of the events in similat manner
+		return QGraphicsPathItem::sceneEvent(event);
+	}
+
+	/*-------------------------------------------------------------------------
+	------- TouchAndHoldController class Begin -------------------------------*/
 	TouchAndHoldController::TouchAndHoldController(QObject *parent) : QObject(parent)
 	{
+		dpi = 175;
+
 		_mainController = NULL;
 
 		_closeOverlayAction			= new QAction(QIcon(":/images/overlay/close-02.png"), tr("Close"), this);
@@ -36,8 +109,9 @@ namespace CDI
 		_componentEditMode = false;
 		_jointEditMode = false;
 
-		_selectedComponent = NULL;
-		_selectedJoint = NULL;
+		_selectedComponent 		= NULL;
+		_selectedJoint 			= NULL;
+		_selectedPhysicsJoint 	= NULL;
 
 		// Connect actions to slots
 		connect(_closeOverlayAction, SIGNAL(triggered()),
@@ -100,7 +174,6 @@ namespace CDI
 		if (parentGroup)
 			delete parentGroup;
 
-		int dpi = 175;
 		float center_radius = 0.25f * dpi;
 		float ring_radius = 1.0f * dpi;
 
@@ -197,7 +270,6 @@ namespace CDI
 			if (parentGroup)
 				delete parentGroup;
 
-			int dpi = 175;
 			float center_radius = 0.25f * dpi;
 			float ring_radius = 1.0f * dpi;
 
@@ -248,6 +320,43 @@ namespace CDI
 			parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
 			_mainController->setTapOverride(true);
 		}
+	}
+
+	void TouchAndHoldController::enableMotorRangeSelection(PhysicsJoint *physicsJoint, QPointF scenePos)
+	{
+		if (_mainController == NULL || _view == NULL) return;
+		if (parentGroup) delete parentGroup;
+
+		float center_radius = 0.15f * dpi;
+		float ring_radius = 0.75f * dpi;
+
+		parentGroup = new QGraphicsItemGroup;
+		_mainController->_scene->addItem(parentGroup);
+
+		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+		QGraphicsPathItem* decor = new QGraphicsPathItem(parentGroup);
+		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+
+		// Set up colors
+		QPen pen = QPen();
+		QColor penColor = Qt::green; //QColor(200,200,255);
+		pen.setColor(penColor);
+		pen.setWidth(3);
+		QBrush brush = QBrush(Qt::SolidPattern);
+		brush.setColor((penColor.setAlpha(200), penColor.lighter(75)));
+
+		// Set up decor
+		QPainterPath path;
+		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
+		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
+		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
+		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
+		decor->setPath(path);
+		decor->setPen(pen);
+		decor->setBrush(brush);
+
+
+
 	}
 
 	void TouchAndHoldController::overlayComponentOptions(Component* component)
@@ -431,7 +540,7 @@ namespace CDI
 
 	void TouchAndHoldController::slotComponentDeleteAction()
 	{
-    if (_componentEditMode)
+	if (_componentEditMode)
 		{
 			_mainController->_page->destroyComponent(_selectedComponent);
 			slotCloseOverlay();

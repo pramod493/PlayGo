@@ -39,7 +39,7 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 	// QDockWidget* treeDock = new QDockWidget(parent);
 	// treeDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
 	// 					  Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-  //   treeDock->setWidget(tree);
+	// treeDock->setWidget(tree);
 	tree = NULL;
 
 	_toplevelWindow = parent;
@@ -217,9 +217,10 @@ void PlayGoController::shapePress(QPointF pos)
 	_currentPolygon->push_point(pos);
 
 	_fillPen = _defaultPen;
+	_fillPen.setWidth(3);
 	QColor tmpColor = _fillPen.color().lighter();
 	_fillBrush.setColor(tmpColor);
-	_currentPolygon->setPen(_defaultPen);
+	_currentPolygon->setPen(_fillPen);
 	_currentPolygon->setBrush(_fillBrush);
 	_isDrawingPolygon = true;
 }
@@ -325,63 +326,25 @@ void PlayGoController::lassoRelease(QPointF pos)
 
 void PlayGoController::connectPress(QPointF scenePos)
 {
-	_page->onSimulationStepStart();	// update all pending component positions
+	// update all pending component positions so that physics engine works on
+	// the updated configuration
+	_page->onSimulationStepStart();
 	switch (_activeConnectionMode)
 	{
 	case GestureSketch :
-	{
 		gestureSketchModeFilter(scenePos, UI::Began);
 		break;
-	}
 	case HingeJoint :
-	{
-		// Do on release
+		hingeJointModeFilter(scenePos, UI::Began);
 		break;
-	}
 	case SliderJoint :
-	{
-		if (_sliderComponentA && _sliderComponentB)
-		{
-			_sliderStartPos = scenePos;
-			if (_sliderLineItem) delete _sliderLineItem;
-			_sliderLineItem = new QGraphicsLineItem(QLineF(_sliderStartPos, _sliderStartPos));
-			_scene->addItem(_sliderLineItem);
-		}
+		sliderJointModeFilter(scenePos, UI::Began);
 		break;
-	}
 	case SpringJoint :
-	{
-		break;
-	}
+		break;		// Nothing to do for spring joint
 	case ApplyForce :
-	{
-		// TODO - Default to application of force
-		QList<QGraphicsItem*> selections = _scene->items(scenePos,
-														 Qt::IntersectsItemBoundingRect);
-		if (selections.size() == 0) break;
-
-		foreach(QGraphicsItem* graphicsitem, selections)
-		{
-			if (graphicsitem->type() != Pixmap::Type) continue;
-			// Must have a component attached
-			if (graphicsitem->parentItem() == NULL) continue;
-			// Pixmap must be of type component
-			if (graphicsitem->parentItem()->type() != Component::Type) continue;
-
-			Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
-			// We will use the shape for later stages
-			if (pixmap->contains(pixmap->mapFromScene(scenePos)) == false) continue;
-			Component* component
-					= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
-			QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
-			forceLine = new ForceGraphicsItem(0,0,0,0);
-			forceLine->setTransform(t);
-			_scene->addItem(forceLine);
-			component->addToComponent(forceLine);
-			return;
-		}
+		forceModeFilter(scenePos, UI::Began);
 		break;
-	}
 	}
 }
 
@@ -390,270 +353,46 @@ void PlayGoController::connectMove(QPointF scenePos)
 	switch (_activeConnectionMode)
 	{
 	case GestureSketch :
-	{
-		gestureSketchModeFilter(scenePos, UI::Began);
+		gestureSketchModeFilter(scenePos, UI::Update);
 		break;
-	}
 	case HingeJoint :
+		hingeJointModeFilter(scenePos, UI::Update);
 		break;
 	case SliderJoint :
-	{
-		if (_sliderLineItem)
-		{
-			_sliderEndPos = scenePos;
-			_sliderLineItem->setLine(QLineF(_sliderStartPos, _sliderEndPos));
-		}
+		sliderJointModeFilter(scenePos, UI::Update);
 		break;
-	}
 	case SpringJoint :
 		break;
 	case ApplyForce :
-	{
-		if (forceLine)
-		{
-			QPointF tPos = forceLine->mapFromScene(scenePos);
-			forceLine->setLine(0,0,tPos.x(),tPos.y());
-		}
+		forceModeFilter(scenePos, UI::Update);
 		break;
-	}
 	}
 }
 
 void PlayGoController::connectRelease(QPointF scenePos)
 {
-	_page->onSimulationStepStart();
+	_page->onSimulationStepStart();	// Update all pending updates
 	switch (_activeConnectionMode)
 	{
 	case GestureSketch :
-	{
-		if (_currentConnectStroke)
-		{
-			_currentConnectStroke->push_point(scenePos);
-
-			sketchRecognizer->addStroke(_currentConnectStroke->points);
-			_tmpStrokes.push_back(_currentConnectStroke);
-			sketchRecognizer->gbRecognize();
-
-			_currentConnectStroke = NULL;
-		}
+		gestureSketchModeFilter(scenePos, UI::End);
 		break;
-	}
 	case StaticJoint :
-	{
-		QList<Component*> components = getSelectableComponentsByPhysics(scenePos);
-		if (components.size())
-		{
-			Component* component = components[0];
-			if (component->isStatic())
-				component->setStatic(false);
-			else
-				component->setStatic(true);
-		}
+		staticJointModeFilter(scenePos, UI::End);
 		break;
-	}
 	case HingeJoint :
-	{
-		QList<Component*> itemsToUse = getSelectableComponentsByPhysics(scenePos);
-
-		if (itemsToUse.size() >= 2)
-		{	// Ignore all other components under selection
-			Component *c1 = itemsToUse[0];
-			Component *c2 = itemsToUse[1];
-
-			if (c1->id() == c2->id())
-			{
-				if (itemsToUse.size() > 2)
-				{
-					c2 = itemsToUse[2];
-				}
-			}
-
-			bool b_enableMotor = false;
-			float f_motorSpeed = 0;
-			float f_motorTorque = 0;
-			if (enableMotorCheckbox->isChecked())
-			{
-				b_enableMotor = true;
-				bool ok;
-				int speed = motorSpeed->text().toInt(&ok);
-				if (ok) f_motorSpeed = speed;		//revolutJointDef.motorSpeed = speed * 2.0f *3.14f;
-				int torque = motorTorque->text().toInt(&ok);
-				if (ok)	 f_motorTorque = torque;	//revolutJointDef.maxMotorTorque = torque;
-			}
-			PhysicsJoint* physicsJoint = _page->getPhysicsManager()->createPinJoint(
-						c1, c2, scenePos,
-						b_enableMotor, false,
-						f_motorSpeed, f_motorTorque,
-						0, 0);
-			JointGraphics* jointView = new PinJointGraphics(physicsJoint, c1);
-			jointView->setPos(c1->mapFromScene(scenePos));
-
-			// Disable motor because we are not in the play mode. Motor might ruin things
-			if (b_enableMotor)
-			{
-				b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
-				revoluteJoint->EnableMotor(false);
-			}
-		}
+		hingeJointModeFilter(scenePos, UI::End);
 		break;
-	}
 	case SliderJoint :
-	{
-		if (_sliderComponentA == NULL)
-		{
-			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
-			if (selection.size())
-			{
-				_sliderComponentA = selection[0];
-				_sliderComponentA->setOpacity(1.0f);
-			}
-		} else if (_sliderComponentB == NULL)
-		{
-			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
-			if (selection.size())
-			{
-				if (_sliderComponentA == selection[0])
-				{
-					if (selection.size() > 1)
-					{
-						_sliderComponentB = selection[1];
-						_sliderComponentB->setOpacity(1.0f);
-					}
-				} else
-				{
-					_sliderComponentB = selection[0];
-					_sliderComponentB->setOpacity(1.0f);
-				}
-			}
-		} else
-		{
-			_sliderEndPos = scenePos;
-			{
-				QGraphicsPathItem* pathitem = new QGraphicsPathItem;
-				QPainterPath path;
-				int width = 30;
-				QLineF line = QLineF(_sliderStartPos, _sliderEndPos);
-				int n = static_cast<int>(line.length()/width);
-				line.setLength(width);
-				QPointF movePos = line.p2() - line.p1();
-				QLineF normal = line.normalVector();
-				normal.setLength(width);
-				QPointF normalPos = normal.p2() - normal.p1();
-
-				path.moveTo(_sliderStartPos);
-				for (int i=0; i < n; i++)
-				{
-					path.lineTo(line.x2()+normalPos.x(), line.y2()+normalPos.y());
-					line.translate(movePos);
-					path.lineTo(line.x2(), line.y2());
-				}
-				pathitem->setPath(path);
-
-				QPen linePen = QPen(Qt::red);
-				linePen.setWidth(3);
-				pathitem->setPen(linePen);
-				_scene->addItem(pathitem);
-			}
-			// Check for lines
-			QLineF lineA = QLineF(_sliderComponentA->mapFromScene(_sliderStartPos),
-								  _sliderComponentA->mapFromScene(_sliderEndPos));
-			QLineF lineB = QLineF(_sliderComponentB->mapFromScene(_sliderStartPos),
-								  _sliderComponentB->mapFromScene(_sliderEndPos));
-
-
-
-			QVector2D vecA = QVector2D(lineA.p2() - lineA.p1());
-			//QVector2D vecB = QVector2D(lineB.p2() - lineB.p1());
-			QVector2D vectorGlobal = QVector2D(_sliderEndPos-_sliderStartPos);
-
-			float physicsScale = getPhysicsScale();
-
-			b2PrismaticJointDef sliderDef;
-			sliderDef.bodyA = _sliderComponentA->physicsBody();
-			sliderDef.bodyB = _sliderComponentB->physicsBody();
-			sliderDef.collideConnected = false;
-
-			sliderDef.localAxisA.Set(vecA.x(), vecA.y());
-			sliderDef.localAxisA.Normalize();
-
-			sliderDef.localAnchorA.Set(lineA.p1().x()/physicsScale, lineA.p1().y()/physicsScale);
-			sliderDef.localAnchorB.Set(lineB.p1().x()/physicsScale, lineB.p1().y()/physicsScale);
-
-			sliderDef.enableLimit = true;
-			sliderDef.lowerTranslation = 0;
-			sliderDef.upperTranslation = vectorGlobal.length()/physicsScale;
-
-//			sliderDef.referenceAngle =
-//					_sliderComponentA->physicsBody()->GetAngle() -
-//					_sliderComponentB->physicsBody()->GetAngle();
-
-			if (enableMotorCheckbox->isChecked())
-			{
-				sliderDef.enableMotor = true;
-				bool ok;
-				int speed = motorSpeed->text().toInt(&ok);
-				if (ok) sliderDef.motorSpeed = speed;
-				int torque = motorTorque->text().toInt(&ok);
-				if (ok)	sliderDef.maxMotorForce = torque;
-			} else
-			{
-				sliderDef.enableMotor = false;
-			}
-
-			b2Joint* joint = _page->getPhysicsManager()->_b2World->CreateJoint(&sliderDef);
-			b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
-			//                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
-			_sliderComponentA->addToComponent(_sliderLineItem);
-
-			_sliderComponentA->setOpacity(0.5f);
-			_sliderComponentB->setOpacity(0.5f);
-
-			_sliderLineItem = 0;
-			_sliderComponentA = 0;
-			_sliderComponentB = 0;
-		}
+		sliderJointModeFilter(scenePos, UI::End);
 		break;
-	}
 	case SpringJoint :
 		break;
 	case ApplyForce :
-	{
-
-		if (forceLine == NULL)
-		{
-			QLOG_ERROR() << "ERROR!! forceLine should not be NULL.";
-			return;
-		}
-
-		QPointF tPos = forceLine->mapFromScene(scenePos);
-		forceLine->setLine(0,0,tPos.x(),tPos.y());
-
-		if (forceLine->parentItem())
-		{
-			if (forceLine->parentItem()->type() == Component::Type)
-			{
-				Component* parentComponent = qgraphicsitem_cast<Component*>(forceLine->parentItem());
-				if (parentComponent->physicsBody())
-				{
-					QPointF forceorigin = forceLine->mapToParent(QPointF(0,0));
-					QPointF forcevector = forceorigin - forceLine->mapToParent(tPos);
-					/*float forceScale = 1.0f;
-						float physicsScale = getPhysicsScale();
-						parentComponent->physicsBody()->ApplyForce
-								(b2Vec2(forcevector.x()/forceScale, forcevector.y()/forceScale),
-								 b2Vec2(forceorigin.x()/physicsScale, forceorigin.y()/physicsScale),
-								 true);
-						*/
-					parentComponent->physicsBody()->SetLinearVelocity(b2Vec2(forcevector.x(), forcevector.y()));
-
-					qDebug() << "Force output" << forceorigin << forcevector;
-				}
-			}
-		}
-		delete forceLine;
-		forceLine = NULL;
+		forceModeFilter(scenePos, UI::End);
 		break;
-	}
+	default:
+		break;	// Nothing to do
 	}
 }
 
@@ -775,6 +514,12 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 			if (ok) f_motorSpeed = speed;		//revolutJointDef.motorSpeed = speed * 2.0f *3.14f;
 			int torque = motorTorque->text().toInt(&ok);
 			if (ok)	 f_motorTorque = torque;	//revolutJointDef.maxMotorTorque = torque;
+
+			enableMotorCheckbox->setChecked(false);
+		}
+		{
+			// Allow searching/creation of stepping options
+
 		}
 		PhysicsJoint* physicsJoint = _page->getPhysicsManager()->createPinJoint(
 					c1, c2, scenePos,
@@ -926,7 +671,7 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 				sliderDef.enableMotor = false;
 			}
 
-			b2Joint* joint = _page->getPhysicsManager()->_b2World->CreateJoint(&sliderDef);
+			b2Joint* joint = _page->getPhysicsManager()->createJoint(sliderDef);
 			b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
 			//                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
 			_sliderComponentA->addToComponent(_sliderLineItem);
@@ -944,6 +689,89 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 	{
 		break;
 	}
+	}
+}
+
+void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventState)
+{
+	switch (eventState)
+	{
+	case UI::Began :
+	{
+		// TODO - Default to application of force
+		QList<QGraphicsItem*> selections = _scene->items(scenePos,
+														 Qt::IntersectsItemBoundingRect);
+		if (selections.size() == 0) break;
+
+		foreach(QGraphicsItem* graphicsitem, selections)
+		{
+			if (graphicsitem->type() != Pixmap::Type) continue;
+			// Must have a component attached
+			if (graphicsitem->parentItem() == NULL) continue;
+			// Pixmap must be of type component
+			if (graphicsitem->parentItem()->type() != Component::Type) continue;
+
+			Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
+			// We will use the shape for later stages
+			if (pixmap->contains(pixmap->mapFromScene(scenePos)) == false) continue;
+			Component* component
+					= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
+			QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
+			forceLine = new ForceGraphicsItem(0,0,0,0);
+			forceLine->setTransform(t);
+			_scene->addItem(forceLine);
+			component->addToComponent(forceLine);
+			return;
+		}
+		break;
+	}
+	case UI::Update :
+	{
+		if (forceLine)
+		{
+			QPointF tPos = forceLine->mapFromScene(scenePos);
+			forceLine->setLine(0, 0, tPos.x(), tPos.y());
+		}
+		break;
+	}
+	case UI::End :
+	{
+		if (forceLine == NULL)
+		{
+			QLOG_ERROR() << "ERROR!! forceLine should not be NULL.";
+			return;
+		}
+		QPointF tPos = forceLine->mapFromScene(scenePos);
+		forceLine->setLine(0,0,tPos.x(),tPos.y());
+
+		if (forceLine->parentItem())
+		{
+			if (forceLine->parentItem()->type() == Component::Type)
+			{
+				Component* parentComponent = qgraphicsitem_cast<Component*>(forceLine->parentItem());
+				if (parentComponent->physicsBody())
+				{
+					QPointF forceorigin = forceLine->mapToParent(QPointF(0,0));
+					QPointF forcevector = forceorigin - forceLine->mapToParent(tPos);
+					/*float forceScale = 1.0f;
+						float physicsScale = getPhysicsScale();
+						parentComponent->physicsBody()->ApplyForce
+								(b2Vec2(forcevector.x()/forceScale, forcevector.y()/forceScale),
+								 b2Vec2(forceorigin.x()/physicsScale, forceorigin.y()/physicsScale),
+								 true);
+						*/
+					parentComponent->physicsBody()->SetLinearVelocity(b2Vec2(forcevector.x(), forcevector.y()));
+
+					qDebug() << "Force output" << forceorigin << forcevector;
+				}
+			}
+		}
+		delete forceLine;
+		forceLine = NULL;
+		break;
+	}
+	case UI::Cancel :
+		break;
 	}
 }
 
@@ -974,7 +802,7 @@ void PlayGoController::createConnectionsToolbar()
 	forceSelectAction->setCheckable(true);
 	forceSelectAction->setChecked(false);
 
-	connectionOptionsToolbar = new QToolBar(tr("Connect mode toolbar"), _toplevelWindow);
+	connectionOptionsToolbar = new QToolBar(QString("Connect mode toolbar"), _toplevelWindow);
 
 	connectionOptionsToolbar->addAction(scribbleModeSelection);
 	connectionOptionsToolbar->addAction(lockItemAction);

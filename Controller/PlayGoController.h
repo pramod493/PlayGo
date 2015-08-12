@@ -13,7 +13,7 @@
 #include <QPainter>
 
 #include <QTouchDevice>
-#include <QTouchEvent>,
+#include <QTouchEvent>
 #include <QTabletEvent>
 
 #include <QToolBar>
@@ -42,6 +42,7 @@ namespace CDI
 	class ConnectController;
 	class TouchAndHoldController;
 	class cdState;
+
 	/**
 	 * @brief Main controller object. This receives input events from View and Scene
 	 * and modifies the view as well as scene based on that.
@@ -198,6 +199,7 @@ namespace CDI
 		virtual void staticJointModeFilter(QPointF scenePos, UI::EventState eventState);
 		virtual void hingeJointModeFilter(QPointF scenePos, UI::EventState eventState);
 		virtual void sliderJointModeFilter(QPointF scenePos, UI::EventState eventState);
+		virtual void forceModeFilter(QPointF scenePos, UI::EventState eventState);
 
 		void createConnectionsToolbar();
 		void showConnectionsToolbar();
@@ -335,7 +337,7 @@ namespace CDI
 		 * @return
 		 * @remarks Should the events be accepted by Component object in the Scene
 		 */
-	 	void onPhysicsMaskUpdate();
+		void onPhysicsMaskUpdate();
 
 		void connectionModeReset();
 
