@@ -117,7 +117,7 @@ namespace CDI
 		bool _internalLock;
 
 		bool _isRunning;
-public :
+
 		b2World* _b2World;
 protected:
 		bool _enableDebugView;
@@ -179,9 +179,9 @@ protected:
 
 		bool enableDebugView() const;
 
-	protected:
 		virtual b2Joint* createJoint(b2JointDef& jointDef);
 
+	protected:
 		virtual void init();
 
 	signals:

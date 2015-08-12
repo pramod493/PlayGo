@@ -31,7 +31,7 @@ namespace CDI
 		_settings.gravity = settings->gravity;
 		_settings.enableSleep = settings->enableSleep;
 
-        _enableDebugView = true;
+		_enableDebugView = true;
 		init();
 	}
 
@@ -328,10 +328,8 @@ namespace CDI
 
 	void PhysicsManager::setEnableMotor(bool enable)
 	{
-		qDebug() << "All motors " << enable;
 		foreach (PhysicsJoint* physicsJoint, _jointList)
 		{
-			qDebug() << "Inside motor";
 			switch (physicsJoint->_box2dJointType)
 			{
 				case e_revoluteJoint :
@@ -348,9 +346,11 @@ namespace CDI
 					enable ? sliderJoint->EnableMotor(sliderJointDef->enableMotor) : sliderJoint->EnableMotor(false);
 					break;
 				}
+			default:
+				break;
 			}
 
-			if (!enable)
+			if (!enable)	// pause objects when disabling the motor
 			{
 				b2Body* bodyA = physicsJoint->_joint->GetBodyA();
 				b2Body* bodyB = physicsJoint->_joint->GetBodyB();
@@ -362,8 +362,6 @@ namespace CDI
 				bodyB->SetAngularVelocity(0);
 			}
 		}
-
-		QLOG_INFO() << "All joint motor" << enable;
 	}
 
 	void PhysicsManager::setGlobalCollision

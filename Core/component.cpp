@@ -253,6 +253,7 @@ namespace CDI
 		case QEvent::TouchEnd :
 		case QEvent::TouchCancel :
 			event->accept();
+			QMessageBox::about(NULL, "DUMMY", "DUMMY");
 			return touchEvent(static_cast<QTouchEvent*>(event));
 			break;
 		case QEvent::Gesture :
@@ -298,8 +299,6 @@ namespace CDI
 
 	bool Component::touchEvent(QTouchEvent *event)
 	{
-		qDebug() << "Touch event @ component";
-
 		if (event->type()==QEvent::TouchBegin)
 		{
 			// Do not process when the touch event arrives

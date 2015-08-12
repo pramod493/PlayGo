@@ -11,16 +11,27 @@ namespace CDI
         : QToolBar(parent)
     {
         toolbarColors = QList<QColor>();
-        toolbarColors.append(Qt::black);
-        toolbarColors.append(Qt::red);
-        toolbarColors.append(Qt::darkRed);
-        toolbarColors.append(Qt::green);
-        toolbarColors.append(Qt::darkGreen);
-        toolbarColors.append(Qt::blue);
-        toolbarColors.append(Qt::darkBlue);
-        toolbarColors.append(Qt::magenta);
-		toolbarColors.append(Qt::darkYellow);
+        // Check out http://www.w3schools.com/cssref/css_colors.asp for some of
+        // the color codes
+        toolbarColors.append(QColor(064,064,064));
 
+        toolbarColors.append(QColor(128,000,000));
+        toolbarColors.append(QColor(153,000,051));
+        toolbarColors.append(QColor(102,000,102));
+        toolbarColors.append(QColor(153,051,102));
+
+        toolbarColors.append(QColor(000,000,153));
+        toolbarColors.append(QColor(051,051,255));
+        toolbarColors.append(QColor(000,102,255));
+        toolbarColors.append(QColor(000,153,204));
+
+        toolbarColors.append(QColor(051,051,000));
+        toolbarColors.append(QColor(000,102,000));
+        toolbarColors.append(QColor(000,153,051));
+
+        toolbarColors.append(QColor(204,102,000));
+        toolbarColors.append(Qt::darkYellow);
+        
 		srand(111111);	// initialize randomizer
     }
 
