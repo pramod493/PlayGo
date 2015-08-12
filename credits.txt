@@ -1,1 +1,5 @@
 Most of the icons provided by Freepik from [www.flaticon.com]
+
+* Code to convert images between Qt format and OpenCV copied from 
+http://asmaloney.com/2013/11/code/converting-between-cvmat-and-qimage-or-qpixmap/
+
