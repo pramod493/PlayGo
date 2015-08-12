@@ -45,4 +45,37 @@ namespace CDI
 			_action->trigger();
 		}
 	}
+
+    void SelectableActions::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
+    {
+        mouseEvent->accept();
+    }
+
+    void SelectableActions::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
+    {
+
+    }
+
+    void SelectableActions::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
+    {
+        mouseEvent->accept();
+    }
+
+    bool SelectableActions::sceneEvent(QEvent *event)
+    {
+        switch (event->type())
+        {
+            case QEvent::TouchBegin :
+            {
+                event->accept();
+                return true;
+            }
+            case QEvent::TouchEnd :
+            {
+                // Accept only when the touch point still lies on the object
+                
+            }
+        }
+		return QGraphicsEllipseItem::sceneEvent(event);
+    }
 }

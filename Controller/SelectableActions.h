@@ -16,10 +16,17 @@ namespace CDI
   public:
     enum {Type = UserType + UI_SELECTABLE_ACTIONS };
     static int dim;
-    
+
     SelectableActions(QAction *action, QGraphicsItem* parent);
     int type() const;
     virtual void trigger();
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent);
+
+    bool sceneEvent(QEvent *event);
   };
  }
 
