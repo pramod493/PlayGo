@@ -72,27 +72,27 @@ namespace CDI
 			switch (sceneEvent->type())
 			{
 			case QEvent::TouchBegin :
-			{ qDebug() << "Touch begin scene"; break; }
+			{ QLOG_INFO() << "Touch begin scene"; break; }
 			case QEvent::TouchUpdate :
-			{ qDebug() << "Touch update scene"; break; }
+			{ QLOG_INFO() << "Touch update scene"; break; }
 			case QEvent::TouchEnd :
-			{ qDebug() << "Touch end scene"; break; }
+			{ QLOG_INFO() << "Touch end scene"; break; }
 			case QEvent::TouchCancel :
-			{ qDebug() << "Touch cancel scene"; break; }
+			{ QLOG_INFO() << "Touch cancel scene"; break; }
 			case QEvent::TabletPress :
-			{ qDebug() << "Tablet press scene"; break; }
+			{ QLOG_INFO() << "Tablet press scene"; break; }
 			case QEvent::TabletMove :
-			{ qDebug() << "Tablet move scene"; break; }
+			{ QLOG_INFO() << "Tablet move scene"; break; }
 			case QEvent::TabletRelease :
-			{ qDebug() << "Tablet release scene"; break; }
+			{ QLOG_INFO() << "Tablet release scene"; break; }
 			case QEvent::MouseButtonDblClick :
-			{ qDebug() << "Mouse button double click scene"; break; }
+			{ QLOG_INFO() << "Mouse button double click scene"; break; }
 			case QEvent::MouseButtonPress :
-			{ qDebug() << "Mouse button press scene"; break; }
+			{ QLOG_INFO() << "Mouse button press scene"; break; }
 			case QEvent::MouseButtonRelease :
-			{ qDebug() << "Mouse button release scene"; break; }
+			{ QLOG_INFO() << "Mouse button release scene"; break; }
 			case QEvent::MouseMove :
-			{qDebug() << "Mouse move scene"; break;	}
+			{QLOG_INFO() << "Mouse move scene"; break;	}
 			}
 			sceneEvent->accept();
 			return true;
@@ -108,7 +108,7 @@ namespace CDI
 			case QEvent::TouchEnd :
 			case QEvent::TouchCancel :
 			{
-				//qDebug() << "Return:" << retval << "Accept:" << sceneEvent->isAccepted();
+				//QLOG_INFO() << "Return:" << retval << "Accept:" << sceneEvent->isAccepted();
 				emit signalUnacceptedTouchEvent(static_cast<QTouchEvent*>(sceneEvent));
 				sceneEvent->accept();
 				return true;

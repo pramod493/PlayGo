@@ -2,17 +2,17 @@
 
 namespace CDI
 {
-    QDataStream & operator<<(QDataStream & stream, const Point2DPT & point)
-    {
-//		qDebug() << "Serialize " << point;
+	QDataStream & operator<<(QDataStream & stream, const Point2DPT & point)
+	{
+//		QLOG_INFO() << "Serialize " << point;
 		stream << float(point.x()) << float(point.y()) << float(point.pressure()) <<
 				  qint32(point.time());
-        return stream;
-    }
+		return stream;
+	}
 
 	QDataStream & operator >>(QDataStream & stream, Point2DPT & point)
 	{
-//		qDebug() << "Deserialize " << point;
+//		QLOG_INFO() << "Deserialize " << point;
 		float x, y, pressure;
 		qint32 time;
 		stream >> x;
@@ -27,9 +27,9 @@ namespace CDI
 		return stream;
 	}
 
-    QDebug operator<<(QDebug d, const Point2DPT &p)
-    {
-        d.nospace() << "CDI::Point2DPT(" << p.x() << ", " << p.y() <<
+	QDebug operator<<(QDebug d, const Point2DPT &p)
+	{
+		d.nospace() << "CDI::Point2DPT(" << p.x() << ", " << p.y() <<
 					   ", " << p.pressure() << ", " << p.time() <<')';
 		return d;
 	}

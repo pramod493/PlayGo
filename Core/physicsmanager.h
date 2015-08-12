@@ -302,12 +302,12 @@ Q_DECLARE_METATYPE(CDI::PhysicsManager)
 					item->setPos(position.x*item->physicsMultiplier,position.y*item->physicsMultiplier);
 					item->setRotation(angle);
 					update(item->boundingRect());
-					qDebug() << angle << position.x << position.y;
+					QLOG_INFO() << angle << position.x << position.y;
 				}
 			}
 			if (item != NULL)
 			if (item->physicsBody!= NULL)
 			{
-				qDebug() << item->physicsBody->GetAngle();
+				QLOG_INFO() << item->physicsBody->GetAngle();
 			}
 */

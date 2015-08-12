@@ -30,10 +30,10 @@ ReconizerWindow::~ReconizerWindow()
 
 void ReconizerWindow::on_pushButton_clicked()
 {
-    // Actually this is the clear all button
-    GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());
-    myScene->clearStrokes();
-    qDebug() << "Strokes Cleared";
+	// Actually this is the clear all button
+	GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());
+	myScene->clearStrokes();
+	qDebug() << "Strokes Cleared";
 }
 
 void ReconizerWindow::on_detectGestureSelection_clicked()
@@ -47,11 +47,11 @@ void ReconizerWindow::on_addgestureSelection_clicked()
 
 void ReconizerWindow::on_addButon_clicked()
 {
-    // It should response only if add gesture mode selected
+	// It should response only if add gesture mode selected
 
-    // Save the current stroke as template
-    // it's just a file containing 32 normalized points
-    QString gestureClass =  ui->lineEdit->text();
+	// Save the current stroke as template
+	// it's just a file containing 32 normalized points
+	QString gestureClass =  ui->lineEdit->text();
 #ifdef Q_OS_LINUX
 	QString tmpDir = "/home/pramod/Junks/database/gestures/";
 #else
@@ -60,35 +60,35 @@ void ReconizerWindow::on_addButon_clicked()
 
 	tmpDir = tmpDir +gestureClass + "_" + QUuid::createUuid().toString() + ".dat";
 	qDebug() << "Adding gestures to " << tmpDir;
-    if( gestureClass != "" )
-    {
-        GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());
-        myScene->pdRecognizer->savePDRTemplate(tmpDir,gestureClass);
-        myScene->clearStrokes();
-    }
-    else
-    {
-        qDebug() << "Please Input Gesture Name";
-    }
+	if( gestureClass != "" )
+	{
+		GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());
+		myScene->pdRecognizer->savePDRTemplate(tmpDir,gestureClass);
+		myScene->clearStrokes();
+	}
+	else
+	{
+		qDebug() << "Please Input Gesture Name";
+	}
 
-    // After that, we should clear the window?
+	// After that, we should clear the window?
 }
 
 void ReconizerWindow::on_detectGestureSelection_toggled(bool checked)
 {
-    // Recognize the gesture while finishing each strokes
-    // Update search after each new stroke given?
-    // Or maybe we should add a recognize button
+	// Recognize the gesture while finishing each strokes
+	// Update search after each new stroke given?
+	// Or maybe we should add a recognize button
 
 
-    // The way we could do this is set the flag
-    // and the search could be done in mousereleaseevent
+	// The way we could do this is set the flag
+	// and the search could be done in mousereleaseevent
 
 }
 
 void ReconizerWindow::on_DetectButton_clicked()
 {
-    GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());
-    myScene->pdRecognizer->gbRecognize();
-    myScene->clearStrokes();
+	GestureScene* myScene = static_cast<GestureScene*>(ui->graphicsView->scene());
+	myScene->pdRecognizer->gbRecognize();
+	myScene->clearStrokes();
 }

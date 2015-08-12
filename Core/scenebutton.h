@@ -7,7 +7,7 @@
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
 #include <QMessageBox>
-
+#include "QsLog.h"
 namespace CDI
 {
 	class SceneButton : public QGraphicsWidget
@@ -36,7 +36,7 @@ namespace CDI
 	protected:
 		void mousePressEvent(QGraphicsSceneMouseEvent *)
 		{
-			qDebug() << _filePath << "clicked...";
+			QLOG_INFO() << _filePath << "clicked...";
 		}
 
 		void mouseReleaseEvent(QGraphicsSceneMouseEvent *)

@@ -253,7 +253,6 @@ namespace CDI
 		case QEvent::TouchEnd :
 		case QEvent::TouchCancel :
 			event->accept();
-			QMessageBox::about(NULL, "DUMMY", "DUMMY");
 			return touchEvent(static_cast<QTouchEvent*>(event));
 			break;
 		case QEvent::Gesture :

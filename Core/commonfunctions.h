@@ -43,7 +43,7 @@ namespace CDI
 
 	// IMPORTANT - Do not change from CAPS. It creates conflict with class name
 	// Also, MUST update the getItemType() and getSelectionType() function to reflect the changes
-    enum ItemType : int {
+	enum ItemType : int {
 		STROKE = 10,	// geometry
 		IMAGE,
 		POLYGON2D,		// Nothing but objects with holes. Maybe triangulated
@@ -57,21 +57,21 @@ namespace CDI
 		PAGE,
 		ROOT,
 		NONE
-    };
+	};
 
-    enum SelectionType : int {
+	enum SelectionType : int {
 		OnItem,
 		Inside,
 		Outside,
 		Nearby
 	};
 
-    ItemType getItemType(int i);
+	ItemType getItemType(int i);
 	SelectionType getSelectionType(int i);
 
-    QString getItemNameByType(ItemType i);
+	QString getItemNameByType(ItemType i);
 
-    QString getHomeDirectory();
+	QString getHomeDirectory();
 
 	typedef QPointF Point2D;
 
@@ -80,11 +80,13 @@ namespace CDI
 
 	float dotProduct(Point2D* p1, Point2D* p2);
 
-    // Though cross product is a vector, it will result in only along z- direction.
+	// Though cross product is a vector, it will result in only along z- direction.
 	// So return type is a scalar
 	float crossProduct(Point2D* p1, Point2D* p2);
 
 	float angleBetweenPoints(Point2D* p1, Point2D* p2);
+
+	float angleWithX(Point2D *point);
 
 	float magnitude(Point2D* p);
 
@@ -96,11 +98,11 @@ namespace CDI
 
 	float euclideanDistance(Point2D* a, Point2D* b);
 
-    float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd);
+	float DistancePointLine(Point2D* p, Point2D* lineStart, Point2D* lineEnd);
 
 	float diameterOfCircumcircle(float a, float b, float c);
 
-    bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance);
+	bool DistanceFromLineSegment(Point2D* p, Point2D* lineStart, Point2D* lineEnd, float* distance);
 
 	bool extractTransformComponents(QTransform &t, float* rotation, float* scale, Point2D* translation);
 

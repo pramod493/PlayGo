@@ -4,31 +4,46 @@
 #include <QObject>
 #include <QGraphicsItem>
 #include <QGraphicsItemGroup>
+#include <QGraphicsView>
+
 #include "cdi2qtwrapper.h"
 #include "commonfunctions.h"
 #include "physicsjoint.h"
 #include "SelectableActions.h"
 
-class QGraphicsView;
+class QGraphicsObject;
+class QGraphicsPathItem;
+class QGraphicsSimpleTextItem;
 class QAction;
+
 namespace CDI
 {
 	class PlayGoController;
 	class Component;
 	class PhysicsJoint;
-
-	class RangeSelector : public QObject , public QGraphicsPathItem
+	class RangeSelector : public QObject, public QGraphicsPathItem
 	{
 		Q_OBJECT
-		int _angle;
+		int _angle;				/**< Angle of the handle (in degrees) */
+		bool _itemIsLocked;		/**< Item is currently being transformed */
+		QPointF _startPos;		/**< start position of drag */
+		QPointF _prevPos;		/**< previous position of drag */
+		QGraphicsSimpleTextItem *textItem;
 
-		bool _itemIsLocked;
-		QPointF _startPos;
-		QPointF _prevPos;
 	public:
-		RangeSelector(QGraphicsItem  *parent);
+		RangeSelector(QGraphicsItem  *parent = NULL);
+		~RangeSelector() {}
 
+		/**
+		 * @brief Returns the current angle value
+		 * @return Angle of the selector
+		 */
 		int currentAngle();
+
+		/**
+		 * @brief Sets the angle of the selector
+		 * @param value
+		 */
 		void setAngle(int value);
 
 	protected:
@@ -36,9 +51,17 @@ namespace CDI
 		void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
 		void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent);
 
+		/**
+		 * @brief Manage the touch events received by the item
+		 * @param event Event received from scene
+		 * @return true, if accepted; false otherwise
+		 */
 		bool sceneEvent(QEvent* event);
 
 	signals:
+		/**
+		 * @brief Emitted at the end of event once the angle is changes
+		 */
 		void onAngleChanged();
 	};
 
@@ -86,10 +109,15 @@ namespace CDI
 		PlayGoController *mainController() const;
 		void setMainController(PlayGoController *mainController);
 
+		/**
+		 * @brief Display overlay with options related to component
+		 * @param component
+		 * @param scenePos
+		 */
 		void enableOverlay(Component* component, QPointF scenePos);
 		void enableOverlay(JointGraphics* jointGraphics, QPointF scenePos);
 
-		void enableMotorRangeSelection(PhysicsJoint *physicsJoint, QPointF scenePos);
+		void enableJointLimitsSelection(JointGraphics *jointGraphics, QPointF scenePos);
 
 		void overlayComponentOptions(Component* component);
 		void overlayJointOptions(JointGraphics *jointgraphics);

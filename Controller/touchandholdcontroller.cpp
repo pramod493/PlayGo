@@ -1,10 +1,14 @@
-#include "touchandholdcontroller.h"
-#include "PlayGoController.h"
 #include <QRadialGradient>
 #include <QAction>
-#include "QsLog.h"
-#include "SelectableActions.h"
 #include <QTouchEvent>
+#include <QGraphicsSimpleTextItem>
+#include <QGraphicsObject>
+
+#include "QsLog.h"
+#include "PlayGoController.h"
+#include "touchandholdcontroller.h"
+#include "SelectableActions.h"
+
 namespace CDI
 {
 	RangeSelector::RangeSelector(QGraphicsItem *graphicsparent)
@@ -15,16 +19,22 @@ namespace CDI
 		int lineLength = 150;
 		int radius = 30;
 		painterPath.moveTo(0,0);
-		painterPath.lineTo(0, lineLength);
+		painterPath.lineTo(lineLength, 0);
 		painterPath.addEllipse(lineLength, -radius, 2*radius, 2*radius);
 		setPath(painterPath);
 
 		setAcceptTouchEvents(true);
+		setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
 		_angle = 0;
 		_itemIsLocked = false;
 		_startPos = QPointF();
 		_prevPos = QPointF();
+
+		textItem = new QGraphicsSimpleTextItem(this);
+		textItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		textItem->setPos (lineLength + 2*radius, 0);
+		textItem->setText(QString("0°"));
 	}
 
 	int RangeSelector::currentAngle()
@@ -34,22 +44,25 @@ namespace CDI
 
 	void RangeSelector::setAngle(int value)
 	{
-
+		if (_angle == value) return;
+		_angle = value;
+		setRotation(_angle);
+		textItem->setText(QString::number(_angle) + QString("°"));
 	}
 
 	void RangeSelector::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
-
+		QLOG_INFO() << "Mouse press began";
 	}
 
 	void RangeSelector::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
-
+		QLOG_INFO() << "Mouse press move";
 	}
 
 	void RangeSelector::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	{
-
+		QLOG_INFO() << "Mouse press release";
 	}
 
 	bool RangeSelector::sceneEvent(QEvent* event)
@@ -59,15 +72,59 @@ namespace CDI
 		case QEvent::TouchBegin :
 		{
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			const QTouchEvent::TouchPoint &tp = touchEvent->touchPoints().first();
+			_startPos = tp.scenePos();
 			_itemIsLocked = true;
 			event->accept();
 			return true;
 		}
 		case QEvent::TouchUpdate :
+		{
+			if (!_itemIsLocked) return false;	// Item is not locked for some reason
+
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			const QTouchEvent::TouchPoint &tp = touchEvent->touchPoints().first();
+			QPointF origin = mapToScene(0,0);
+			QPointF currentPos = tp.scenePos() - origin;
+			QPointF initialPos = _startPos - origin;
+
+			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
+			setRotation(_angle + deltaAngle);
+			textItem->setText(QString::number(static_cast<int>(_angle+deltaAngle)) + QString("°"));
+			QLOG_INFO() << "Range Selector angle" << (_angle + deltaAngle);
+			event->accept();
+			return true;
+		}
 		case QEvent::TouchEnd :
+		{
+			if (!_itemIsLocked) return false;	// Item is not locked for some reason
+
+			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
+			const QTouchEvent::TouchPoint &tp = touchEvent->touchPoints().first();
+			QPointF origin = mapToScene(0,0);
+			QPointF currentPos = tp.scenePos() - origin;
+			QPointF initialPos = _startPos - origin;
+
+			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
+			if (abs(deltaAngle) > 1.0f) {
+				_angle += static_cast<int>(deltaAngle);
+				setRotation(_angle);
+				emit onAngleChanged();
+			} else
+			{
+				setRotation(_angle);
+			}
+			textItem->setText(QString::number(_angle) + QString("°"));
+			event->accept();
+			_itemIsLocked = false;
+			return true;
+		}
 		case QEvent::TouchCancel :
 		{
-
+			setRotation(_angle);
+			_itemIsLocked = false;
+			event->accept();
+			return true;	// NOTE - Do we need to accept event/return true in this case?
 		}
 		default :
 			break;
@@ -160,7 +217,7 @@ namespace CDI
 	void TouchAndHoldController::setMainController(PlayGoController *mainController)
 	{
 		_mainController = mainController;
-		_view = _mainController->_view;
+		_view = static_cast<QGraphicsView*>(_mainController->_view);
 	}
 
 	void TouchAndHoldController::enableOverlay(Component *component, QPointF scenePos)
@@ -314,6 +371,18 @@ namespace CDI
 			closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 			angle += 60;
 
+			SelectableActions* enableLimitItem = new SelectableActions
+					(_enableLimitsAction, parentGroup);
+			enableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+			enableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+			angle += 60;
+
+			SelectableActions* disableLimitItem = new SelectableActions
+					(_disableLimitsAction, parentGroup);
+			disableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+			disableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+			angle += 60;
+
 			parentGroup->setPos(scenePos);
 			parentGroup->setZValue(Z_UIVIEW);
 			parentGroup->setPanelModality(QGraphicsItem::SceneModal);
@@ -322,13 +391,12 @@ namespace CDI
 		}
 	}
 
-	void TouchAndHoldController::enableMotorRangeSelection(PhysicsJoint *physicsJoint, QPointF scenePos)
+	void TouchAndHoldController::enableJointLimitsSelection(JointGraphics *jointGraphics, QPointF scenePos)
 	{
 		if (_mainController == NULL || _view == NULL) return;
 		if (parentGroup) delete parentGroup;
 
 		float center_radius = 0.15f * dpi;
-		float ring_radius = 0.75f * dpi;
 
 		parentGroup = new QGraphicsItemGroup;
 		_mainController->_scene->addItem(parentGroup);
@@ -339,34 +407,46 @@ namespace CDI
 
 		// Set up colors
 		QPen pen = QPen();
-		QColor penColor = Qt::green; //QColor(200,200,255);
+		QColor penColor = QColor(100,100,100); //QColor(200,200,255);
 		pen.setColor(penColor);
 		pen.setWidth(3);
 		QBrush brush = QBrush(Qt::SolidPattern);
-		brush.setColor((penColor.setAlpha(200), penColor.lighter(75)));
+		brush.setColor((penColor.setAlpha(245), penColor.lighter(20)));
 
 		// Set up decor
 		QPainterPath path;
 		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
-		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
 		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
 		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
 		decor->setPath(path);
 		decor->setPen(pen);
 		decor->setBrush(brush);
 
+		pen.setColor(Qt::black);
+		pen.setWidth(5);
 
+		RangeSelector* startSelector = new RangeSelector(parentGroup);
+		startSelector->setPen(pen);
+		startSelector->setBrush(QBrush(QColor(255,100,100)));
+		startSelector->setAngle(0);
 
+		RangeSelector* endSelector = new RangeSelector(parentGroup);
+		endSelector->setPen(pen);
+		endSelector->setBrush(QBrush(QColor(100,100,255)));
+		endSelector->setAngle(45);
+
+		parentGroup->setPos(scenePos);
+		parentGroup->setZValue(Z_UIVIEW);
 	}
 
 	void TouchAndHoldController::overlayComponentOptions(Component* component)
 	{
-
+		Q_UNUSED(component)
 	}
 
 	void TouchAndHoldController::overlayJointOptions(JointGraphics *jointgraphics)
 	{
-
+		Q_UNUSED(jointgraphics)
 	}
 
 	bool TouchAndHoldController::handleTapAndHold(QEvent *event)
@@ -379,7 +459,7 @@ namespace CDI
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
 			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
 			const QTouchEvent::TouchPoint &tp = touchpoints.first();
-			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			QPointF scenePos = _view->mapToScene(tp.pos().toPoint());
 			handleSelection(scenePos, UI::Began);
 			return true;
 		}
@@ -388,7 +468,7 @@ namespace CDI
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
 			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
 			const QTouchEvent::TouchPoint &tp = touchpoints.first();
-			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			QPointF scenePos = _view->mapToScene(tp.pos().toPoint());
 			handleSelection(scenePos, UI::Update);
 			return true;
 		}
@@ -397,7 +477,7 @@ namespace CDI
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
 			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
 			const QTouchEvent::TouchPoint &tp = touchpoints.first();
-			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			QPointF scenePos = _view->mapToScene(tp.pos().toPoint());
 			handleSelection(scenePos, UI::Cancel);
 			return true;
 		}
@@ -406,7 +486,7 @@ namespace CDI
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
 			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
 			const QTouchEvent::TouchPoint &tp = touchpoints.first();
-			QPointF scenePos = _mainController->_view->mapToScene(tp.pos().toPoint());
+			QPointF scenePos = _view->mapToScene(tp.pos().toPoint());
 			handleSelection(scenePos, UI::End);
 			return true;
 		}
@@ -417,7 +497,7 @@ namespace CDI
 		case QEvent::MouseButtonPress :
 		{
 			QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-			handleSelection(_mainController->_view->mapToScene(mouseEvent->pos()), UI::Began);
+			handleSelection(_view->mapToScene(mouseEvent->pos()), UI::Began);
 			return true;
 		}
 		case QEvent::MouseMove :
@@ -428,19 +508,19 @@ namespace CDI
 		case QEvent::MouseButtonRelease :
 		{
 			QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-			handleSelection(_mainController->_view->mapToScene(mouseEvent->pos()), UI::End);
+			handleSelection(_view->mapToScene(mouseEvent->pos()), UI::End);
 		}
 		case QEvent::TabletPress :
 		case QEvent::TabletMove :
 		{
 				QTabletEvent* tabletEvent = static_cast<QTabletEvent*>(event);
-				handleSelection(_mainController->_view->mapToScene(tabletEvent->pos()), UI::Update);
+				handleSelection(_view->mapToScene(tabletEvent->pos()), UI::Update);
 				return true;
 		}
 		case QEvent::TabletRelease :
 		{
 			QTabletEvent* tabletEvent = static_cast<QTabletEvent*>(event);
-			handleSelection(_mainController->_view->mapToScene(tabletEvent->pos()), UI::End);
+			handleSelection(_view->mapToScene(tabletEvent->pos()), UI::End);
 			return true;
 		}
 		case QEvent::Gesture :
@@ -448,6 +528,8 @@ namespace CDI
 			return true;
 			break;
 		}
+		default :
+			break;
 		}
 		return false;
 	}
@@ -473,15 +555,16 @@ namespace CDI
 			case UI::End :
 			{
 				QGraphicsScene *scene = _mainController->_scene;
-				QList<QGraphicsItem*> items = scene->items(scenePos, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder,
-							 _mainController->_view->transform());
+				QList<QGraphicsItem*> items = scene->items(scenePos, Qt::IntersectsItemBoundingRect,
+														   Qt::DescendingOrder,	_view->transform());
 				for (QList<QGraphicsItem*>::const_iterator it = items.constBegin();
 					 it != items.constEnd(); ++it)
 				{
 					QGraphicsItem* graphicsitem = (*it);
 					if (graphicsitem->type() == SelectableActions::Type)
 					{
-						SelectableActions* selectableAction = qgraphicsitem_cast<SelectableActions*>(graphicsitem);
+						SelectableActions* selectableAction =
+								qgraphicsitem_cast<SelectableActions*>(graphicsitem);
 						selectableAction->trigger();
 						return;
 					}
@@ -540,11 +623,9 @@ namespace CDI
 
 	void TouchAndHoldController::slotComponentDeleteAction()
 	{
-	if (_componentEditMode)
-		{
-			_mainController->_page->destroyComponent(_selectedComponent);
-			slotCloseOverlay();
-		}
+		if (!_componentEditMode) return;
+		_mainController->_page->destroyComponent(_selectedComponent);
+		slotCloseOverlay();
 	}
 
 	void TouchAndHoldController::slotEnableCollisionAction()
@@ -589,7 +670,12 @@ namespace CDI
 
 	void TouchAndHoldController::slotEnableLimits()
 	{
-
+		if (_jointEditMode)
+		{
+			if (parentGroup) delete parentGroup;
+			parentGroup = 0;	// Clean up
+			enableJointLimitsSelection(_selectedJoint, _scenePos);
+		}
 	}
 
 	void TouchAndHoldController::slotDisableLimits()

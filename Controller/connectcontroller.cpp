@@ -281,7 +281,7 @@ namespace CDI
 						*/
 						parentComponent->physicsBody()->SetLinearVelocity(b2Vec2(forcevector.x(), forcevector.y()));
 
-						qDebug() << "Force output" << forceorigin << forcevector;
+						QLOG_INFO() << "Force output" << forceorigin << forcevector;
 					}
 				}
 			}

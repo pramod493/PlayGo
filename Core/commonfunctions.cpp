@@ -120,6 +120,11 @@ namespace CDI
 		return atan2 ((p2->y()-p1->y()), (p2->x()-p1->x()));
 	}
 
+	float angleWithX(Point2D *point)
+	{
+		return atan2(point->y(), point->x());
+	}
+
 	float magnitude(Point2D* p)
 	{
 		return sqrt(p->x() * (p->x()) + p->y() * (p->y()) );
@@ -306,7 +311,7 @@ namespace CDI
 	{
 		if (qtime == NULL)
 		{
-			qDebug() << "Init timer";
+			QLOG_INFO() << "Init timer";
 			qtime = new QTime(0,0,0,0);
 			qtime->start();
 		}

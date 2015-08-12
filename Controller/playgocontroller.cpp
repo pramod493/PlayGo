@@ -762,7 +762,7 @@ void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventSta
 						*/
 					parentComponent->physicsBody()->SetLinearVelocity(b2Vec2(forcevector.x(), forcevector.y()));
 
-					qDebug() << "Force output" << forceorigin << forcevector;
+					QLOG_INFO() << "Force output" << forceorigin << forcevector;
 				}
 			}
 		}
@@ -948,11 +948,14 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		}
 	}
 
-	//if (_tapOverrideEnabled) return touchholdController->handleTapAndHold(event);
-	touchholdController->handleTapAndHold(event);	// Do not cancel events
+	if (_tapOverrideEnabled)
+	{
+		touchholdController->handleTapAndHold(event);	// Do not cancel events
+		return false;	// Send events to scene but not to controller.
+	}
 
 	//QString msg = getEventname(event);
-	//if (!msg.isEmpty()) qDebug() << msg;
+	//if (!msg.isEmpty()) QLOG_INFO() << msg;
 
 	switch(event->type())
 	{
@@ -1268,12 +1271,12 @@ void PlayGoController::searchAction()
 		int screen_startx = portRect.left();
 		int screen_starty = portRect.top();
 
-		qDebug() << results;
+		QLOG_INFO() << results;
 		int each_image_width = 150;	// px
 		int image_margin = 20;	// px
 		int num_images = screen_width / (each_image_width + image_margin);
 
-		qDebug() << num_images	<< each_image_width << "(" << screen_width << "x" << screen_height << ")";
+		QLOG_INFO() << num_images	<< each_image_width << "(" << screen_width << "x" << screen_height << ")";
 
 		int i=0; int j=0;
 		foreach (SearchResult* searchResult, results)
@@ -1308,7 +1311,6 @@ void PlayGoController::searchAction()
 
 			if (++i == num_images){ i=0; j++; }
 		}
-
 		return;
 	}
 	// We are searching if at least one of the strokes is highlighted
@@ -1398,7 +1400,7 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 	QPoint viewportPos = _viewport->mapFromGlobal(pos);
 	QPointF scenePos = _view->mapToScene(viewportPos.x(), viewportPos.y());
 
-	qDebug() << pos << viewportPos << scenePos;
+	QLOG_INFO() << pos << viewportPos << scenePos;
 
 	// Erase whatever was done till now
 	switch (_activeMode)
@@ -1651,7 +1653,7 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 				touchEventOwner = 0;
 				const QTouchEvent::TouchPoint &tp = event->touchPoints().first();
 				QPointF scenePos = _view->mapToScene(tp.pos().toPoint());//tp.scenePos();
-				qDebug() << scenePos << tp.scenePos();
+				QLOG_INFO() << scenePos << tp.scenePos();
 
 				QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
 																	Qt::DescendingOrder, _view->transform());
@@ -1742,7 +1744,7 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 			float d1 = diameterOfCircumcircle(euclideanDistance(&a1,&b1),
 											  euclideanDistance(&b1,&c1),
 											  euclideanDistance(&c1,&a1));
-			//qDebug() << d0 << d1 << "SearchView";
+			//QLOG_INFO() << d0 << d1 << "SearchView";
 
 			if ((qFuzzyCompare(d0,0) == false && qFuzzyCompare(d1,0)) == false)
 			{
@@ -1875,7 +1877,7 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 		if (swipe->state() == Qt::GestureCanceled)
 			msg += "Canceled>>";
 	}
-	qDebug() << msg;
+	QLOG_INFO() << msg;
 }
 
 void PlayGoController::onPhysicsMaskUpdate()
@@ -1965,7 +1967,7 @@ void PlayGoController::setMode(UI::MODE newMode)
 {
 	if (_tapOverrideEnabled)
 		touchholdController->slotCloseOverlay();
-
+	_page->getPhysicsManager()->setEnableDebugView(false);
 	onModeChange(_activeMode, newMode);
 	if (_activeMode == newMode)
 	{
