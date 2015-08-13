@@ -954,8 +954,8 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		return false;	// Send events to scene but not to controller.
 	}
 
-	//QString msg = getEventname(event);
-	//if (!msg.isEmpty()) QLOG_INFO() << msg;
+	QString msg = getEventname(event);
+	if (!msg.isEmpty()) QLOG_INFO() <<"Viewport event" << msg;
 
 	switch(event->type())
 	{
@@ -978,7 +978,7 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		{
 			onMouseEventFromView(static_cast<QMouseEvent*>(event), _view);
 		}
-		return false;
+		break;
 	}
 	case QEvent::TabletPress :
 	case QEvent::TabletMove :
@@ -986,20 +986,20 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 	{
 		onTabletEventFromView(static_cast<QTabletEvent*>(event), _view);
 		// Let's try sending these to scene
-		return false;
+		break;
 	}
 	case QEvent::Gesture :
 	{
 		QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(event);
 		onGestureEventFromView(gestureEvent);
-		return false;     // Let the scene handle the gesture as well.
+		// Let the scene handle the gesture as well.
 		break;
 	}
 	case QEvent::KeyPress :
 	case QEvent::KeyRelease :
 	{
 		// Currently no use of keypress
-		return false;
+		break;
 	}
 	}
 	return false;

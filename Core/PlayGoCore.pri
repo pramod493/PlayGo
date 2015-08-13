@@ -2,7 +2,8 @@ include ($$PWD/../Indexer-Minimal/Indexer.pri)
 include ($$PWD/../poly2tri/poly2tri.pri)
 include ($$PWD/../Physics/QBox2D.pri)
 include ($$PWD/../EdgeDetect/Edge Detect.pri)
-include ($$PWD/../qCustomPlot/qCustomPlot.pri)
+# Enable when adding plots
+#include ($$PWD/../qCustomPlot/qCustomPlot.pri)
 include ($$PWD/../QsLog/QsLog.pri)
 
 #DEFINES += CDI_DEBUG_DRAW_SHAPE

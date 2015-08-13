@@ -21,28 +21,6 @@ namespace CDI
 		QGraphicsScene(page)
 	{
 		_page = page;
-
-		/*QPixmap spline = QPixmap(":/images/spline.png");
-		QPixmap eraser = QPixmap(":/images/eraser.png");
-		QPixmap play   = QPixmap(":/images/joints/lock-joint.png");
-
-		QGraphicsItemGroup *group = new QGraphicsItemGroup;
-
-		SceneButton* btn1 = new SceneButton(spline, QString("Spline"), NULL);	group->addToGroup(btn1);
-		SceneButton* btn2 = new SceneButton(eraser, QString("Eraser"), NULL);	group->addToGroup(btn2);
-		SceneButton *btn3 = new SceneButton(play, QString("Play"), NULL);		group->addToGroup(btn3);
-
-		addItem(group);
-		//group->setFlag(QGraphicsItem::ItemIsMovable);
-		group->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		group->setPos(400,400);
-		float theta = _PI_ / 4.0f;
-		float radius = 250;
-		btn1->setPos(radius * cos(theta), radius * sin(theta));
-		btn2->setPos(radius * cos(theta*2), radius * sin(theta*2));
-		btn3->setPos(radius * cos(theta*3), radius * sin(theta*3));*/
-
 	}
 
 	SketchScene::~SketchScene()
@@ -65,38 +43,6 @@ namespace CDI
 	bool SketchScene::event(QEvent *sceneEvent)
 	{
 		bool retval = QGraphicsScene::event(sceneEvent);
-		// Delete this section
-		// Only for priniting logs
-		if (false)
-		{
-			switch (sceneEvent->type())
-			{
-			case QEvent::TouchBegin :
-			{ QLOG_INFO() << "Touch begin scene"; break; }
-			case QEvent::TouchUpdate :
-			{ QLOG_INFO() << "Touch update scene"; break; }
-			case QEvent::TouchEnd :
-			{ QLOG_INFO() << "Touch end scene"; break; }
-			case QEvent::TouchCancel :
-			{ QLOG_INFO() << "Touch cancel scene"; break; }
-			case QEvent::TabletPress :
-			{ QLOG_INFO() << "Tablet press scene"; break; }
-			case QEvent::TabletMove :
-			{ QLOG_INFO() << "Tablet move scene"; break; }
-			case QEvent::TabletRelease :
-			{ QLOG_INFO() << "Tablet release scene"; break; }
-			case QEvent::MouseButtonDblClick :
-			{ QLOG_INFO() << "Mouse button double click scene"; break; }
-			case QEvent::MouseButtonPress :
-			{ QLOG_INFO() << "Mouse button press scene"; break; }
-			case QEvent::MouseButtonRelease :
-			{ QLOG_INFO() << "Mouse button release scene"; break; }
-			case QEvent::MouseMove :
-			{QLOG_INFO() << "Mouse move scene"; break;	}
-			}
-			sceneEvent->accept();
-			return true;
-		}
 		return retval;
 
 		if (true /*retval == false || sceneEvent->isAccepted() == false */)
@@ -110,21 +56,6 @@ namespace CDI
 			{
 				//QLOG_INFO() << "Return:" << retval << "Accept:" << sceneEvent->isAccepted();
 				emit signalUnacceptedTouchEvent(static_cast<QTouchEvent*>(sceneEvent));
-				sceneEvent->accept();
-				return true;
-			}
-			case QEvent::TabletPress :
-			case QEvent::TabletMove :
-			case QEvent::TabletRelease :
-			{
-				sceneEvent->accept();
-				return true;
-			}
-			case QEvent::MouseButtonDblClick :
-			case QEvent::MouseButtonPress :
-			case QEvent::MouseButtonRelease :
-			case QEvent::MouseMove :
-			{
 				sceneEvent->accept();
 				return true;
 			}

@@ -40,10 +40,12 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_LINUX
 	QStyle* style = QStyleFactory::create("Windows");   // Looks more theme independent
 	if (style)	app.setStyle(style);
-#else
-    QStyle* style = QStyleFactory::create("windowsvista");
-	if (style)	app.setStyle(style);
 #endif //Q_OS_LINUX
+
+#ifdef Q_OS_WIN
+	QStyle* style = QStyleFactory::create("windowsvista");
+	if (style)	app.setStyle(style);
+#endif Q_OS_WIN
 
 	// Initialize the QsLog logger
 
