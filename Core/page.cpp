@@ -20,7 +20,7 @@ namespace CDI
 		_searchManager = new SearchManager(this);
 
 		PhysicsSettings settings = PhysicsSettings();
-        settings.gravity = Point2D(0,0);
+		settings.gravity = Point2D(0,0);
 		settings.timeStep = 1.0f/60.0f;
 		_physicsManager = new PhysicsManager(&settings, this);
 
@@ -408,24 +408,23 @@ namespace CDI
 
 	QImage Page::getSelectionImageFromHighlight()
 	{
-		QRectF sceneRect = _scene->itemsBoundingRect();
-		int x_min = sceneRect.x() + sceneRect.width();
-		int x_max = sceneRect.x();
-		int y_min = sceneRect.y() + sceneRect.height();
-		int y_max = sceneRect.y();
+		QRect sceneRect = _scene->itemsBoundingRect().toRect();
+		int x_min = sceneRect.right();
+		int x_max = sceneRect.left();
+		int y_min = sceneRect.bottom();
+		int y_max = sceneRect.top();
 
 		QImage image(sceneRect.x()+sceneRect.width(),
 					 sceneRect.y()+sceneRect.height(),
 					 QImage::Format_ARGB32_Premultiplied);
-		image.fill(Qt::transparent);
+		image.fill(Qt::white);
 
 		QPainter painter(&image);
 		painter.setRenderHint(QPainter::Antialiasing, true);
-		QList<QGraphicsItem*> allitems = _scene->items();
-		for (int i=0; i < allitems.size(); i++)
+
+		auto allitems = _scene->items();
+		for (auto graphicsitem : allitems)	// Might return specific type in future
 		{
-			QGraphicsItem* graphicsitem = allitems[i];
-			// TODO Check if the selection polygon and AABB intersect
 			if (graphicsitem->type() == Stroke::Type && graphicsitem->isVisible())
 			{
 				Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
@@ -436,22 +435,35 @@ namespace CDI
 					stroke->paint(&painter, NULL);
 					stroke->highlight(true);
 
-					QRect rect=
-							stroke->sceneTransform().inverted().mapRect(stroke->boundingRect()).toRect();
-
+					QRect rect= stroke->mapRectToScene(stroke->boundingRect()).toRect();
+							//stroke->sceneTransform().inverted().mapRect(stroke->boundingRect()).toRect();
 					x_min = (x_min < rect.x() ? x_min : rect.x());
 					y_min = (y_min < rect.y() ? y_min : rect.y());
 
-					x_max = (rect.x()+rect.width() > x_max) ? rect.x()+rect.width() : x_max;
-					y_max = (rect.y()+rect.height() > y_max) ? rect.y()+rect.height() : y_max;
+					x_max = (rect.right() > x_max) ? rect.right() : x_max;
+					y_max = (rect.bottom() > y_max) ? rect.bottom() : y_max;
 				}
 			}
 		}
+		// Something spooky going on here. mostly ==
+		if (x_min >= x_max || y_min >= y_max) return QImage();
+
+		int diffX = x_max-x_min;
+		int diffY = y_max-y_min;
+
+		// Crop only what is needed
+		QImage tightCropping = image.copy(QRect(x_min, y_min, diffX, diffY));
 
 		int maxDim = ( (x_max-x_min) > (y_max-y_min) ? (x_max-x_min) : (y_max-y_min) );
-		QRect squareRect = QRect(x_min, y_min, maxDim, maxDim);
-		QImage croppedSelection = image.copy(squareRect);
-		return croppedSelection;
+		QImage squareImage = QImage(maxDim, maxDim, QImage::Format_ARGB32_Premultiplied);
+		squareImage.fill(Qt::white);
+
+		QPoint offset(0,0);
+		if (maxDim > diffX) offset.setX((maxDim-diffX)/2);
+		if (maxDim > diffY) offset.setY((maxDim-diffY)/2);
+		QPainter squarePainter(&squareImage);
+		squarePainter.drawImage(offset, tightCropping);
+		return squareImage;
 	}
 
 	QImage Page::getSelectionImage()
