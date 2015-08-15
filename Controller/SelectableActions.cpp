@@ -1,6 +1,8 @@
 #include "SelectableActions.h"
 #include "QsLog.h"
-
+#include <QGraphicsSceneMouseEvent>
+#include <QTouchEvent>
+#include <QMessageBox>
 namespace CDI
 {
   // Initialize the static variable. This defines the size of all the
@@ -30,6 +32,12 @@ namespace CDI
 		pixmapItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 		QGraphicsSimpleTextItem* textItem = new QGraphicsSimpleTextItem(_action->text(), this);
 		textItem->setPos(-_dim/2, _dim/2);
+		textItem->setScale(1.5f);
+		textItem->setBrush(QBrush(Qt::red));
+		//textItem->setPen(QPen(Qt::blue));
+
+		//QMessageBox::about(0, "Enable selection", "Enable selection");
+		setAcceptTouchEvents(true);
 	}
 
 	int SelectableActions::type() const
@@ -46,36 +54,46 @@ namespace CDI
 		}
 	}
 
-    void SelectableActions::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
-    {
-        mouseEvent->accept();
-    }
-
-    void SelectableActions::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
-    {
-
-    }
-
-    void SelectableActions::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
-    {
-        mouseEvent->accept();
-    }
-
-    bool SelectableActions::sceneEvent(QEvent *event)
-    {
-        switch (event->type())
-        {
-            case QEvent::TouchBegin :
-            {
-                event->accept();
-                return true;
-            }
-            case QEvent::TouchEnd :
-            {
-                // Accept only when the touch point still lies on the object
-                
-            }
-        }
+	bool SelectableActions::sceneEvent(QEvent *event)
+	{
+		switch (event->type())
+		{
+		case QEvent::GraphicsSceneMousePress :
+		case QEvent::TouchBegin :
+		{
+			event->accept();
+			return true;
+		}
+		case QEvent::GraphicsSceneMouseRelease :
+		{
+			QGraphicsSceneMouseEvent* mouseEvent =
+					static_cast<QGraphicsSceneMouseEvent*>(event);
+			QPointF scenePos = mouseEvent->scenePos();
+			if (contains(mapFromScene(scenePos)))
+			{
+				trigger();
+				return true;
+			}
+			break;
+		}
+		case QEvent::TouchEnd :
+		{
+			// Accept only when the touch point still lies on the object
+			QTouchEvent *touchEvent = static_cast<QTouchEvent*>(event);
+			QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
+			//foreach(QTouchEvent::TouchPoint tp, touchpoints)
+			for(auto tp : touchpoints)
+			{
+				QPointF scenePos = tp.scenePos();
+				if (contains(mapFromScene(scenePos)))
+				{
+					trigger();
+					return true;
+				}
+			}
+			break;
+		}
+		}
 		return QGraphicsEllipseItem::sceneEvent(event);
-    }
+	}
 }
