@@ -1,70 +1,94 @@
-#include "cdisearchgraphicsitem.h"
+#include "cdiSearchGraphicsItem.h"
 #include <QGraphicsScene>
 #include "QsLog.h"
 #include "sketchscene.h"
-//#include "pixmapitem.h"
+#include <QGraphicsSceneMouseEvent>
 
 namespace CDI {
-	SearchGraphicsItem::SearchGraphicsItem(QGraphicsItem *parent)
-		: QGraphicsPixmapItem(parent)
+	cdSearchGraphicsItem::cdSearchGraphicsItem(
+			SearchResult* searchResult, int dim, QGraphicsItem* parent)
+		: QObject(), QGraphicsRectItem(parent)
 	{
+		if (dim < 0) dim = 150;
+
+		setPen(QPen(Qt::green));
+		setBrush(QBrush(QColor(20,20,20,200), Qt::BDiagPattern));
+		setRect(0,0,dim, dim);
+
 		setAcceptDrops(true);
+		setZValue(Z_UIVIEW);
 		setAcceptTouchEvents(true);
+		setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
-        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		result = SearchResult(*searchResult);
+		QString sourceFilePath = result.resultFilePath;
 
-        touchOn = false;
-        waitInMiliseconds = 500;
-        t = QTime();
+		QPixmap pixmap = QPixmap(sourceFilePath);
+		QPixmap cropped = pixmap.scaled(dim, dim, Qt::KeepAspectRatio);
+		QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(cropped, this);
+		pixmapItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		touchOn = false;
+		waitInMiliseconds = 500;
+		t = QTime();
 	}
 
-	SearchGraphicsItem::SearchGraphicsItem(
-			const QPixmap &pixmap, QString filePath, QGraphicsItem* parent)
-		: QGraphicsPixmapItem(pixmap, parent)
+	bool cdSearchGraphicsItem::sceneEvent(QEvent* event)
 	{
-		sourceFilePath = filePath;
-		setAcceptDrops(true);
-		setAcceptTouchEvents(true);
-
-        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
-
-        touchOn = false;
-        waitInMiliseconds = 500;
-        t = QTime();
+		switch (event->type())
+		{
+		case QEvent::TouchBegin :
+		case QEvent::GraphicsSceneMousePress :
+		{
+			touchOn = true;		// touch began
+			t.restart();		// start timer
+			event->accept();
+			return true;
+		}
+		case QEvent::TouchEnd :
+		{
+			if (touchOn && (t.elapsed() < waitInMiliseconds))
+			{
+				touchOn = false;
+				QTouchEvent *touchEvent = static_cast<QTouchEvent*>(event);
+				QList<QTouchEvent::TouchPoint> touchpoints = touchEvent->touchPoints();
+				for(auto tp : touchpoints)
+				{
+					QPointF scenePos = tp.scenePos();
+					if (contains(mapFromScene(scenePos)))
+					{
+						emit signalSearchItemSelected(this);
+						return true;
+					}
+				}
+			}
+			break;
+		}
+		case QEvent::GraphicsSceneMouseRelease :
+		{
+			if (touchOn && (t.elapsed() < waitInMiliseconds))
+			{
+				touchOn = false;
+				QGraphicsSceneMouseEvent* mouseEvent =
+						static_cast<QGraphicsSceneMouseEvent*>(event);
+				QPointF scenePos = mouseEvent->scenePos();
+				if (contains(mapFromScene(scenePos)))
+				{
+					emit signalSearchItemSelected(this);
+					return true;
+				}
+			}
+			break;
+		}
+		default:
+			break;
+		}
+		return false;
 	}
 
-	bool SearchGraphicsItem::sceneEvent(QEvent* event)
+	SearchResult cdSearchGraphicsItem::getResult() const
 	{
-        //// Tap to select item
-        switch (event->type()) {
-            case QEvent::TouchEnd :
-            case QEvent::TouchUpdate :
-            case QEvent::TouchBegin :
-                event->setAccepted(true);
-                QTouchEvent* e = static_cast<QTouchEvent*> (event);
-                if (e->touchPoints().size() != 1) return true;  // Only single touch allowed
-                    break;
-        }
-        switch (event->type())
-        {
-            case QEvent::TouchBegin :
-                touchOn = true;
-                t.restart();
-                break;
-            case QEvent::TouchUpdate :
-                break;
-            case QEvent::TouchEnd :
-                if (touchOn && (t.elapsed() < waitInMiliseconds))
-                {
-					// TODO Load item on selection of search results
-                    touchOn = false;
-                    SketchScene* parentScene = static_cast<SketchScene*>(scene());  // NOTE - Do we really need the SketchScene?
-//                    PixmapItem* pixItem =new PixmapItem(QPixmap(sourceFilePath), sourceFilePath, NULL, NULL);
-//                    pixItem->setFlag(QGraphicsItem::ItemIsMovable, true);
-//                    parentScene->addItem(pixItem);
-                }
-                break;
-        }
-		return true;
+		return result;
 	}
+
 }

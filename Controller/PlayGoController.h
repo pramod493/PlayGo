@@ -28,7 +28,6 @@
 
 #include "sketchscene.h"
 #include "sketchview.h"
-#include "searchview.h"
 #include "modelviewtreewidget.h"
 
 #include "box2dworld.h"
@@ -42,7 +41,7 @@ namespace CDI
 	class ConnectController;
 	class TouchAndHoldController;
 	class cdState;
-
+	class cdSearchGraphicsItem;
 	/**
 	 * @brief Main controller object. This receives input events from View and Scene
 	 * and modifies the view as well as scene based on that.
@@ -101,7 +100,8 @@ namespace CDI
 		/*********************************************************
 		 * Search related variables
 		 ********************************************************/
-		SearchView* searchView;
+		QGraphicsItemGroup* searchItemGroup;
+		QAction *hideSearchResultAction;
 		bool _searchResultsDisplayed;
 
 		/*********************************************************
@@ -287,7 +287,26 @@ namespace CDI
 		 */
 		void onSearchComplete();
 
+		/**
+		 * @brief onSearchItemSelect is called with the selected search result. It loads/
+		 * replaces the selected stroke with the search result
+		 * @param result SearchResult selected
+		 */
 		void onSearchItemSelect(SearchResult* result);
+
+		/**
+		 * @brief onSearchItemSelect is called with the graphics item containing search result
+		 * details. It loads/replaces the selected stroke with the search result as well as deletes
+		 * the display
+		 * @param result Selected graphics item
+		 */
+		void onSearchItemSelect(cdSearchGraphicsItem* result);
+
+		/**
+		 * @brief closeSearchResultDisplay closes the display of search results by destroying all
+		 * the displayed results as well as enabling touch on all the components (DO NOT IMPLEMENT NOW)
+		 */
+		void closeSearchResultDisplay();
 
 		/**
 		 * @brief Receives tablet/pen event from view

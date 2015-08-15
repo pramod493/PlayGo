@@ -6,6 +6,8 @@
 
 #include "cdiwindow.h"
 #include "graphicssearchitem.h"
+#include "cdisearchgraphicsitem.h"
+#include "SelectableActions.h"
 
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsDropShadowEffect>
@@ -64,13 +66,14 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 
 	initController();
 
-	searchView = _toplevelWindow->searchView;
-	if (searchView != NULL)
-	{
-		connect(searchView, SIGNAL(signalOnSearchResultSelect(SearchResult*)),
-				this, SLOT(onSearchItemSelect(SearchResult*)));
-	}
+	// We are not using the SearchView any more for displaying search results
+	searchItemGroup = nullptr;
 	_searchResultsDisplayed = false;
+	// Triggers the closing of search results
+	hideSearchResultAction = new QAction
+			(QIcon(":/images/overlay/close-02.png"), tr("Hide search results"), this);
+	connect(hideSearchResultAction, SIGNAL(triggered()),
+			this, SLOT(closeSearchResultDisplay()));
 
 	QTapAndHoldGesture::setTimeout(2000);
 }
@@ -1241,78 +1244,6 @@ void PlayGoController::connectAction(QMouseEvent *event)
 
 void PlayGoController::searchAction()
 {
-
-	if (true) {
-		QList<SearchResult*> results = _page->getSearchManager()->search(QString("Image.png"), 30);
-
-		// Testing adding of overlay on the scene
-		QRect portRect = _view->viewport()->rect();
-		QPolygonF scenePolygon= _view->mapToScene(portRect);
-		//QRectF itemRect = yourItem->mapRectFromScene(sceneRect);
-
-		QGraphicsPolygonItem* rectItem = new QGraphicsPolygonItem;
-
-		_scene->addItem(rectItem);
-
-		//rectItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		QColor col = QColor(200,150,150,10);
-
-		QBrush brush = QBrush(col);
-
-		rectItem->setBrush(brush);
-
-		rectItem->setPolygon(scenePolygon);
-
-		QRect boundingRectOfPolygon = scenePolygon.boundingRect().toRect();	// bounding rect should be close to display area
-
-		int screen_width = portRect.width();
-		int screen_height = portRect.height();
-		int screen_startx = portRect.left();
-		int screen_starty = portRect.top();
-
-		QLOG_INFO() << results;
-		int each_image_width = 150;	// px
-		int image_margin = 20;	// px
-		int num_images = screen_width / (each_image_width + image_margin);
-
-		QLOG_INFO() << num_images	<< each_image_width << "(" << screen_width << "x" << screen_height << ")";
-
-		int i=0; int j=0;
-		foreach (SearchResult* searchResult, results)
-		{
-			QString filepath = searchResult->resultFilePath;
-			QPixmap pixmap = QPixmap(filepath);
-			QPixmap cropped = pixmap.scaled(each_image_width, each_image_width, Qt::KeepAspectRatio);
-			QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(cropped);
-
-			QRectF rect = QRect(0, 0, each_image_width, each_image_width);
-			QGraphicsRectItem* rectItem = new QGraphicsRectItem(rect);
-			rectItem->setPen(QPen(Qt::green));
-			rectItem->setBrush(QBrush(QColor(20,20,20,200), Qt::BDiagPattern));
-
-			_scene->addItem(pixmapItem);
-			_scene->addItem(rectItem);
-
-			pixmapItem->setZValue(3);
-			rectItem->setZValue(2.90);
-
-			QPoint screenPos = QPoint(screen_startx+ i * (each_image_width+image_margin), screen_starty+ j * (each_image_width+image_margin));
-			pixmapItem->setPos(_view->mapToScene(screenPos));
-			rectItem->setPos(_view->mapToScene(screenPos));
-
-			rectItem->setAcceptTouchEvents(true);
-			rectItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-			pixmapItem->setParentItem(rectItem);
-			pixmapItem->setFlag(QGraphicsItem::ItemIsMovable);
-			pixmapItem->setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
-			pixmapItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-			if (++i == num_images){ i=0; j++; }
-		}
-		return;
-	}
 	// We are searching if at least one of the strokes is highlighted
 	if (!_itemHighlighted) return;
 	// Do not use lasso polygon to find the selected strokes because selection can be done in
@@ -1320,24 +1251,69 @@ void PlayGoController::searchAction()
 	QImage inputImage =
 			//				_scene->getSelectionImage(_lassoPolygon);
 			_page->getSelectionImageFromHighlight();
-	QList<Stroke*> selectedStrokes =
-			_page->getHighlightedStrokes();
+	auto selectedStrokes = _page->getHighlightedStrokes();
 
-	if (selectedStrokes.size() == 0) return;
+	if (selectedStrokes.size() == 0 || inputImage.isNull()) return;
 
-	QList<SearchResult*> searchResults =
-			_page->getSearchManager()->search(inputImage, 20);
+	auto results =	_page->getSearchManager()->search(inputImage, 20);
 
-	if (searchResults.size())
+	if (results.size() == 0) return;
+
+	// Add overlay on the viewable scene
+	QRect portRect = _view->viewport()->rect();
+	QPolygonF scenePolygon= _view->mapToScene(portRect);
+
+	QGraphicsPolygonItem* rectItem = new QGraphicsPolygonItem;
+	QColor col = QColor(200,150,150,10);
+	QBrush brush = QBrush(col);
+	rectItem->setBrush(brush);
+	rectItem->setPolygon(scenePolygon);
+
+	QRect boundingRectOfPolygon = scenePolygon.boundingRect().toRect();	// bounding rect should be close to display area
+	Q_UNUSED(boundingRectOfPolygon)
+
+	int screen_width = portRect.width();
+	int screen_height = portRect.height(); Q_UNUSED(screen_height)
+	int screen_startx = portRect.left();
+	int screen_starty = portRect.top();
+
+	int each_image_width = 150;	// px
+	int image_margin = 20;	// px
+	int num_images = screen_width / (each_image_width + image_margin);
+
+	//QLOG_INFO() << num_images	<< each_image_width << "(" << screen_width << "x" << screen_height << ")";
+
+	searchItemGroup = new QGraphicsItemGroup();
+	searchItemGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+	_scene->addItem(searchItemGroup);
+	searchItemGroup->setZValue(Z_UIVIEW);
+	searchItemGroup->addToGroup(rectItem);
+
+	int i=0; int j=0;
 	{
+		// Position the close button on the center
+		QPoint screenPos = QPoint(screen_startx+ i * (each_image_width+image_margin) + each_image_width/2,
+								  screen_starty+ j * (each_image_width+image_margin) + each_image_width/2);
+		SelectableActions* selectable = new SelectableActions(hideSearchResultAction, nullptr);
 
-		searchView->LoadSearchData(selectedStrokes, searchResults);
-		emit onSearchComplete();
-	} else
+		selectable->setPos(screenPos);
+		selectable->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		searchItemGroup->addToGroup(selectable);
+		++i;
+	}
+
+	for(SearchResult* searchResult : results)
 	{
-		QMessageBox::about(_view,
-						   QString("Search result"),
-						   QString("No result found!"));
+		QPoint screenPos = QPoint(screen_startx+ i * (each_image_width+image_margin),
+								  screen_starty+ j * (each_image_width+image_margin));
+		cdSearchGraphicsItem *resultItem = new cdSearchGraphicsItem(searchResult, each_image_width);
+		resultItem->setPos(_view->mapToScene(screenPos));
+		searchItemGroup->addToGroup(resultItem);
+
+		connect(resultItem, SIGNAL(signalSearchItemSelected(cdSearchGraphicsItem*)),
+				this, SLOT(onSearchItemSelect(cdSearchGraphicsItem*)));
+
+		if (++i == num_images){ i=0; j++; }
 	}
 }
 
@@ -1583,6 +1559,22 @@ void PlayGoController::onSearchItemSelect(SearchResult *result)
 	newComponent->requiresRegeneration = true;
 }
 
+void PlayGoController::onSearchItemSelect(cdSearchGraphicsItem *result)
+
+{
+	onSearchItemSelect(&result->getResult());
+	closeSearchResultDisplay();
+}
+
+void PlayGoController::closeSearchResultDisplay()
+{
+	if (searchItemGroup)
+	{
+		delete searchItemGroup;
+		searchItemGroup = nullptr;
+	}
+}
+
 void PlayGoController::onTabletEventFromView(QTabletEvent *event,
 											 QGraphicsView *view)
 {
@@ -1744,7 +1736,6 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 			float d1 = diameterOfCircumcircle(euclideanDistance(&a1,&b1),
 											  euclideanDistance(&b1,&c1),
 											  euclideanDistance(&c1,&a1));
-			//QLOG_INFO() << d0 << d1 << "SearchView";
 
 			if ((qFuzzyCompare(d0,0) == false && qFuzzyCompare(d1,0)) == false)
 			{
@@ -2013,7 +2004,6 @@ void PlayGoController::loadImage(QString imagePath)
 	component->addToComponent(pixmap);
 }
 
-int depth = 1;
 void PlayGoController::loadImage(QString imagePath, QObject* obj, QDropEvent* event)
 {
 	QPixmap _pixmap = QPixmap();

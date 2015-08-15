@@ -53,8 +53,6 @@ namespace CDI
 
 		// Views and scene
 		sketchView = new SketchView(playgo->currentPage(), this);
-		searchView = new SearchView(this);
-		searchScene = searchView->scene();
 
 		// Controller to handle touch, tablet and mouse events
 		// and possibly synchronize with Box2D and Indexer
@@ -75,14 +73,14 @@ namespace CDI
 		// Sketch scene and search view are laid out
 		// next to each other and separated by a splitter
 		splitter = new QSplitter;
-		splitter->addWidget(sketchView);
-//		splitter->addWidget(searchView);
+		splitter->addWidget(sketchView);	// Do not add any extra widget
 
+		/* Dock not required because search results are displayed is overlaid now
 		searchDock = new QDockWidget(tr("Search results"), this);
 		searchDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
 							  Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
 		searchDock->setWidget(searchView);
-		addDockWidget(Qt::RightDockWidgetArea, searchDock);
+		addDockWidget(Qt::RightDockWidgetArea, searchDock);*/
 
 		setCentralWidget(splitter);
 	}

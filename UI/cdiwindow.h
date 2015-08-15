@@ -22,7 +22,6 @@
 #include "sketchview.h"
 #include "sketchscene.h"
 #include "PlayGoController.h"
-#include "searchview.h"
 #include "playgocore.h"
 
 class QDockWidget;
@@ -74,10 +73,6 @@ namespace CDI
 		// Sketching related widgets
 		SketchView* sketchView;			// Primarily use this one. Skip the
 										// other ones...
-
-		SearchView* searchView;
-		QGraphicsScene* searchScene;
-
 		PlayGoController* controller;
 
 	protected:
