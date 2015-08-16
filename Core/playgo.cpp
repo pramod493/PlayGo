@@ -90,6 +90,7 @@ namespace CDI
 
 	Page* PlayGo::getItemPage(QUuid id, bool searchRecursive)
 	{
+		Q_UNUSED(searchRecursive)
 		if (_pages.contains(id)) return _pages.value(id);	// Item is Page
 
 		QHash<QUuid, Page*>::const_iterator iter;

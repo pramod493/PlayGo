@@ -3,6 +3,7 @@
 #include <QGraphicsObject>
 #include <QGraphicsItemGroup>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsSceneMouseEvent>
 #include <QGesture>
 #include "commonfunctions.h"
 #include "cdi2qtwrapper.h"
@@ -111,9 +112,9 @@ namespace CDI
 
 		void setDisableScaling(bool value);
 
-        void setHighlight(bool value);
+		void setHighlight(bool value);
 
-        bool isHighlighted() const;
+		bool isHighlighted() const;
 
 		bool isLocked() const;
 
@@ -177,9 +178,9 @@ namespace CDI
 
 		void onTransformChange(QGraphicsItem* component);
 
-        void preComponentDelete(Component* component);
+		void preComponentDelete(Component* component);
 
-    public slots:
+	public slots:
 		void internalTransformChanged()
 		{
 			pendingPositionUpdate = true;

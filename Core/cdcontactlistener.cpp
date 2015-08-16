@@ -1,10 +1,12 @@
 #include "cdcontactlistener.h"
+#include "physicsmanager.h"
 #include "cdi2qtwrapper.h"
 #include "QsLog.h"
 
 namespace CDI
 {
-	cdContactListener::cdContactListener()
+	cdContactListener::cdContactListener(QObject *parent)
+		: QObject(parent)
 	{
 
 	}

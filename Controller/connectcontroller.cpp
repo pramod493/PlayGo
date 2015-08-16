@@ -346,7 +346,7 @@ namespace CDI
 
 	void ConnectController::onGestureReceive(QGraphicsItem *graphicsitem)
 	{
-
+		Q_UNUSED(graphicsitem)
 	}
 
 	void ConnectController::onTabletEvent(QTabletEvent *event)

@@ -8,6 +8,8 @@
 #include <QFile>
 #include <QDir>
 
+#include <QMessageBox>
+
 using namespace std;
 using namespace CDI;
 vector<string> getDummyResults()
@@ -83,7 +85,7 @@ namespace CDI
 	QList<SearchResult*> SearchManager::search(QString filePath, int numResults)
 	{
 		vector<string> results;
-		if(true)
+		if(true)	// TODO - Eliminate for now
 		{
 			results = getDummyResults();
 		} else
@@ -105,7 +107,6 @@ namespace CDI
 			QFileInfo fileinfo = QFileInfo(str);
 			QString justFilename(fileinfo.fileName());
 			QString newFilepath = originialImageDir.filePath(justFilename);
-
 			SearchResult *searchResult = new SearchResult(newFilepath);
 			searchResults.push_back(searchResult);
 		}

@@ -42,7 +42,7 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 	// treeDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
 	// 					  Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
 	// treeDock->setWidget(tree);
-	tree = NULL;
+	tree = nullptr;
 
 	_toplevelWindow = parent;
 	_scene = static_cast<SketchScene*>(view->getPage()->scene());
@@ -54,10 +54,12 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 	// Installing event on QGraphicsView seems to filter out touch
 	_view->viewport()->installEventFilter(this);
 
+	// Customize settings of view
 	_view->setTransformationAnchor(QGraphicsView::NoAnchor);
 	_view->setOptimizationFlag(QGraphicsView::DontSavePainterState);
 	_view->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
 
+	// Allows drawing on background as well as foreground of view
 	connect(_view, SIGNAL(viewDrawforeground(QPainter*,const QRectF&)),
 			this, SLOT(drawMenusOnView(QPainter*,const QRectF&)));
 
@@ -169,21 +171,11 @@ void PlayGoController::initController()
 
 void PlayGoController::brushPress(QPointF pos, float pressure, int time)
 {
-	if (_page->currentComponent() == NULL && false)
-	{
-		Component* currentComponent = _page->createComponent();
-		QTransform t;
-		t = t.translate(pos.x(), pos.y());
-		currentComponent->setTransform(t);
-		_page->setCurrentComponent(currentComponent);
-		_page->currentComponent()->setZValue(Z_COMPONENTVIEW);
-	}
-
 	_currentStroke = new Stroke();
+	_currentStroke->setPos(pos);
 	_currentStroke->setPen(_defaultPen);
 	_currentStroke->setBrush(_defaultBrush);
 
-	//_page->currentComponent()->addToComponent(_currentStroke);
 	_currentStroke->push_point(Point2DPT(pos.x(),pos.y(),pressure, time));
 	_scene->addItem(_currentStroke);
 	_isDrawingStroke = true;
@@ -198,14 +190,31 @@ void PlayGoController::brushMove(QPointF pos, float pressure, int time)
 
 void PlayGoController::brushRelease(QPointF pos, float pressure, int time)
 {
-	if (_page == NULL) return;
-	if (_currentStroke == NULL || !_isDrawingStroke) return;
+	if (_page == NULL || _currentStroke == NULL || !_isDrawingStroke) return;
+
 	_isDrawingStroke = false;
 	_currentStroke->push_point(Point2DPT(pos.x(),pos.y(),pressure, time));
 	_currentStroke->applySmoothing(2);
-	_currentStroke = NULL;
 
+	// Do the addition to the component here
+	if (_page->currentComponent() == NULL)
+	{
+		Component* currentComponent = _page->createComponent();
+		QTransform t;
+		t = t.translate(pos.x(), pos.y());
+		currentComponent->setTransform(t);
+		_page->setCurrentComponent(currentComponent);
+		_page->currentComponent()->setZValue(Z_COMPONENTVIEW);
+	}
+
+	// Add the stroke to the compopnent
+	_page->currentComponent()->addToComponent(_currentStroke);
+
+	// recalculate the item's bounding rect
 	if (_page->currentComponent())_page->currentComponent()->recalculateBoundingRect();
+
+	// Set the current stroke's value to null
+	_currentStroke = nullptr;
 }
 
 void PlayGoController::shapePress(QPointF pos)
@@ -491,7 +500,7 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 	}
 	case UI::End :
 	{
-		QList<Component*> itemsToUse = getSelectableComponentsByPhysics(scenePos);
+		/*QList<Component*>*/ auto itemsToUse = getSelectableComponentsByPhysics(scenePos);
 
 		if (itemsToUse.size() < 2) break;
 		// Ignore all other components under selection
@@ -509,21 +518,20 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 		bool b_enableMotor = false;
 		float f_motorSpeed = 0;
 		float f_motorTorque = 0;
-		if (enableMotorCheckbox->isChecked())
-		{
-			b_enableMotor = true;
-			bool ok;
-			int speed = motorSpeed->text().toInt(&ok);
-			if (ok) f_motorSpeed = speed;		//revolutJointDef.motorSpeed = speed * 2.0f *3.14f;
-			int torque = motorTorque->text().toInt(&ok);
-			if (ok)	 f_motorTorque = torque;	//revolutJointDef.maxMotorTorque = torque;
+		getMotorParams(&b_enableMotor, &f_motorSpeed, &f_motorTorque);
+//		if (enableMotorCheckbox->isChecked())
+//		{
+//			b_enableMotor = true;
+//			bool ok;
+//			int speed = motorSpeed->text().toInt(&ok);
+//			if (ok) f_motorSpeed = speed;		//revolutJointDef.motorSpeed = speed * 2.0f *3.14f;
+//			int torque = motorTorque->text().toInt(&ok);
+//			if (ok)	 f_motorTorque = torque;	//revolutJointDef.maxMotorTorque = torque;
 
-			enableMotorCheckbox->setChecked(false);
-		}
-		{
-			// Allow searching/creation of stepping options
+//			enableMotorCheckbox->setChecked(false);
+//		}
 
-		}
+		qDebug() << b_enableMotor << f_motorSpeed << f_motorTorque;
 		PhysicsJoint* physicsJoint = _page->getPhysicsManager()->createPinJoint(
 					c1, c2, scenePos,
 					b_enableMotor, false,
@@ -676,6 +684,7 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 
 			b2Joint* joint = _page->getPhysicsManager()->createJoint(sliderDef);
 			b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
+			Q_UNUSED(sliderJoint)
 			//                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
 			_sliderComponentA->addToComponent(_sliderLineItem);
 
@@ -702,11 +711,12 @@ void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventSta
 	case UI::Began :
 	{
 		// TODO - Default to application of force
-		QList<QGraphicsItem*> selections = _scene->items(scenePos,
+		/*QList<QGraphicsItem*>*/ auto selections = _scene->items(scenePos,
 														 Qt::IntersectsItemBoundingRect);
 		if (selections.size() == 0) break;
 
-		foreach(QGraphicsItem* graphicsitem, selections)
+		//foreach(QGraphicsItem* graphicsitem, selections)
+		for(auto graphicsitem : selections)
 		{
 			if (graphicsitem->type() != Pixmap::Type) continue;
 			// Must have a component attached
@@ -868,6 +878,19 @@ void PlayGoController::hideConnectionsToolbar()
 	if (connectionOptionsToolbar) connectionOptionsToolbar->hide();
 }
 
+void PlayGoController::getMotorParams(bool* motorEnable, float *speed, float *torque)
+{
+	if (connectionOptionsToolbar)
+	{
+		*motorEnable = enableMotorCheckbox->isChecked();
+		bool ok;
+		float f_speed = motorSpeed->text().toFloat(&ok);
+		if (ok) *speed = f_speed;		//revolutJointDef.motorSpeed = speed * 2.0f *3.14f;
+		float f_torque= motorTorque->text().toFloat(&ok);
+		if (ok)	 *torque = f_torque;	//revolutJointDef.maxMotorTorque = torque;
+	}
+}
+
 bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 {
 	bool retval = true;
@@ -930,35 +953,65 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 {
 	if (obj != _viewport) return false;
 
+	auto eventType = event->type();
+
 	// Test out auto generated mouse events
-	switch (event->type())
+	switch (eventType)
 	{
-		case QEvent::MouseButtonDblClick :
-		case QEvent::MouseButtonPress :
-		case QEvent::MouseButtonRelease :
-		case QEvent::MouseMove :
-		case QEvent::Wheel :
+	case QEvent::MouseButtonDblClick :
+		qDebug() << "Double click detected @ filtering";
+		break;
+	case QEvent::MouseButtonPress :
+	case QEvent::MouseButtonRelease :
+	case QEvent::MouseMove :
+	case QEvent::Wheel :
+	{
+		QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
+		// \todo This does not capture the mouse events generated by pen
+		// Doing this at parent level will disrupt touch to m ouse conversions to other widgets too
+		if ( (mouseEvent != NULL ) &&
+			 (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized))
 		{
-			QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
-			// \todo This does not capture the mouse events generated by pen
-			// Doing this at parent level will disrupt touch to m ouse conversions to other widgets too
-			if ( (mouseEvent != NULL ) &&
-				 (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized))
-			{
-				event->ignore();
-				return true;
-			}
+			event->ignore();
+			return true;
 		}
 	}
+	default:
+		break;
+	}
 
+	// Pause the physics when interacting with the components/drawing
+	switch (eventType)
+	{
+	case QEvent::TouchBegin :
+	case QEvent::TabletPress :
+	case QEvent::MouseButtonPress :
+	{
+		_page->getPhysicsManager()->quickPause(true);
+		break;
+	}
+	case QEvent::TouchEnd :
+	case QEvent::TouchCancel :
+	case QEvent::MouseButtonRelease :
+	case QEvent::TabletRelease :
+	{
+		_page->getPhysicsManager()->quickPause(false);
+		_page->onSimulationStepStart();	// Update changes to physics before next start
+		break;
+	}
+	default:
+		break;
+	}
+
+	// filter all events from controller
 	if (_tapOverrideEnabled)
 	{
 		touchholdController->handleTapAndHold(event);	// Do not cancel events
 		return false;	// Send events to scene but not to controller.
 	}
 
-	QString msg = getEventname(event);
-	if (!msg.isEmpty()) QLOG_INFO() <<"Viewport event" << msg;
+	//QString msg = getEventname(event);
+	//if (!msg.isEmpty()) QLOG_INFO() <<"Viewport event" << msg;
 
 	switch(event->type())
 	{
@@ -973,6 +1026,9 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		return retval;
 	}
 	case QEvent::MouseButtonDblClick :
+	{
+		break;
+	}
 	case QEvent::MouseButtonPress :
 	case QEvent::MouseButtonRelease :
 	case QEvent::MouseMove :
@@ -988,22 +1044,16 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 	case QEvent::TabletRelease :
 	{
 		onTabletEventFromView(static_cast<QTabletEvent*>(event), _view);
-		// Let's try sending these to scene
-		break;
+		break;	// Let's try sending these to scene
 	}
 	case QEvent::Gesture :
 	{
 		QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(event);
 		onGestureEventFromView(gestureEvent);
-		// Let the scene handle the gesture as well.
-		break;
+		break;	// Let the scene handle the gesture as well.
 	}
-	case QEvent::KeyPress :
-	case QEvent::KeyRelease :
-	{
-		// Currently no use of keypress
+	default:
 		break;
-	}
 	}
 	return false;
 }
@@ -1364,9 +1414,9 @@ void PlayGoController::setTapOverride(bool value)
 	if (_tapOverrideEnabled == value) return;
 
 	_tapOverrideEnabled = value;
-	QList<Component*> components = _page->getComponents();
+	auto components = _page->getComponents();
 	bool touchEnable = (_tapOverrideEnabled ? false : true);
-	foreach (Component* component, components)
+	for(Component* component : components)
 		component->setAcceptTouchEvents(touchEnable);
 }
 
@@ -1598,6 +1648,8 @@ void PlayGoController::onTabletEventFromView(QTabletEvent *event,
 		case UI::Connect :
 			connectAction(event);
 			break;
+		default:
+			break;
 		}
 	} else if (event->pointerType() == QTabletEvent::Eraser)
 	{
@@ -1680,6 +1732,7 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 				// Update joint
 				PhysicsJoint* physicsJoint = touchEventOwner->getPhysicsJoint();
 				QPointF scenePos = touchEventOwner->scenePos();
+				// TODO - Move these operations to the joint itself
 				_page->getPhysicsManager()->updateJoint(physicsJoint, scenePos);
 
 				eventAcceptedByJoint = false;
@@ -1975,7 +2028,8 @@ void PlayGoController::clearCurrentScene()
 
 void PlayGoController::drawMenusOnView(QPainter * painter, const QRectF & rect)
 {
-
+	Q_UNUSED(painter)
+	Q_UNUSED(rect)
 }
 
 void PlayGoController::onExternalImageAdd(const QString &path)
@@ -2006,8 +2060,10 @@ void PlayGoController::loadImage(QString imagePath)
 
 void PlayGoController::loadImage(QString imagePath, QObject* obj, QDropEvent* event)
 {
+	Q_UNUSED(obj)	// TODO - Use this to check where the image came from
 	QPixmap _pixmap = QPixmap();
 	_pixmap.load(imagePath);
+	// TODO - This might actually be needed but keep it to reduce the memory footprint
 	if (_pixmap.width() > 500 || _pixmap.height() > 500)
 	{
 		_pixmap = _pixmap.scaled(QSize(500,500), Qt::KeepAspectRatio);

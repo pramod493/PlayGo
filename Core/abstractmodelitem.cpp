@@ -59,7 +59,7 @@ namespace CDI
 
 	void AbstractModelItem::setVisible(bool visible)
 	{
-        if(mask & isLocked)  return;
+		if(mask & isLocked)  return;
 		if (visible == isVisible()) return;	// No need to change the state of display
 		if (visible) mask &= ~isHidden;
 		else mask |= isHidden;
@@ -83,19 +83,19 @@ namespace CDI
 		setVisible(false);
 	}
 
-    bool AbstractModelItem::locked() const
-    {
-        if (mask & isLocked) return true;
-        return false;
-    }
+	bool AbstractModelItem::locked() const
+	{
+		if (mask & isLocked) return true;
+		return false;
+	}
 
-    void AbstractModelItem::lock(bool value)
-    {
-        if (value)
-            mask |= isLocked;
-        else
-            mask &= ~isLocked;
-    }
+	void AbstractModelItem::lock(bool value)
+	{
+		if (value)
+			mask |= isLocked;
+		else
+			mask &= ~isLocked;
+	}
 
 	QDataStream& operator<<(QDataStream& stream, const AbstractModelItem& item)
 	{
@@ -113,6 +113,8 @@ namespace CDI
 		// to get the ItemType
 
 		AbstractModelItem* ptr = NULL;
+		Q_UNUSED(t)
+		Q_UNUSED(parentComponent)
 
 //		switch (t)
 //		{

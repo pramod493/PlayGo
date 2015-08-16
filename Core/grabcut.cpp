@@ -219,7 +219,8 @@ namespace CDI
 		QPixmap pixmap = QPixmap();
 		pixmap.load(QString::fromStdString(imagepath));
 		pixmap = pixmap.scaled(900,900, Qt::KeepAspectRatio);
-		QGraphicsPixmapItem* pixmapItem = view->scene()->addPixmap(pixmap);
+		/*QGraphicsPixmapItem* pixmapItem = */
+		view->scene()->addPixmap(pixmap);
 		view->resize(pixmap.width(), pixmap.height());
 		return 1;
 	}

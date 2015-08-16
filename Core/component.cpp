@@ -101,6 +101,7 @@ namespace CDI
 	{
 		Q_UNUSED(widget)
 		Q_UNUSED(option)
+		Q_UNUSED(painter)
 		// parent object does not need to manage children paint operations
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		if (option->state & QStyle::State_Selected)
@@ -138,40 +139,40 @@ namespace CDI
 
 	void Component::setStatic(bool value)
 	{
-		if (_physicsBody)
+		if (_physicsBody == nullptr) return;
+
+		if (value)
 		{
-			if (value)
-			{
-				if (_anchorItem == NULL)
-				{
-					_anchorItem = new QGraphicsPathItem(this);
-					_anchorItem->setFlag(QGraphicsItem::ItemIgnoresParentOpacity);
-					_anchorItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-					QPen pen = QPen(Qt::blue);
-					pen.setWidth(3);
-					_anchorItem->setPen(pen);
+			_physicsBody->SetType(b2_staticBody);
 
-					QPainterPath path;
-					float length = 20;
-					path.moveTo(-length, -length);
-					path.lineTo(length, length);
-					path.moveTo(-length, length);
-					path.lineTo(length, -length);
-					_anchorItem->setPath(path);
-
-					_anchorItem->setPos(boundingRect().center());
-				} else
-				{
-					_anchorItem->show();
-				}
-					_physicsBody->SetType(b2_staticBody);
-			} else
+			if (_anchorItem)
 			{
-				_physicsBody->SetType(b2_dynamicBody);
-				if (_anchorItem)
-					delete _anchorItem;
-				_anchorItem = NULL;
+				_anchorItem->show();
+				return;
 			}
+
+			_anchorItem = new QGraphicsPathItem(this);
+			_anchorItem->setFlag(QGraphicsItem::ItemIgnoresParentOpacity);
+			_anchorItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+			QPen pen = QPen(Qt::blue);
+			pen.setWidth(3);
+			_anchorItem->setPen(pen);
+
+			QPainterPath path;
+			float length = 20;
+			path.moveTo(-length, -length);
+			path.lineTo(length, length);
+			path.moveTo(-length, length);
+			path.lineTo(length, -length);
+
+			_anchorItem->setPath(path);
+			_anchorItem->setPos(boundingRect().center());
+		} else
+		{
+			_physicsBody->SetType(b2_dynamicBody);
+			if (_anchorItem)
+				delete _anchorItem;
+			_anchorItem = nullptr;
 		}
 	}
 
@@ -199,30 +200,26 @@ namespace CDI
 		}
 	}
 
-		void Component::setHighlight(bool value)
+	void Component::setHighlight(bool value)
+	{
+		if (!value)
 		{
-				if (graphicsEffect() == NULL)
-				{
-						QGraphicsColorizeEffect* effect = new QGraphicsColorizeEffect(this);
-						effect->setColor(QColor(255,100,100,255));
-						effect->setStrength(0.75f);
-						setGraphicsEffect(effect);
-				}
-//				if (value == false)
-//				{
-//						if (_highlightEffect)
-//								_highlightEffect->setEnabled(false);
-//				} else
-//				{
-//						if (_highlightEffect)
-//						{
-//								_highlightEffect->setEnabled(true);
-//						} else
-//						{
-
-//						}
-//				}
+			if (graphicsEffect())
+				graphicsEffect()->setEnabled(false);
+			return;
 		}
+
+		if (graphicsEffect() == nullptr)
+		{
+			QGraphicsColorizeEffect* effect = new QGraphicsColorizeEffect(this);
+			effect->setColor(QColor(255,100,100,255));
+			effect->setStrength(0.75f);
+			setGraphicsEffect(effect);
+		} else
+		{
+			graphicsEffect()->setEnabled(true);
+		}
+	}
 
 	bool Component::isHighlighted() const
 		{
@@ -248,6 +245,20 @@ namespace CDI
 	{
 		switch (event->type())
 		{
+		case QEvent::GraphicsSceneMousePress :
+		case QEvent::GraphicsSceneMouseMove :
+		case QEvent::GraphicsSceneMouseRelease :
+		{
+			event->accept();
+			return true;
+			break;
+		}
+		case QEvent::GraphicsSceneMouseDoubleClick :
+		{
+			setHighlight(!isHighlighted());
+			event->accept();
+			return true;
+		}
 		case QEvent::TouchBegin :
 		case QEvent::TouchUpdate :
 		case QEvent::TouchEnd :

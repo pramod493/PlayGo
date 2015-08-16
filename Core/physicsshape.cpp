@@ -17,7 +17,7 @@ namespace CDI
 		_currentscale = 1.0f;
 		scaledToPhysics = false;
 
-		int num_trias = p2tTrias.size();
+		int num_trias = static_cast<int>(p2tTrias.size());
 		for (int i=0; i < num_trias; i++)
 		{
 			Triangle* tria = new Triangle(p2tTrias[i]);
@@ -48,7 +48,7 @@ namespace CDI
 	{
 		stream << _id;
 		stream << _currentscale;
-		int size = trias.size();
+		int size = (int)trias.size();
 		stream << size;
 		for (int i=0; i< size; i++)
 		{

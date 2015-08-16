@@ -22,7 +22,7 @@ namespace ASM {
 		 // 8-bit, 4 channel
 		 case CV_8UC4:
 		 {
-			QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_RGB32 );
+			QImage image( inMat.data, inMat.cols, inMat.rows, (int)inMat.step, QImage::Format_RGB32 );
 
 			return image;
 		 }
@@ -30,7 +30,7 @@ namespace ASM {
 		 // 8-bit, 3 channel
 		 case CV_8UC3:
 		 {
-			QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_RGB888 );
+			QImage image( inMat.data, inMat.cols, inMat.rows, (int)inMat.step, QImage::Format_RGB888 );
 
 			return image.rgbSwapped();
 		 }
@@ -47,7 +47,7 @@ namespace ASM {
 				  sColorTable.push_back( qRgb( i, i, i ) );
 			}
 
-			QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_Indexed8 );
+			QImage image( inMat.data, inMat.cols, inMat.rows, (int)inMat.step, QImage::Format_Indexed8 );
 
 			image.setColorTable( sColorTable );
 

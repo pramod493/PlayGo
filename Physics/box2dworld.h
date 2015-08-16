@@ -11,130 +11,130 @@ namespace CDI
 {
 class Box2DWorld : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 protected:
-    QHash<b2Joint*, b2Body*> p_jointManager;
+	QHash<b2Joint*, b2Body*> p_jointManager;
 
-    b2World *p_b2World;
+	b2World *p_b2World;
 
-    int p_timerId;
-    
-    int p_isRunning;
+	int p_timerId;
 
-    float32 p_timeStep;
+	int p_isRunning;
 
-    int32 p_velocityIterations;
+	float32 p_timeStep;
 
-    int32 p_positionIterations;
+	int32 p_velocityIterations;
+
+	int32 p_positionIterations;
 
 public:
-    explicit Box2DWorld(const b2Vec2 &gravity = b2Vec2(0,0), 
-                        QObject *parent = 0);
+	explicit Box2DWorld(const b2Vec2 &gravity = b2Vec2(0,0),
+						QObject *parent = 0);
 
-    ~Box2DWorld() {
-        delete p_b2World;
-    }
+	~Box2DWorld() {
+		delete p_b2World;
+	}
 
-    //// Simulation options
-    void Start() {
-        p_timerId = startTimer(p_timeStep * 1000);
-        p_isRunning = 1;
-    }
+	//// Simulation options
+	void Start() {
+		p_timerId = startTimer(p_timeStep * 1000);
+		p_isRunning = 1;
+	}
 
-    void Pause() {
-        if (p_timerId > 0) killTimer(p_timerId);
-        p_timerId = 0;
-        p_isRunning = 0;
-    }
+	void Pause() {
+		if (p_timerId > 0) killTimer(p_timerId);
+		p_timerId = 0;
+		p_isRunning = 0;
+	}
 
-    void Reset() {
-        qDebug() << "Reset the simulation";
-    }
+	void Reset() {
+		qDebug() << "Reset the simulation";
+	}
 
-    //// Object management in the world
-    b2Body* CreateBody(const b2BodyDef *qb2BodyDef);
+	//// Object management in the world
+	b2Body* CreateBody(const b2BodyDef *qb2BodyDef);
 
-    void DestroyBody(b2Body* body)
-    {
-        p_b2World->DestroyBody(body);
-    }
+	void DestroyBody(b2Body* body)
+	{
+		p_b2World->DestroyBody(body);
+	}
 
-    void CreateJoint();
+	void CreateJoint();
 
-    void DestroyJoint(b2Joint* joint)
-    {
-        
-    }
+	void DestroyJoint(b2Joint* joint)
+	{
+		B2_NOT_USED(joint);
+	}
 
-    //// Simulation settings tampering
-    void SetGravity();
+	//// Simulation settings tampering
+	void SetGravity();
 
-    void GetGravity();
+	void GetGravity();
 
-    void Lock();
+	void Lock();
 
-    bool isLocked();
+	bool isLocked();
 
-    //// Individual object behavior configuration
-    void SetAutoClearForces();
+	//// Individual object behavior configuration
+	void SetAutoClearForces();
 
-    void GetAutoClearForces();
+	void GetAutoClearForces();
 
-    void ClearForces();
+	void ClearForces();
 
-    //// World flags - Not of the normal types
-    void SetAllowSleeping();
+	//// World flags - Not of the normal types
+	void SetAllowSleeping();
 
-    void GetAllowSleeping();
+	void GetAllowSleeping();
 
-    void SetWarmStarting();
+	void SetWarmStarting();
 
-    void GetWarmStarting();
+	void GetWarmStarting();
 
-    void SetContinuousPhysics();
+	void SetContinuousPhysics();
 
-    void GetContinuousPhysics();
+	void GetContinuousPhysics();
 
-    void SetSubStepping();
+	void SetSubStepping();
 
-    void GetSubstepping();
+	void GetSubstepping();
 
-    void GetContactManager();
+	void GetContactManager();
 
-    void GetProfile();
+	void GetProfile();
 
-    void SetDestructionListener();
+	void SetDestructionListener();
 
-    void SetContactListener();
+	void SetContactListener();
 
-    void QueryAABB();
+	void QueryAABB();
 
-    void Raycast();
+	void Raycast();
 
-    int GetProxyCount();
+	int GetProxyCount();
 
-    int GetBodyCount();
+	int GetBodyCount();
 
-    int GetJointCount();
+	int GetJointCount();
 
-    int GetContactCount();
+	int GetContactCount();
 
-    void SetTimeStep(float tStep);
+	void SetTimeStep(float tStep);
 
-    void SetVelocityIterations(int velIters);
+	void SetVelocityIterations(int velIters);
 
-    void SetPositionIterations(int posIters);
+	void SetPositionIterations(int posIters);
 
-    bool isRunning();
+	bool isRunning();
 
-    virtual void Step();
+	virtual void Step();
 
 signals:
 
 public slots:
-    void simulate(bool flag);
+	void simulate(bool flag);
 
 protected:
-    void timerEvent(QTimerEvent *event);
+	void timerEvent(QTimerEvent *event);
 };
 }

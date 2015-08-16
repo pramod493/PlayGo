@@ -21,50 +21,10 @@ namespace CDI
 	class PlayGoController;
 	class Component;
 	class PhysicsJoint;
-	class RangeSelector : public QObject, public QGraphicsPathItem
-	{
-		Q_OBJECT
-		int _angle;				/**< Angle of the handle (in degrees) */
-		bool _itemIsLocked;		/**< Item is currently being transformed */
-		QPointF _startPos;		/**< start position of drag */
-		QPointF _prevPos;		/**< previous position of drag */
-		QGraphicsSimpleTextItem *textItem;
-
-	public:
-		RangeSelector(QGraphicsItem  *parent = NULL);
-		~RangeSelector() {}
-
-		/**
-		 * @brief Returns the current angle value
-		 * @return Angle of the selector
-		 */
-		int currentAngle();
-
-		/**
-		 * @brief Sets the angle of the selector
-		 * @param value
-		 */
-		void setAngle(int value);
-
-	protected:
-		void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
-		void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
-		void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent);
-
-		/**
-		 * @brief Manage the touch events received by the item
-		 * @param event Event received from scene
-		 * @return true, if accepted; false otherwise
-		 */
-		bool sceneEvent(QEvent* event);
-
-	signals:
-		/**
-		 * @brief Emitted at the end of event once the angle is changes
-		 */
-		void onAngleChanged();
-	};
-
+	/**
+	 * @brief The TouchAndHoldController class displays the on screen menu overlaid
+	 * on the selected entity
+	 */
 	class TouchAndHoldController : public QObject
 	{
 		Q_OBJECT
@@ -115,6 +75,12 @@ namespace CDI
 		 * @param scenePos
 		 */
 		void enableOverlay(Component* component, QPointF scenePos);
+
+		/**
+		 * @brief Dispay overlay with options related to joint
+		 * @param jointGraphics JointGraphics
+		 * @param scenePos selection position
+		 */
 		void enableOverlay(JointGraphics* jointGraphics, QPointF scenePos);
 
 		void enableJointLimitsSelection(JointGraphics *jointGraphics, QPointF scenePos);
@@ -147,6 +113,7 @@ namespace CDI
 		void slotEditJointSpeed();
 		void slotEditJointTorque();
 
+		void slotMotorParamsChange();
 	};
 }
 #endif // TOUCHANDHOLDCONTROLLER_H

@@ -629,13 +629,12 @@ namespace CDI
 			QLOG_ERROR() << "List of selected items is empty.";
 			return QRectF();
 		}
-
-		QRectF baseRect = listOfItems[0]->sceneTransform().inverted().mapRect(listOfItems[0]->boundingRect());
+		// sceneTransform().inverted() does not work.. i think
+		QRectF baseRect = listOfItems[0]->mapRectToScene(listOfItems[0]->boundingRect());
 		for (int i=1; i < listOfItems.size(); i++)
 		{
 			baseRect = baseRect.united(
-						listOfItems[i]->sceneTransform().inverted().mapRect
-						(listOfItems[i]->boundingRect()));
+						listOfItems[i]->mapRectToScene(listOfItems[i]->boundingRect()));
 		}
 		return baseRect;
 	}
@@ -734,7 +733,7 @@ namespace CDI
 
 	void Page::removeComponentConnections(Component *component)
 	{
-		// Right now nothing to do here
+		Q_UNUSED(component)
 	}
 
 	// Slots
@@ -783,9 +782,11 @@ namespace CDI
 
 	void Page::onSimulationStepStart()
 	{
-		if (_physicsManager)
+		if (_physicsManager && transformedComponents.size())
+		{
 			_physicsManager->updateFromComponentPosition(transformedComponents);
-		transformedComponents.clear();	// update the coords
+			transformedComponents.clear();	// update the coords
+		}
 	}
 
 	void Page::onSimulationStepComplete()

@@ -53,7 +53,7 @@ namespace CDI
 		virtual QDataStream& deserialize(QDataStream& stream);
 
 	protected:
-		virtual void removeComponentConnections(Component* component) {}
+		virtual void removeComponentConnections(Component* component) {Q_UNUSED(component)}
 
 	};
 }

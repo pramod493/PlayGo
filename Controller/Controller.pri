@@ -7,7 +7,8 @@ SOURCES += \
     $$PWD/mainsettings.cpp \
     $$PWD/cdState.cpp \
     $$PWD/sketchstate.cpp \
-    $$PWD/SelectableActions.cpp
+    $$PWD/SelectableActions.cpp \
+    $$PWD/pinjointlimitselector.cpp
 
 HEADERS += \
     $$PWD/PlayGoController.h \
@@ -16,7 +17,8 @@ HEADERS += \
     $$PWD/mainsettings.h \
     $$PWD/cdState.cpp \
     $$PWD/sketchstate.h \
-    $$PWD/SelectableActions.h
+    $$PWD/SelectableActions.h \
+    $$PWD/pinjointlimitselector.h
 
 FORMS += \
     $$PWD/mainsettings.ui

@@ -3,16 +3,15 @@
 #include <QtAlgorithms>
 #include "box2dworld.h"
 #include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsPolygonItem>
 #include <QMessageBox>
 #include <QDebug>
+
 using namespace CDI;
 class BoxDebugScene : public b2Draw
 {
 public:
-	QGraphicsView* view;
 	QGraphicsScene* scene;
 	QList<QGraphicsItem*> itemsToDelete;
 
@@ -25,6 +24,12 @@ public:
 		scale = displayScale;
 	}
 
+	void setScene(QGraphicsScene* newScene)
+	{
+		if (scene == newScene) return;
+		scene = newScene;
+	}
+
 	void clear()
 	{
 		qDeleteAll(itemsToDelete);
@@ -34,6 +39,7 @@ public:
 
 	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 	{
+		Q_UNUSED(color)
 		QPolygonF polygon;
 		for (int i=0; i < vertexCount; i++)
 		{
@@ -53,6 +59,7 @@ public:
 	}
 	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 	{
+		Q_UNUSED(color)
 		QPolygonF polygon;
 		for (int i=0; i < vertexCount; i++)
 		{
@@ -74,6 +81,7 @@ public:
 
 	void DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
 	{
+		Q_UNUSED(color)
 		QGraphicsEllipseItem* ellipse = scene->addEllipse(QRectF(center.x-radius, center.y-radius, 2*radius, 2* radius));
 		ellipse->setPen(QPen(Qt::red));
 		scene->update(ellipse->boundingRect());
@@ -82,10 +90,12 @@ public:
 
 	void DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
 	{
+		Q_UNUSED(axis)
 		DrawCircle(center, radius, color);
 	}
 	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 	{
+		Q_UNUSED(color)
 		QGraphicsLineItem* line = scene->addLine(
 					QLineF(QPointF(p1.x,p1.y)*scale, QPointF(p2.x,p2.y)*scale));
 		line->setPen(QPen(Qt::green));

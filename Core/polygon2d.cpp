@@ -120,6 +120,7 @@ namespace CDI
 
 	bool Polygon2D::containsPoint(const Point2D &pt, SelectionType rule, float margin)
 	{
+		Q_UNUSED(margin) Q_UNUSED(rule)
 		return polygon().containsPoint(pt, Qt::WindingFill);
 	}
 

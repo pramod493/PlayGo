@@ -49,7 +49,7 @@ namespace CDI
 		:QObject(physicsManager.parent())
 	{
 		defaultPhysicsScale = getPhysicsScale();
-		_settings = PhysicsSettings();
+		_settings = physicsManager._settings;
 		_enableDebugView = physicsManager.enableDebugView();
 
 		init();
@@ -67,14 +67,19 @@ namespace CDI
 							  | b2Draw::e_centerOfMassBit);//b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
 		_b2World->SetDebugDraw(debugView);
 
+		_contactListener = new cdContactListener(this);
+		_b2World->SetContactListener(_contactListener);
+
 		_internalLock = false;
 		_isRunning = false;
+		_quickpause = false;
 		timer = NULL;
 	}
 
 	PhysicsManager::~PhysicsManager()
 	{
-		if (_b2World!= NULL) delete _b2World;
+		if (_b2World) delete _b2World;
+		if (_contactListener) delete _contactListener;
 	}
 
 	b2Body* PhysicsManager::createBody(const b2BodyDef &def)
@@ -154,16 +159,24 @@ namespace CDI
 
 	PhysicsJoint* PhysicsManager::createPrismaticJoint(Component *c1, Component *c2,
 											   QPointF startPos, QPointF endPos,
-											   bool enableMotoe, bool enableLimits,
+											   bool enableMotor, bool enableLimits,
 											   float motorSpeed, float motorForce,
 											   float lowerLimit, float upperLimit)
 	{
+		Q_UNUSED(startPos)
+		Q_UNUSED(endPos)
+		Q_UNUSED(enableMotor)
+		Q_UNUSED(enableLimits)
+		Q_UNUSED(motorSpeed)
+		Q_UNUSED(motorForce)
+		Q_UNUSED(lowerLimit)
+		Q_UNUSED(upperLimit)
+
 		b2PrismaticJointDef* jointDef = new b2PrismaticJointDef;
 		jointDef->bodyA = c1->physicsBody();
-		jointDef->bodyB = c1->physicsBody();
+		jointDef->bodyB = c2->physicsBody();
 
-		QPointF direction = endPos - startPos;
-
+		//QPointF direction = endPos - startPos;
 		return NULL;
 	}
 
@@ -297,14 +310,14 @@ namespace CDI
 		connect(timer, SIGNAL(timeout()),
 				this, SLOT(step()));
 		timer->start(timerStepIn_msecs);
-
+		_quickpause = false;
 		_isRunning = true;
 		if (debugView) debugView->clear();
 	}
 
 	void PhysicsManager::step()
 	{
-		if (_b2World == NULL) return;
+		if (_b2World == NULL || _quickpause) return;
 
 		emit physicsStepStart();
 		_b2World->Step(_settings.timeStep, _settings.velocityIterations,
@@ -317,17 +330,35 @@ namespace CDI
 		emit physicsStepComplete();
 	}
 
+	void PhysicsManager::quickPause(bool enable)
+	{
+		// NOTE - Not that good of an idea
+		return;
+		qDebug() << "Pausing" << enable;
+		_quickpause = enable;
+	}
+
 	void PhysicsManager::setEnableGravity(bool enable)
 	{
-		if (enable)
-			_b2World->SetGravity
-					(b2Vec2(_settings.gravity.x(), _settings.gravity.y()));
-		else
-			_b2World->SetGravity(b2Vec2(0,0));
+		// Check if it is alredy in requested state
+		if (enable == _settings.enableGravity) return;
+		_b2World->SetGravity(enable ?
+							 b2Vec2(_settings.gravity.x(), _settings.gravity.y()) :
+								 b2Vec2(0,0));
+		_settings.enableGravity = enable;
+	}
+
+	bool PhysicsManager::isGravityEnabled() const
+	{
+		return _settings.enableGravity;
 	}
 
 	void PhysicsManager::setEnableMotor(bool enable)
 	{
+		if (_settings.enableMotor == enable) return;	// Nothing to do
+
+		_settings.enableMotor = enable;
+
 		foreach (PhysicsJoint* physicsJoint, _jointList)
 		{
 			switch (physicsJoint->_box2dJointType)
@@ -362,6 +393,13 @@ namespace CDI
 				bodyB->SetAngularVelocity(0);
 			}
 		}
+
+
+	}
+
+	bool PhysicsManager::isMotorEnabled() const
+	{
+		return _settings.enableMotor;
 	}
 
 	void PhysicsManager::setGlobalCollision

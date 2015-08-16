@@ -204,6 +204,7 @@ namespace CDI
 		void createConnectionsToolbar();
 		void showConnectionsToolbar();
 		void hideConnectionsToolbar();
+		void getMotorParams(bool* motorEnable, float *speed, float *torque);
 
 		/**
 		 * @brief Handles updates whenever MODE is changed.
