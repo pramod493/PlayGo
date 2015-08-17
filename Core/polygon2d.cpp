@@ -49,6 +49,20 @@ namespace CDI
 #endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
+	Polygon2D::Polygon2D(const Polygon2D& copy)
+		: QGraphicsPolygonItem(copy.polygon(), copy.parentItem())
+	{
+		_id = uniqueHash();
+		applyCustomRenderSettings = false;
+		_internalPolygon = QPolygonF(copy._internalPolygon);
+		_physicsShape = new PhysicsShape(*copy._physicsShape);
+
+		setZValue(copy.zValue());
+
+		setPen(copy.pen());
+		setBrush(copy.brush());
+	}
+
 	Polygon2D::~Polygon2D()
 	{
 		_internalPolygon.clear();

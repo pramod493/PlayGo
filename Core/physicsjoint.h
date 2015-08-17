@@ -57,7 +57,7 @@ namespace CDI
 
 		Component* getComponentB() const;
 
-		virtual bool update();
+		virtual bool updateJoint();
 
 		//virtual void updateJoint();
 
@@ -97,14 +97,30 @@ namespace CDI
 		int type() const { return Type; }
 
 		virtual void initializePainterPath() = 0;
-
 	};
 
+	/**
+	 * @brief The PinJointGraphics class displays the pin joint between two
+	 * components. In case of new joint, it also displays the status of motor
+	 */
 	class PinJointGraphics : public JointGraphics
 	{
 	public :
 		PinJointGraphics(PhysicsJoint* physicsJoint, QGraphicsItem* parent = 0);
 		void initializePainterPath();
+	};
+
+	/**
+	 * @brief The SliderJointGraphics class dispalys the slider/prismatic joint
+	 * between two components
+	 */
+	class SliderJointGraphics : public JointGraphics
+	{
+	public:
+		SliderJointGraphics(PhysicsJoint* physicsJoint, QGraphicsItem* parent = 0)
+			: JointGraphics(physicsJoint, parent)
+		{}
+		void initializePainterPath() {}
 	};
 
 }

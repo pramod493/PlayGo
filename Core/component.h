@@ -63,6 +63,8 @@ namespace CDI
 	public:
 		Component(QGraphicsItem* parent = 0);
 
+		Component(const Component& copy);
+
 		virtual ~Component();
 
 		/**

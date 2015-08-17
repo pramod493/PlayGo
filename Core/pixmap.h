@@ -10,21 +10,23 @@ namespace CDI
 	class Pixmap : public QGraphicsPixmapItem
 	{
 	public:
-        enum {Type = UserType + IMAGEVIEW };
+		enum {Type = UserType + IMAGEVIEW };
 
-    protected:
-        bool _highlighted;
+	protected:
+		bool _highlighted;
 		QUuid _id;
 		QString _filename;
 
 		PhysicsShape* _physicsShape;
 
-    public:
+	public:
 		Pixmap(QGraphicsItem* parent = 0);
 
 		Pixmap(QString filepath, QGraphicsItem* parent = 0);
 
 		Pixmap(const QPixmap &pixmap, QString filepath, QGraphicsItem* parent = 0);
+
+		Pixmap(const Pixmap& copy);
 
 		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -45,9 +47,9 @@ namespace CDI
 
 		void setFilename(QString filepath);
 
-        bool isHighlighted() const;
+		bool isHighlighted() const;
 
-        void highlight(bool value);
+		void highlight(bool value);
 
 		QDataStream& serialize(QDataStream& stream) const;
 

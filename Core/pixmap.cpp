@@ -6,7 +6,7 @@ namespace CDI
 		:QGraphicsPixmapItem(parent)
 	{
 		_id = uniqueHash();
-        _highlighted = false;
+		_highlighted = false;
 		_physicsShape = NULL;
 
 //        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
@@ -22,7 +22,7 @@ namespace CDI
 		ellipse->setTransform(QTransform());
 		ellipse->setZValue(1.0f);
 #endif //CDI_DEBUG_DRAW_SHAPE
-    }
+	}
 
 	Pixmap::Pixmap(QString filepath, QGraphicsItem* parent)
 		: QGraphicsPixmapItem(parent)
@@ -41,8 +41,8 @@ namespace CDI
 //			initializePhysicsShape();
 		}
 
-		// TODO - Set shape mode to AABB again if it hinders performance
-//		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		// NOTE - Set shape mode to AABB again if it hinders performance
+		// setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
 		setShapeMode(QGraphicsPixmapItem::MaskShape);
 
 		setZValue(Z_IMAGEVIEW);
@@ -80,6 +80,19 @@ namespace CDI
 #endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
+	Pixmap::Pixmap(const Pixmap& copy)
+		:QGraphicsPixmapItem(copy.pixmap(), copy.parentItem())
+	{
+		_id = uniqueHash();
+		_highlighted = false;
+		_physicsShape = new PhysicsShape(*copy._physicsShape);
+		_filename = copy.filename();
+		setShapeMode(copy.shapeMode());
+		setZValue(copy.zValue());
+
+		setTransform(copy.transform());
+	}
+
 	void Pixmap::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 	{
 		QGraphicsPixmapItem::paint(painter, option, widget);
@@ -97,19 +110,29 @@ namespace CDI
 
 	void Pixmap::resetPhysicsShape()
 	{
-        initializePhysicsShape();
+		initializePhysicsShape();
+	}
+
+	QString Pixmap::filename() const
+	{
+		return _filename;
+	}
+
+	void Pixmap::setFilename(QString filepath)
+	{
+		_filename = filepath;
 	}
 
 	bool Pixmap::isHighlighted() const
-    {
-        return _highlighted;
-    }
+	{
+		return _highlighted;
+	}
 
 	void Pixmap::highlight(bool value)
-    {
-        if (_highlighted == value) return;  // Do nothing
-        _highlighted = value;
-    }
+	{
+		if (_highlighted == value) return;  // Do nothing
+		_highlighted = value;
+	}
 
 	QDataStream& Pixmap::serialize(QDataStream& stream) const
 	{
@@ -135,13 +158,13 @@ namespace CDI
 		tmpPixmap.save(filepath);
 		vector<p2t::Triangle*> p2tTrias = generatePolygonFromImage(filepath);
 		_physicsShape  = new PhysicsShape(p2tTrias);
+
 		for (int i=0; i < p2tTrias.size(); i++)
 		{
 			p2t::Triangle* tria = p2tTrias[i];
 			if (tria) delete tria;
 			p2tTrias[i] = 0;
 		}
-        QLOG_INFO() << "Regenerated Pixmap physics shape. " <<
-                       p2tTrias.size() << "triangles created";
+		p2tTrias.clear();
 	}
 }

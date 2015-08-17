@@ -38,6 +38,7 @@ namespace CDI
 		QAction *_componentLockAction;
 		QAction *_componentUnlockAction;
 		QAction *_componentEditAction;		// Edit shape action
+		QAction *_componentCopyAction;
 		QAction *_componentDisableScaleAction;
 		QAction *_componentDeleteAction;
 		QAction *_startLayerManager;
@@ -61,6 +62,7 @@ namespace CDI
 		Component* _selectedComponent;
 		JointGraphics* _selectedJoint;
 		PhysicsJoint* _selectedPhysicsJoint;
+		bool _jointParamsChanged;
 		QPointF _scenePos;
 
 	public:
@@ -100,6 +102,7 @@ namespace CDI
 		void slotComponentLockAction();
 		void slotComponentUnlockAction();
 		void slotComponentEditAction();
+		void slotComponentCopyAction();
 		void slotComponentDisableScaleAction();
 		void slotComponentDeleteAction();
 		void slotEnableCollisionAction();

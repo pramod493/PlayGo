@@ -89,7 +89,7 @@ namespace CDI
 		return componentB;
 	}
 
-	bool PhysicsJoint::update()
+	bool PhysicsJoint::updateJoint()
 	{
 		return _physicsManager->updateJoint(this);
 	}
@@ -149,8 +149,10 @@ namespace CDI
 		_painterPath.moveTo(0,0);
 
 		radius += 15;
-		b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(_physicsJoint->joint());
-		if (revoluteJoint->IsMotorEnabled())
+
+		b2RevoluteJointDef* revoluteJointDef =
+				static_cast<b2RevoluteJointDef*>(_physicsJoint->jointDef());
+		if (revoluteJointDef->enableMotor)
 		{
 			_painterPath.addText(QPointF(0,0),
 								 QFont("Times", 12),

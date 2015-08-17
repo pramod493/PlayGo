@@ -29,6 +29,8 @@ namespace CDI
 
 		Polygon2D(const QPolygonF& polygon, QGraphicsItem* parent = 0);
 
+		Polygon2D(const Polygon2D& copy);
+
 		virtual ~Polygon2D();
 
 		int type() const { return Type; }

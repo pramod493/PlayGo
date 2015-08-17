@@ -82,6 +82,76 @@ namespace CDI
 #endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
+	Component::Component(const Component &copy)
+	{
+		_id = uniqueHash();
+		setParentItem(copy.parentItem());
+		setParent(copy.parent());
+
+		_physicsBody = NULL;
+
+		setAcceptTouchEvents(copy.acceptTouchEvents());
+		setFiltersChildEvents(true);
+		setZValue(copy.zValue());
+
+		disableScaling	= copy.disableScaling;
+		previousScale	= copy.previousScale;
+		groupIndex		= copy.groupIndex;
+		maskBits		= copy.maskBits;
+		categoryBits	= copy.categoryBits;
+		_density		= copy._density;
+
+		////// Copy all the children
+		auto listChildren = copy.childItems();
+		for(QGraphicsItem* graphicsItem : listChildren)
+		{
+			switch(graphicsItem->type())
+			{
+			case Stroke::Type :
+			{
+				break;
+			}
+			case Polygon2D::Type :
+			{
+				Polygon2D* copyPolygon =
+						qgraphicsitem_cast<Polygon2D*>(graphicsItem);
+				Polygon2D* newPolygon = new Polygon2D(*copyPolygon);
+
+				addToComponent(newPolygon);
+				newPolygon->setTransform(copyPolygon->transform());
+				break;
+			}
+			case Pixmap::Type :
+			{
+				Pixmap* copyPixmap =
+						qgraphicsitem_cast<Pixmap*>(graphicsItem);
+				Pixmap* newPixmap =
+						new Pixmap(copyPixmap->pixmap(), copyPixmap->filename(), this);
+
+				addToComponent(newPixmap);
+				newPixmap->setTransform(copyPixmap->transform());
+				break;
+			}
+			default:
+				break;
+			}
+		}
+
+		connect(this, SIGNAL(xChanged()),
+				this, SLOT(internalTransformChanged()));
+
+		connect(this, SIGNAL(yChanged()),
+				this, SLOT(internalTransformChanged()));
+
+		connect(this, SIGNAL(scaleChanged()),
+				this, SLOT(internalTransformChanged()));
+
+		connect(this, SIGNAL(rotationChanged()),
+				this, SLOT(internalTransformChanged()));
+
+		setTransform(copy.transform());
+	}
+
 	Component::~Component()
 	{
 		// Deletion handled by Page object

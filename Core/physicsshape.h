@@ -114,6 +114,8 @@ namespace CDI
 
 		PhysicsShape(vector<p2t::Triangle*> p2tTrias);
 
+		PhysicsShape(const PhysicsShape& copy);
+
 		virtual ~PhysicsShape();
 
 		ItemType type() const;

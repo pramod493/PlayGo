@@ -24,6 +24,7 @@ namespace CDI
 		_componentLockAction		= new QAction(QIcon(":/images/overlay/lock.png"), tr("Lock"), this);
 		_componentUnlockAction		= new QAction(QIcon(":/images/overlay/unlock.png"), tr("Unlock"), this);
 		_componentEditAction		= new QAction(QIcon(":/images/overlay/edit.png"), tr("Edit"), this);
+		_componentCopyAction		= new QAction(QIcon(":/images/overlay/layers.png"), tr("Copy"), this);
 		_componentDisableScaleAction = new QAction(QIcon(":/images/overlay/anchor.png"), tr("Disable scaling"), this);
 		_componentDeleteAction		= new QAction(QIcon(":/images/overlay/delete-01.png"), tr("Delete"), this);
 		_startLayerManager			= new QAction(QIcon(":/images/overlay/layers.png"), tr("Layers"), this);
@@ -40,49 +41,64 @@ namespace CDI
 		_editJointSpeedAction		= new QAction(QIcon(":/images/overlay/speed.png"), tr("Change max speed"), this);
 		_editJointTorque			= new QAction(QIcon(":/images/overlay/torque.png"), tr("Change force"), this);
 
-		parentGroup = NULL;		//
+		parentGroup = nullptr;		//
 
 		_componentEditMode = false;
 		_jointEditMode = false;
 
-		_selectedComponent 		= NULL;
-		_selectedJoint 			= NULL;
-		_selectedPhysicsJoint 	= NULL;
+		_selectedComponent 		= nullptr;
+		_selectedJoint 			= nullptr;
+		_selectedPhysicsJoint 	= nullptr;
+		_jointParamsChanged = false;
 
 		// Connect actions to slots
+		// Close
 		connect(_closeOverlayAction, SIGNAL(triggered()),
 				this, SLOT(slotCloseOverlay()));
+		// Lock
 		connect(_componentLockAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentLockAction()));
+		// Unlock
 		connect(_componentUnlockAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentUnlockAction()));
+		// Edit
 		connect(_componentEditAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentEditAction()));
+		// Copy
+		connect(_componentCopyAction, SIGNAL(triggered()),
+				this, SLOT(slotComponentCopyAction()));
+		// Disable scaling
 		connect(_componentDisableScaleAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentDisableScaleAction()));
+		// Delete
 		connect(_componentDeleteAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentDeleteAction()));
-
+		// Enable collision
 		connect(_enableComponentCollision, SIGNAL(triggered()),
 				this, SLOT(slotEnableCollisionAction()));
+		// Disable collision
 		connect(_disableComponentCollision, SIGNAL(triggered()),
 				this, SLOT(slotDisableCollisionAction()));
 
+		// Joint delete
 		connect(_jointDeleteAction, SIGNAL(triggered()),
 				this, SLOT(slotJointDelete()));
-
+		// Motor enable
 		connect(_enableMotorAction, SIGNAL(triggered()),
 				this, SLOT(slotEnableMotor()));
+		// Motor disable
 		connect(_disableMotorAction, SIGNAL(triggered()),
 				this, SLOT(slotDisableMotor()));
-
+		// Limits enable
 		connect(_enableLimitsAction, SIGNAL(triggered()),
 				this, SLOT(slotEnableLimits()));
+		// Limits disable
 		connect(_disableLimitsAction, SIGNAL(triggered()),
 				this, SLOT(slotDisableLimits()));
-
+		// Change speed
 		connect(_editJointSpeedAction, SIGNAL(triggered()),
 				this, SLOT(slotEditJointSpeed()));
+		// Change torque - Unused
 		connect(_editJointTorque, SIGNAL(triggered()),
 				this, SLOT(slotEditJointTorque()));
 	}
@@ -190,11 +206,17 @@ namespace CDI
 		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 		angle += delta;
 
-		SelectableActions* layerItem = new SelectableActions
+		SelectableActions* copyItem = new SelectableActions
+				(_componentCopyAction, parentGroup);
+		copyItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		copyItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += delta;
+
+		/*SelectableActions* layerItem = new SelectableActions
 				(_startLayerManager, parentGroup);
 		layerItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
 		layerItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
+		angle += delta;*/
 
 		parentGroup->setPos(scenePos);
 		parentGroup->setZValue(Z_UIVIEW);
@@ -340,7 +362,8 @@ namespace CDI
 
 	bool TouchAndHoldController::handleTapAndHold(QEvent *event)
 	{
-		return false;
+		return false;		// Nothing to be done here
+
 		switch(event->type())
 		{
 		case QEvent::TouchBegin :
@@ -456,15 +479,24 @@ namespace CDI
 
 	void TouchAndHoldController::slotCloseOverlay()
 	{
+		if (_jointEditMode && _jointParamsChanged && (_selectedJoint != nullptr))
+		{
+			// update the joint parameters
+			_jointParamsChanged = false;
+			_selectedJoint->getPhysicsJoint()->updateJoint();
+			_selectedJoint->initializePainterPath();	// Manages reupdate
+		}
+
 		if (parentGroup)
 			delete parentGroup;
 
 		// Clear all variables
-		parentGroup = 0;	// Clean up
+		parentGroup = nullptr;	// Clean up
 		_componentEditMode = false;
 		_jointEditMode = false;
-		_selectedComponent = 0;
-		_selectedJoint = 0;
+		_selectedComponent = nullptr;
+		_selectedJoint = nullptr;
+		_jointParamsChanged = false;
 
 		_mainController->setTapOverride(false);
 	}
@@ -489,6 +521,19 @@ namespace CDI
 	{
 			if (!_componentEditMode) return;
 			// TODO - launch edit window
+	}
+
+	void TouchAndHoldController::slotComponentCopyAction()
+	{
+		if (_componentEditMode && _selectedComponent != nullptr)
+		{
+			auto newComponent =
+					_mainController->_page->createComponent(_selectedComponent);
+			/*QLOG_INFO() << "Component copied!" << _selectedComponent->id().toString()
+						<< newComponent->id().toString();*/
+			newComponent->moveBy(20,20);
+		}
+		slotCloseOverlay();
 	}
 
 	void TouchAndHoldController::slotComponentDisableScaleAction()
@@ -589,6 +634,7 @@ namespace CDI
 				def->motorSpeed = motorSpeed;
 				def->maxMotorTorque = motorTorque;
 			}
+			_jointParamsChanged = true;
 		}
 	}
 }

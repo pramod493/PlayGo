@@ -220,6 +220,13 @@ namespace CDI
 		return newComponent;
 	}
 
+	Component* Page::createComponent(Component* copy)
+	{
+		Component* newComponent = new Component(*copy);
+		addComponent(newComponent);
+		return newComponent;
+	}
+
 	void Page::addComponent(Component *component)
 	{
 		if (_components.contains(component->id())) return;

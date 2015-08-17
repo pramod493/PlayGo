@@ -141,6 +141,7 @@ namespace CDI
 
 		virtual Assembly* createAssembly();
 		virtual Component* createComponent();
+		virtual Component* createComponent(Component* copy);
 
 		virtual void addComponent(Component* component);
 		virtual void addAssembly(Assembly* assembly);

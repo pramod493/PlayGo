@@ -25,6 +25,20 @@ namespace CDI
 		}
 	}
 
+	PhysicsShape::PhysicsShape(const PhysicsShape &copy)
+	{
+		_id					= uniqueHash();
+		_currentscale		= copy._currentscale;
+		scaledToPhysics		= copy.scaledToPhysics;
+
+		for(Triangle* tria : copy.trias)
+			trias.push_back(new Triangle(*tria));
+
+		for(QPolygonF* polygon : copy.polygons)
+			polygons.push_back(new QPolygonF(*polygon));
+
+	}
+
 	PhysicsShape::~PhysicsShape()
 	{
 		for (int i=0; i< trias.size(); i++)
