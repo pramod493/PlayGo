@@ -3,84 +3,98 @@
 #include "commonfunctions.h"
 #include "abstractmodelitem.h"
 #include <QGraphicsLineItem>
+#include <QGraphicsPolygonItem>
 #include <QPen>
 #include <QBrush>
 #include <QLineF>
 #include <QPainter>
+#include <QVector2D>
+#include "cdi2qtwrapper.h"
 
 namespace CDI
 {
-	class Component;
-	class ForceGraphicsItem : public QGraphicsLineItem
+	/*-------------------------------------------------------
+	 *  ForceGraphicsItem class declaration
+	 * ----------------------------------------------------*/
+	class ForceGraphicsItem : public QGraphicsPolygonItem
 	{
-	protected:
-		float _edgewidth;
-		float _edgeangle;
 	public:
-		ForceGraphicsItem(QGraphicsItem* parent = 0)
-			:QGraphicsLineItem(parent)
-		{
-			init();
-		}
-
-		ForceGraphicsItem(float x1, float y1, float x2, float y2, QGraphicsItem* parent = 0)
-			:QGraphicsLineItem(x1,y1,x2,y2,parent)
-		{
-			init();
-		}
-
-		void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0)
-		{
-			Q_UNUSED(option)
-			Q_UNUSED(widget)
-			QLineF arrowLine = line();
-			float angle = arrowLine.angle();
-			painter->setPen(pen());
-			painter->drawLine(arrowLine);
-			arrowLine.setLength(_edgewidth);
-			arrowLine.setAngle(angle - _edgeangle);
-			painter->drawLine(arrowLine);
-			arrowLine.setAngle(angle + _edgeangle);
-			painter->drawLine(arrowLine);
-		}
-
-		QRectF boundingRect() const
-		{
-			QRectF base = QGraphicsLineItem::boundingRect();
-
-			QPointF center = line().p1();
-			QRectF local = QRectF(center.x()-_edgewidth, center.y()-_edgewidth,2*_edgewidth, 2*_edgewidth);
-			return base.united(local);
-		}
-
+		static float forceScale;
+		enum {Type = UserType + FORCEVIEW};
 	protected:
-		void init()
-		{
-			QPen _pen = QPen();
-			_pen.setColor(Qt::red);
-			_pen.setWidthF(3);
-			setPen(_pen);
+		QUuid		_id;
 
-			_edgewidth = 20;
-			_edgeangle = 30;
-		}
-	};
+		QPointF		_forcePosition;
+		QPointF		_forceVector;
 
-	class ForceItem : public Item
-	{
-	protected:
-		QUuid _id;
-		Component* _component;
+		/*             <---> 10 px
+		*			   |\
+		*	-----------| \  height = 14 px
+		*	|6 px		  \ arrowhead = 10 px
+		*	|			  /
+		*	-----------| /
+		*	l_vec	   |/
+		*/
+		int thickness_main;	// Why not hard code?
+		int thickness_head;
+		int length_head;
 
 	public:
-		ForceItem();
+		ForceGraphicsItem(QGraphicsItem* parent = 0);
 
-		ItemType type() const { return FORCEITEM; }
+		ForceGraphicsItem(QPointF forceposition, QPointF forcevector, QGraphicsItem* parent = 0);
 
-		QUuid id() const { return _id; }
+		virtual ~ForceGraphicsItem() {}
+
+		/**
+		 * @brief type returns the item type
+		 * @return UserType + FORCEVIEW
+		 */
+		int type() const { return Type; }
+
+		/**
+		 * @brief setLine sets the force vector directly
+		 * @param x0 Origin.x()
+		 * @param y0 origin.y()
+		 * @param fx Force.x()
+		 * @param fy Force.y()
+		 */
+		void setLine(float x0, float y0, float fx, float fy);
+
+		/**
+		 * @brief forcePosition return the force position on the component
+		 * @return Point of application of the force
+		 * @remarks apply scaling before using on box
+		 */
+		QPointF forcePosition() const;
+
+		/**
+		 * @brief setForcePosition sets the point of application of force
+		 * vector on the component
+		 * @param pos Position of the force vector
+		 */
+		void setForcePosition(QPointF pos);
+
+		/**
+		 * @brief forceVector returns the force vector
+		 * @return Force vector (2D)
+		 */
+		QPointF forceVector() const;
+
+		/**
+		 * @brief setForceVector
+		 * @param pos
+		 */
+		void setForceVector(QPointF pos);
+
+		/**
+		 * @brief initialize sets up the force vector based on the current state
+		 */
+		virtual void initialize();
 
 		QDataStream& serialize(QDataStream &stream) const;
 		QDataStream& deserialize(QDataStream &stream);
 	};
+
 }
 #endif // FORCEITEM_H

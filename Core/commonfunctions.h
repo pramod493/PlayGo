@@ -78,6 +78,10 @@ namespace CDI
 	inline bool cdCompare(float f1, float f2)
 	{return (abs(f1-f2) < cdPrecision) ? true : false;}
 
+	inline float toRadians(float val) { return val * _PI_ / 180.0f; }
+	inline float toDegrees(float val) { return val * 180.0f / _PI_; }
+
+
 	float dotProduct(Point2D* p1, Point2D* p2);
 
 	// Though cross product is a vector, it will result in only along z- direction.
