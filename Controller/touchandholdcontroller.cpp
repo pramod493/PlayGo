@@ -225,13 +225,14 @@ namespace CDI
 
 	void TouchAndHoldController::enableOverlay(JointGraphics *jointGraphics, QPointF scenePos)
 	{
-		if (_mainController == NULL || _view == NULL) return;
+		if (_mainController == nullptr || _view == nullptr) return;
 
 		if (jointGraphics->getPhysicsJoint()->jointType() == e_revoluteJoint)
 		{
 			_jointEditMode = true;
 			_selectedJoint = jointGraphics;
 			_scenePos = scenePos;
+
 			if (parentGroup)
 				delete parentGroup;
 
@@ -297,6 +298,11 @@ namespace CDI
 			parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
 			_mainController->setTapOverride(true);
 
+			// Get the settings and use these to update the toolbar
+			b2RevoluteJointDef* jointDef = static_cast<b2RevoluteJointDef*>
+					(_selectedJoint->getPhysicsJoint()->jointDef());
+			// Setting up the correct values in the toolbar
+			_mainController->setMotorParams(jointDef->enableMotor,jointDef->motorSpeed, jointDef->maxMotorTorque);
 		}
 	}
 
@@ -617,7 +623,6 @@ namespace CDI
 
 	void TouchAndHoldController::slotMotorParamsChange()
 	{
-		qDebug() << "motor params changed";
 		if (_jointEditMode && _selectedJoint != NULL)
 		{
 			bool enableMotor = false;

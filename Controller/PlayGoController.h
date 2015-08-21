@@ -42,6 +42,7 @@ namespace CDI
 	class TouchAndHoldController;
 	class cdState;
 	class cdSearchGraphicsItem;
+	class LoadModel;
 	/**
 	 * @brief Main controller object. This receives input events from View and Scene
 	 * and modifies the view as well as scene based on that.
@@ -204,7 +205,22 @@ namespace CDI
 		void createConnectionsToolbar();
 		void showConnectionsToolbar();
 		void hideConnectionsToolbar();
+
+		/**
+		 * @brief getMotorParams returns the current joint motor settings
+		 * @param motorEnable True, if motor enabled
+		 * @param speed Speed set in the toolbar
+		 * @param torque Maximum torque allowed
+		 */
 		void getMotorParams(bool* motorEnable, float *speed, float *torque);
+
+		/**
+		 * @brief setMotorParams set the motor parameters in the toolbar
+		 * @param motorEnable Check to enable motor
+		 * @param speed Maximum speed (-5000 rpm to 5000 rpm)
+		 * @param torque Maximum torque which can be applied by the motor
+		 */
+		void setMotorParams(bool motorEnable, float speed, float torque);
 
 		/**
 		 * @brief Handles updates whenever MODE is changed.
@@ -399,6 +415,7 @@ namespace CDI
 		friend class ConnectController;
 		friend class TouchAndHoldController;
 		friend class cdState;
+		friend class LoadModel;
 	};
 }
 
