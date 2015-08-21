@@ -13,7 +13,7 @@ CONFIG   += console
 TEMPLATE = app
 
 RESOURCES += images.qrc \
-    overlayimages.qrc
+	overlayimages.qrc
 unix {
 include ($$PWD/QtTuio/qTUIO.pri)
 }
@@ -29,12 +29,13 @@ include ($$PWD/Controller/Controller.pri)
 include ($$PWD/Indexer-Minimal/External Libraries.pri)
 
 SOURCES += $$PWD/main.cpp \
-        $$PWD/miscfunctions.cpp \
-        $$PWD/converttopolygons.cpp \
-        $$PWD/batchpolygonize.cpp
+		$$PWD/miscfunctions.cpp \
+		$$PWD/converttopolygons.cpp \
+		$$PWD/batchpolygonize.cpp
 HEADERS += \
-        $$PWD/converttopolygons.h \
-        $$PWD/batchpolygonize.h
+		$$PWD/converttopolygons.h \
+		$$PWD/batchpolygonize.h \
+		$$PWD/LoadModel.h
 
 CONFIG += c++11
 
@@ -43,4 +44,4 @@ QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
 RC_FILE = PlayGoIcon.rc
 
 FORMS += \
-    $$PWD/batchpolygonize.ui
+	$$PWD/batchpolygonize.ui
