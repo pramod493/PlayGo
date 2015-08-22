@@ -1,13 +1,5 @@
 #include "sketchscene.h"
-#include <QtAlgorithms>
-#include <QList>
 #include "QsLog.h"
-#include "scenebutton.h"
-//#include <QGraphicsWebView>
-#include <QGraphicsItemGroup>
-#include <QUrl>
-
-#define CDI_USE_MOUSE_TO_MOVE
 
 namespace CDI
 {

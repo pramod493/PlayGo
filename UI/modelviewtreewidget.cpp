@@ -23,7 +23,7 @@ namespace CDI
 		id_type_hash.insert(Stroke::Type, "Stroke");
 		id_type_hash.insert(Polygon2D::Type, "Polygon 2D");
 		id_type_hash.insert(Pixmap::Type, "Pixmap");
-		id_type_hash.insert(JointGraphics::Type, "Pin joint");
+		id_type_hash.insert(PhysicsJoint::Type, "Pin joint");
 
 // Manual update
 //		QTimer *timer = new QTimer(this);

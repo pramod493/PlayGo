@@ -134,7 +134,7 @@ void PDollarRecognizer::savePDRTemplate(QString tmpDir, QString gestureClass)
 
 void PDollarRecognizer::addStroke(QVector<QPointF> points)
 {
-	int numPoints = points.size();
+	//int numPoints = points.size();
 	int strokeNumber = toBeRecognize.n + 1;
 	toBeRecognize.n = strokeNumber;
 

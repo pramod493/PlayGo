@@ -1,7 +1,6 @@
 #ifndef FORCEITEM_H
 #define FORCEITEM_H
 #include "commonfunctions.h"
-#include "abstractmodelitem.h"
 #include <QGraphicsLineItem>
 #include <QGraphicsPolygonItem>
 #include <QPen>

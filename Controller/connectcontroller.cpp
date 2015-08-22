@@ -185,10 +185,10 @@ namespace CDI
 				Component* component
 						= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
 				QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
-				forceLine = new ForceGraphicsItem(0,0,0,0);
-				forceLine->setTransform(t);
-				_scene->addItem(forceLine);
-				component->addToComponent(forceLine);
+//				forceLine = new ForceGraphicsItem(0,0,0,0);
+//				forceLine->setTransform(t);
+//				_scene->addItem(forceLine);
+//				component->addToComponent(forceLine);
 				return;
 			}
 			break;

@@ -213,7 +213,7 @@ namespace CDI
 		 * @param joint Joint to update
 		 * @return True if successfull, false otherwise
 		 */
-		virtual bool updateJoint(PhysicsJoint* joint);
+		virtual bool updateJoint(PhysicsJoint* physicsJoint);
 
 		virtual bool updateJoint(PhysicsJoint* joint, QPointF newScenePos);
 

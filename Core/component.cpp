@@ -649,26 +649,31 @@ namespace CDI
 		itemBoundingRect = childrenBoundingRect();
 	}
 
-	void Component::addJoint(PhysicsJoint *physicsJoint)
+	void Component::addJoint(cdJoint *physicsJoint)
 	{
+		// Do not add the item to the component because it can be added to one
+		// item at any moment
 		if (_jointlist.contains(physicsJoint) == false)
 			_jointlist.push_back(physicsJoint);
 	}
 
-	void Component::removeJoint(PhysicsJoint *physicsJoint)
+	void Component::removeJoint(cdJoint *physicsJoint)
 	{
 		if (_jointlist.contains(physicsJoint))
-		_jointlist.removeOne(physicsJoint);
+		{
+			_jointlist.removeOne(physicsJoint);
+			removeFromComponent(physicsJoint);
+		}
 	}
 
 	void Component::removeJoint(b2Joint *joint)
 	{
-		// TODO - Shouldn't we delete the joint as well?
-		PhysicsJoint* physicsjoint = 0;
-		foreach (PhysicsJoint* tmp, _jointlist)
-			if (tmp->joint() == joint)
-				physicsjoint = tmp;
-		if (physicsjoint) _jointlist.removeOne(physicsjoint);
+		for (auto internalJoint : _jointlist)
+			if (internalJoint->joint() == joint)
+			{
+				removeJoint(internalJoint);
+				return;
+			}
 	}
 
 	void Component::removeFromComponent(QUuid uid)
@@ -712,7 +717,7 @@ namespace CDI
 			// Update joint positions
 			foreach (PhysicsJoint* tmpJoint, _jointlist)
 			{
-				tmpJoint->physicsManager()->updateJoint(tmpJoint);
+				tmpJoint->updateJoint();
 			}
 		}
 		// Reset the flags which requires regeneration
@@ -757,6 +762,16 @@ namespace CDI
 		}
 		if (_physicsBody)
 			_physicsBody->SetAwake(true);
+	}
+
+	QList<QGraphicsItem*> Component::childItemByType(int itemType)
+	{
+		QList<QGraphicsItem*> allchilditems = childItems();
+		QList<QGraphicsItem*> return_list;
+		for(auto child : allchilditems)
+			if (child->type() == itemType)
+				return_list.push_back(child);
+		return return_list;
 	}
 
 	void Component::addToHash(QUuid uid, QGraphicsItem* item)

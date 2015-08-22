@@ -74,6 +74,7 @@ namespace CDI
 		// use _isStylusNearby to differentiate between mouse event from stylus
 		// and from stylus
 		UI::MODE _activeMode;
+		UI::MODE _lastActiveMode;
 		QTabletEvent::TabletDevice _device;
 
 		/*****************************************************

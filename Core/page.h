@@ -7,7 +7,6 @@
 #include <QGraphicsScene>
 
 #include "commonfunctions.h"
-#include "abstractmodelitem.h"
 #include "assembly.h"
 #include "component.h"
 #include "searchmanager.h"

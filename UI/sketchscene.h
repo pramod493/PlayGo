@@ -1,24 +1,11 @@
 #pragma once
-#include <QLinkedList>
+
 #include <QGraphicsScene>
 #include <QEvent>
-#include <QGraphicsRectItem>
-#include <QImage>
-#include <QList>
 #include <QGraphicsSceneMouseEvent>
-#include <QPainter>
-#include <QGraphicsPolygonItem>
-#include <QPolygonF>
-
+#include <QTouchEvent>
 #include "commonfunctions.h"
-#include "abstractmodelitem.h"
-
-#include "stroke.h"
-#include "searchmanager.h"
-#include "component.h"
-
 #include "page.h"
-#include "graphicssearchitem.h"
 
 namespace CDI
 {

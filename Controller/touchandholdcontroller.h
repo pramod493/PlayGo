@@ -60,8 +60,7 @@ namespace CDI
 		bool _componentEditMode;
 		bool _jointEditMode;
 		Component* _selectedComponent;
-		JointGraphics* _selectedJoint;
-		PhysicsJoint* _selectedPhysicsJoint;
+		PhysicsJoint* _selectedJoint;
 		bool _jointParamsChanged;
 		QPointF _scenePos;
 
@@ -80,15 +79,15 @@ namespace CDI
 
 		/**
 		 * @brief Dispay overlay with options related to joint
-		 * @param jointGraphics JointGraphics
+		 * @param physicsJoint PhysicsJoint
 		 * @param scenePos selection position
 		 */
-		void enableOverlay(JointGraphics* jointGraphics, QPointF scenePos);
+		void enableOverlay(PhysicsJoint *physicsJoint, QPointF scenePos);
 
-		void enableJointLimitsSelection(JointGraphics *jointGraphics, QPointF scenePos);
+		void enableJointLimitsSelection(PhysicsJoint *physicsJoint, QPointF scenePos);
 
 		void overlayComponentOptions(Component* component);
-		void overlayJointOptions(JointGraphics *jointgraphics);
+		void overlayJointOptions(PhysicsJoint *physicsJoint);
 
 		bool handleTapAndHold(QEvent *event);
 

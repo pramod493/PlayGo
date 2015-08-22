@@ -223,14 +223,14 @@ namespace CDI
 		_mainController->setTapOverride(true);
 	}
 
-	void TouchAndHoldController::enableOverlay(JointGraphics *jointGraphics, QPointF scenePos)
+	void TouchAndHoldController::enableOverlay(PhysicsJoint *physicsJoint, QPointF scenePos)
 	{
 		if (_mainController == nullptr || _view == nullptr) return;
 
-		if (jointGraphics->getPhysicsJoint()->jointType() == e_revoluteJoint)
+		if (physicsJoint->getcdjoint()->jointType() == e_revoluteJoint)
 		{
 			_jointEditMode = true;
-			_selectedJoint = jointGraphics;
+			_selectedJoint = physicsJoint;
 			_scenePos = scenePos;
 
 			if (parentGroup)
@@ -306,7 +306,7 @@ namespace CDI
 		}
 	}
 
-	void TouchAndHoldController::enableJointLimitsSelection(JointGraphics *jointGraphics, QPointF scenePos)
+	void TouchAndHoldController::enableJointLimitsSelection(PhysicsJoint *physicsJoint, QPointF scenePos)
 	{
 		if (_mainController == NULL || _view == NULL) return;
 		// This will enable us to call this function directly from main controller
@@ -344,7 +344,7 @@ namespace CDI
 		pen.setWidth(5);
 
 		/*PinJointLimitsSelector * limiter = */new PinJointLimitsSelector
-				(jointGraphics->getPhysicsJoint(), parentGroup);
+				(physicsJoint->getPhysicsJoint(), parentGroup);
 
 		// Close button
 		SelectableActions* closeItem = new SelectableActions
@@ -361,9 +361,9 @@ namespace CDI
 		Q_UNUSED(component)
 	}
 
-	void TouchAndHoldController::overlayJointOptions(JointGraphics *jointgraphics)
+	void TouchAndHoldController::overlayJointOptions(PhysicsJoint *physicsJoint)
 	{
-		Q_UNUSED(jointgraphics)
+		Q_UNUSED(physicsJoint)
 	}
 
 	bool TouchAndHoldController::handleTapAndHold(QEvent *event)

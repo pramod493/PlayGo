@@ -90,7 +90,8 @@ void PlayGoController::initController()
 	// Set the deafult value of other settings
 
 	// Drawing parameters
-	_activeMode = UI::Sketch;
+	_activeMode		= UI::Sketch;
+	_lastActiveMode	= _activeMode;
 	_device = QTabletEvent::NoDevice;
 
 	_defaultPen = QPen(Qt::black);
@@ -528,13 +529,13 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 					b_enableMotor, false,
 					f_motorSpeed, f_motorTorque,
 					0, 0);
-		JointGraphics* jointView = new PinJointGraphics(physicsJoint, c1);
-		jointView->setPos(c1->mapFromScene(scenePos));
+		// Already set. Doesn't hurt to do so again
+		physicsJoint->setPos(c1->mapFromScene(scenePos));
 
 		// Disable motor because we are not in the play mode. Motor might ruin things
 		if (b_enableMotor)
 		{
-			b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
+			b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->getcdjoint()->joint());
 			revoluteJoint->EnableMotor(false);
 		}
 		break;
@@ -722,10 +723,10 @@ void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventSta
 			Component* component
 					= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
 			QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
-			forceLine = new ForceGraphicsItem(0,0,0,0);
-			forceLine->setTransform(t);
-			_scene->addItem(forceLine);
-			component->addToComponent(forceLine);
+//			forceLine = new ForceGraphicsItem(0,0,0,0);
+//			forceLine->setTransform(t);
+//			_scene->addItem(forceLine);
+//			component->addToComponent(forceLine);
 			return;
 		}
 		break;
@@ -1501,11 +1502,11 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 		 it != selectedItems.constEnd(); ++it)
 	{
 		QGraphicsItem* graphicsitem = (*it);
-		if (graphicsitem->type() == JointGraphics::Type)
+		if (graphicsitem->type() == PhysicsJoint::Type)
 		{
-			JointGraphics* jointgraphics = qgraphicsitem_cast<JointGraphics*>(graphicsitem);
-			touchholdController->enableOverlay(jointgraphics, scenePos);
-			_view->centerOn(scenePos);
+			PhysicsJoint* physicsJoint = qgraphicsitem_cast<PhysicsJoint*>(graphicsitem);
+			touchholdController->enableOverlay(physicsJoint, scenePos);
+			//_view->centerOn(scenePos);
 			return;
 		}
 	}
@@ -1692,7 +1693,7 @@ void PlayGoController::onMouseEventFromView(QMouseEvent *event, QGraphicsView *v
 }
 
 bool eventAcceptedByJoint = false;
-JointGraphics *touchEventOwner = NULL;
+PhysicsJoint *touchEventOwner = NULL;
 QPointF initialPos;
 
 bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
@@ -1712,17 +1713,17 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 
 				QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
 																	Qt::DescendingOrder, _view->transform());
-				JointGraphics* jointGraphics = 0;
-				foreach(QGraphicsItem* graphicsitem, selectedItems)
+				PhysicsJoint* physicsJoint = nullptr;
+				for(QGraphicsItem* graphicsitem : selectedItems)
 				{
-					if (graphicsitem->type() == JointGraphics::Type && graphicsitem->parentItem())
+					if (graphicsitem->type() == PhysicsJoint::Type && graphicsitem->parentItem())
 					{
 						if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
 						{
-							jointGraphics = qgraphicsitem_cast<JointGraphics*>(graphicsitem);
+							physicsJoint = qgraphicsitem_cast<PhysicsJoint*>(graphicsitem);
 							eventAcceptedByJoint = true;
-							touchEventOwner = jointGraphics;
-							initialPos = jointGraphics->pos();
+							touchEventOwner = physicsJoint;
+							initialPos = physicsJoint->pos();
 							event->accept();
 							return true;
 						}
@@ -2028,7 +2029,8 @@ void PlayGoController::setMode(UI::MODE newMode)
 	{
 		return;
 	}
-	_activeMode = newMode;
+	_lastActiveMode		= _activeMode;
+	_activeMode			= newMode;
 }
 
 void PlayGoController::clearCurrentScene()

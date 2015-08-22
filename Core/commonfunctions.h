@@ -78,9 +78,12 @@ namespace CDI
 	inline bool cdCompare(float f1, float f2)
 	{return (abs(f1-f2) < cdPrecision) ? true : false;}
 
-	inline float toRadians(float val) { return val * _PI_ / 180.0f; }
-	inline float toDegrees(float val) { return val * 180.0f / _PI_; }
-
+	const float TO_RADIANS_FROM_DEG	= _PI_ / 180.0f;
+	const float TO_DEGREES_FROM_RAD	= 10.0f/_PI_;
+	const float TO_ROT_FROM_DEGREES = 1.0f/360.0f;
+	const float TO_DEGREES_FROM_ROT = 360.0f;
+	const float TO_RPM_FROM_RAD_SEC	= 30.0f/_PI_;
+	const float TO_RAD_SEC_FROM_RPM = _PI_/30.0f;
 
 	float dotProduct(Point2D* p1, Point2D* p2);
 

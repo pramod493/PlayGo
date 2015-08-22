@@ -20,6 +20,7 @@ namespace CDI
 {
 	class Page;
 	class PhysicsJoint;
+	class cdJoint;
 	/**
 	 * @brief It is equivalent of Component in visualization size. This stores references to the all the children
 	 * Also, note that all the children take care of their transform and therefore need not implement the
@@ -50,7 +51,7 @@ namespace CDI
 		QList<b2Fixture*> _fixtures;
 
 		// Store the joint as well as its position w.r.t. unscaled component
-		QList<PhysicsJoint*> _jointlist;
+		QList<cdJoint*> _jointlist;
 
 		QGraphicsPathItem* _anchorItem;
 
@@ -134,9 +135,9 @@ namespace CDI
 
 		virtual void removeFromComponent(QGraphicsItem* itemToRemove);
 
-		virtual void addJoint(PhysicsJoint* physicsJoint);
+		virtual void addJoint(cdJoint* physicsJoint);
 
-		virtual void removeJoint(PhysicsJoint* physicsJoint);
+		virtual void removeJoint(cdJoint* joint);
 
 		virtual void removeJoint(b2Joint* joint);
 
@@ -158,9 +159,19 @@ namespace CDI
 
 		void onCollisionBitsUpdate();
 
+		QList<QGraphicsItem*> childItemByType(int itemType);
+
 	protected:
+		/**
+		 * @brief addToHash manages the hash of QUuid and QGraphicsItem
+		 * \todo Extend the use of has to other items such as joints
+		 */
 		virtual void addToHash(QUuid uid, QGraphicsItem* item);
 
+		/**
+		 * @brief removeFromHash remove item from hash
+		 * \todo Extend the use of has to other items such as joints
+		 */
 		virtual void removeFromHash(QUuid id);
 
 		/**

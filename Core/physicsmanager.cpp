@@ -116,7 +116,11 @@ namespace CDI
 		b2Body* bodyA = c1->physicsBody();
 		b2Body* bodyB = c2->physicsBody();
 
-		b2RevoluteJointDef *jointDef = new b2RevoluteJointDef();
+		PhysicsJoint* physicsJoint = new PhysicsJoint(e_revoluteJoint, c1);
+		physicsJoint->setPos(c1->mapFromScene(scenePos));
+		cdPinJoint* pinJoint = dynamic_cast<cdPinJoint*>(physicsJoint->getcdjoint());
+
+		b2RevoluteJointDef* jointDef  = pinJoint->_jointDef;
 		jointDef->bodyA = bodyA;
 		jointDef->bodyB = bodyB;
 
@@ -136,23 +140,21 @@ namespace CDI
 		jointDef->motorSpeed = motorSpeed;
 		jointDef->maxMotorTorque = motorTorque;
 
-		b2RevoluteJoint* joint = static_cast<b2RevoluteJoint *>(createJoint(*jointDef));
+		b2RevoluteJoint* boxJoint = static_cast<b2RevoluteJoint *>(createJoint(*jointDef));
 
-		PhysicsJoint *physicsJoint = new PhysicsJoint(this);
-		physicsJoint->componentA = c1;
-		physicsJoint->componentB = c2;
-		physicsJoint->relPosA = c1->mapFromScene(scenePos);
-		physicsJoint->relPosB = c2->mapFromScene(scenePos);
-		physicsJoint->_jointDef = jointDef;
-		physicsJoint->_joint = joint;
-		physicsJoint->_box2dJointType = e_revoluteJoint;
-		joint->SetUserData(static_cast<void*>(physicsJoint));
+		pinJoint->_componentA = c1;
+		pinJoint->_componentB = c2;
+		pinJoint->_relPosA = c1->mapFromScene(scenePos);
+		pinJoint->_relPosB = c2->mapFromScene(scenePos);
+
+		pinJoint->_joint = boxJoint;
+		boxJoint->SetUserData(static_cast<void*>(physicsJoint));
 
 		c1->addJoint(physicsJoint);
 		c2->addJoint(physicsJoint);
 
 		_jointList.push_back(physicsJoint);
-		joint->EnableMotor(false);		// All motors are started as disabled
+		boxJoint->EnableMotor(false);		// All motors are started as disabled
 
 		return physicsJoint;
 	}
@@ -180,8 +182,10 @@ namespace CDI
 		return NULL;
 	}
 
-	bool PhysicsManager::updateJoint(PhysicsJoint *joint)
+	bool PhysicsManager::updateJoint(PhysicsJoint *physicsJoint)
 	{
+		cdPinJoint* joint =
+				dynamic_cast<cdPinJoint*>(physicsJoint->getcdjoint());
 		QPointF localPosA = joint->relPosA * joint->componentA->scale();
 		QPointF localPosB = joint->relPosB * joint->componentB->scale();
 
@@ -218,8 +222,8 @@ namespace CDI
 
 	bool PhysicsManager::updateJoint(PhysicsJoint *joint, QPointF newScenePos)
 	{
-		joint->relPosA = joint->componentA->mapFromScene(newScenePos);
-		joint->relPosB = joint->componentB->mapFromScene(newScenePos);
+		joint->_relPosA = joint->componentA->mapFromScene(newScenePos);
+		joint->_relPosB = joint->componentB->mapFromScene(newScenePos);
 		return updateJoint(joint);
 	}
 
@@ -239,32 +243,6 @@ namespace CDI
 		_b2World->DestroyJoint(joint);
 		return true;
 	}
-
-	/*
-	b2Joint* PhysicsManager::createWheelJoint(Component* c1, Component* c2,
-											  b2WheelJointDef& def)
-	{
-		return NULL;
-	}
-
-	b2Joint* PhysicsManager::createGearJoint(Component* j1, Component* j2,
-											 b2GearJointDef& def)
-	{
-		return NULL;
-	}
-
-	b2Joint* PhysicsManager::createGearJoint(Component* j1, Component* j2,
-											 float gearRatio)
-	{
-		return NULL;
-	}
-
-	b2Joint* PhysicsManager::createWeldJOint(Component* c1, Component* c2,
-											 b2WeldJointDef* def)
-	{
-		return NULL;
-	}
-	*/
 
 	void PhysicsManager::updateSettings(PhysicsSettings* newSettings)
 	{
