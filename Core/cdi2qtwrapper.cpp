@@ -167,7 +167,8 @@ namespace CDI
 
 	void CommonDrawFunctions::drawTriangulatedPolygons(vector<p2t::Triangle*> triangles, QPainter* painter)
 	{
-
+		Q_UNUSED(triangles)
+		Q_UNUSED(painter)
 	}
 
 	CommonDrawFunctions* CommonDrawFunctions::_instance = NULL;

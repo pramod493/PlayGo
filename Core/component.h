@@ -19,7 +19,6 @@
 namespace CDI
 {
 	class Page;
-	class PhysicsJoint;
 	class cdJoint;
 	/**
 	 * @brief It is equivalent of Component in visualization size. This stores references to the all the children

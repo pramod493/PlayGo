@@ -5,6 +5,8 @@
 #include <QFont>
 #include <QString>
 
+#include <QMessageBox>
+
 namespace CDI
 {
 	/*-------------------------------------------------------------------------
@@ -26,23 +28,32 @@ namespace CDI
 		setZValue(Z_JOINTVIEW);
 
 		// Set up the draw options for the pin joint
-		QPen _pen = QPen(Qt::blue);
-		_pen.setWidth(3);
+		QPen _pen = QPen(Qt::black);
+		_pen.setWidth(1);
 
 		QRadialGradient radialGradient = QRadialGradient(QPointF(0,0), 15, QPointF(10,10));
 		radialGradient.setColorAt(0, Qt::red);
 		radialGradient.setColorAt(1, Qt::blue);
-		QBrush _brush = QBrush(radialGradient);
+
+		QLinearGradient lineargradient = QLinearGradient(QPointF(0,0), QPointF(1,1));
+		lineargradient.setColorAt(0, Qt::yellow);
+		lineargradient.setColorAt(1, Qt::blue);
+		lineargradient.setSpread(QGradient::PadSpread);
+		lineargradient.setCoordinateMode(QGradient::ObjectBoundingMode);
 
 		setPen(_pen);
-		setBrush(_brush);
+		setBrush(QBrush(lineargradient));
 	}
 
 	cdPinJoint::~cdPinJoint()
 	{
+		emit onJointDelete(this);
+		if (_jointDef) delete _jointDef;
+		if (_componentA) _componentA->removeJoint(this);
+		if (_componentB) _componentB->removeJoint(this);
 		// Automatically calls the physics manager for deletion
 		if (_physicsmanager && _joint)
-			_physicsmanager->deleteJoint(_joint);
+			_physicsmanager->deleteJoint(this);
 	}
 
 	b2RevoluteJoint* cdPinJoint::joint() const
@@ -64,19 +75,24 @@ namespace CDI
 		}
 		// TODO - Implement this function
 		_physicsmanager->updateJoint(this);
+		initializeShape();
+	}
 
+	void cdPinJoint::initializeShape()
+	{
 		// NOTE - Check if the object is on component A or B and render accordingly
 		// update the render function
 		QPainterPath painterpath;
 
 		float radius = 15;
 		painterpath.moveTo(0,0);
-		painterpath.addEllipse(-radius/2.0f, -radius/2.0f, 2*radius, 2*radius);
+		painterpath.addEllipse(-radius, -radius, 2*radius, 2*radius);
 
 		QString text = (_jointDef->enableMotor) ?
 					QString("Motor") : QString("Pin");
-		painterpath.addText(QPointF(2.5f*radius, 0),QFont("Times", 12), text);
+		painterpath.addText(QPointF(1.5f*radius, 0),QFont("Times", 12), text);
 		setPath(painterpath);
+		setZValue(Z_JOINTVIEW);
 	}
 
 	Component *cdPinJoint::componentA() const

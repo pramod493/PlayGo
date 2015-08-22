@@ -1,7 +1,6 @@
 #include "component.h"
 #include "stroke.h"
 #include "pixmap.h"
-#include "graphicssearchitem.h"
 #include "polygon2d.h"
 #include "assembly.h"
 #include "physicsjoint.h"
@@ -12,7 +11,6 @@
 #include <QTransform>
 #include <QGraphicsTransform>
 #include <QMessageBox>
-#include <QVector2D>
 #include "physicsjoint.h"
 #include <QGraphicsTextItem>
 
@@ -25,7 +23,7 @@ namespace CDI
 
 		_physicsBody = NULL;		// Creation is done outside but deletion is performed internally
 		_fixtures	= QList<b2Fixture*>();
-		_jointlist = QList<PhysicsJoint*>();
+		_jointlist = QList<cdJoint*>();
 
 		// Disabling touch makes it hard to interact because one-touch pan is also disabled
 		setAcceptTouchEvents(true);
@@ -715,7 +713,7 @@ namespace CDI
 			}
 
 			// Update joint positions
-			foreach (PhysicsJoint* tmpJoint, _jointlist)
+			foreach (auto tmpJoint, _jointlist)
 			{
 				tmpJoint->updateJoint();
 			}

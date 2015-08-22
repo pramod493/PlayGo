@@ -84,7 +84,7 @@ namespace CDI
 		setPolygon(QPolygonF(points));
 
 		setPos(_forcePosition);
-		auto vectorangle = toDegrees(angleWithX(&_forceVector));
+		auto vectorangle = angleWithX(&_forceVector) * TO_DEGREES_FROM_RAD;
 		setRotation(vectorangle);
 	}
 

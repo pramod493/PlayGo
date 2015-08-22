@@ -229,21 +229,11 @@ namespace CDI
 	 * -------------- Pin Joint Limits selection -------------------------------*/
 
 	PinJointLimitsSelector::PinJointLimitsSelector
-		(PhysicsJoint *physicsJoint, QGraphicsItem *graphicsparent)
+		(cdPinJoint *physicsJoint, QGraphicsItem *graphicsparent)
 		: QObject (0), QGraphicsItemGroup(graphicsparent)
 	{
 		p_physicsJoint = physicsJoint;
-		if (p_physicsJoint->jointType() != e_revoluteJoint)
-		{
-			// Strictly supports only revolute (pin) joint
-			p_lowerLimitHandle = NULL;
-			p_upperLimitHandle = NULL;
-			p_connectorItem = NULL;
-			p_enableLimits = NULL;
-			p_disableLimits = NULL;
-			p_limitsEnabled = false;
-			return;
-		}
+		p_jointDef = physicsJoint->jointDef();
 		p_upperLimitHandle = new RangeDialHandle(175, 30, this);	// Keeps it under the next one
 		p_lowerLimitHandle = new RangeDialHandle(100, 30, this);
 
@@ -259,8 +249,8 @@ namespace CDI
 		p_upperLimitHandle->setBrush(QBrush(QColor(100,100,255)));
 		p_upperLimitHandle->setAngle(45);	// end angle
 
-		p_lowerLimitHandle->setAngle(45);
-		p_upperLimitHandle->setAngle(130);
+		p_lowerLimitHandle->setAngle(p_jointDef->lowerAngle * TO_DEGREES_FROM_RAD);
+		p_upperLimitHandle->setAngle(p_jointDef->upperAngle * TO_DEGREES_FROM_RAD);
 
 		p_connectorItem = new CustomArc(this);
 		onAngleChanged();
@@ -299,6 +289,9 @@ namespace CDI
 		p_connectorItem->endAngle = max(-lowerAngle, -upperAngle);
 		p_connectorItem->scene()->update(p_connectorItem->mapRectToScene(p_connectorItem->boundingRect()));
 		qDebug() << "Limit value changed" << lowerAngle << upperAngle;
+
+		p_jointDef->lowerAngle = lowerAngle * TO_RADIANS_FROM_DEG;
+		p_jointDef->upperAngle = upperAngle * TO_RADIANS_FROM_DEG;
 	}
 }
 

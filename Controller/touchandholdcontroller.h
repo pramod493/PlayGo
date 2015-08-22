@@ -20,7 +20,6 @@ namespace CDI
 {
 	class PlayGoController;
 	class Component;
-	class PhysicsJoint;
 	/**
 	 * @brief The TouchAndHoldController class displays the on screen menu overlaid
 	 * on the selected entity
@@ -33,6 +32,7 @@ namespace CDI
 	protected:
 		PlayGoController *_mainController;
 		QGraphicsView *_view;
+
 		QAction *_closeOverlayAction;
 
 		QAction *_componentLockAction;
@@ -60,7 +60,7 @@ namespace CDI
 		bool _componentEditMode;
 		bool _jointEditMode;
 		Component* _selectedComponent;
-		PhysicsJoint* _selectedJoint;
+		cdJoint* _selectedJoint;
 		bool _jointParamsChanged;
 		QPointF _scenePos;
 
@@ -82,12 +82,12 @@ namespace CDI
 		 * @param physicsJoint PhysicsJoint
 		 * @param scenePos selection position
 		 */
-		void enableOverlay(PhysicsJoint *physicsJoint, QPointF scenePos);
+		void enableOverlay(cdJoint *physicsJoint, QPointF scenePos);
 
-		void enableJointLimitsSelection(PhysicsJoint *physicsJoint, QPointF scenePos);
+		void enableJointLimitsSelection(cdPinJoint *physicsJoint, QPointF scenePos);
 
 		void overlayComponentOptions(Component* component);
-		void overlayJointOptions(PhysicsJoint *physicsJoint);
+		void overlayJointOptions(cdJoint *physicsJoint);
 
 		bool handleTapAndHold(QEvent *event);
 

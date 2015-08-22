@@ -27,6 +27,7 @@ namespace CDI
 			: QObject(), QGraphicsPathItem(parent),
 			_boxJointType(type), _id(uniqueHash()) {}
 
+		virtual ~cdJoint() {}
 		/**
 		 * @brief jointType returns the joint type and cannot be changed after creation
 		 * @return
@@ -107,6 +108,8 @@ namespace CDI
 		// update joint
 		void updateJoint();
 
+		void initializeShape();
+
 		// Query functions
 		Component *componentA() const;
 		Component *componentB() const;
@@ -126,6 +129,7 @@ namespace CDI
 		float jointAngle() const;
 
 	signals:
+		void onJointDelete(cdPinJoint*);
 		void onJointChange(cdPinJoint*);
 
 		friend class PhysicsManager;

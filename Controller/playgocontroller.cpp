@@ -5,7 +5,6 @@
 #include "QsLog.h"
 
 #include "cdiwindow.h"
-#include "graphicssearchitem.h"
 #include "cdisearchgraphicsitem.h"
 #include "SelectableActions.h"
 
@@ -520,24 +519,27 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 		float f_motorSpeed = 0;
 		float f_motorTorque = 0;
 		getMotorParams(&b_enableMotor, &f_motorSpeed, &f_motorTorque);
-		if (b_enableMotor)
+		if (b_enableMotor)	// Disable motor after first pin joint is created
 			setMotorParams(false, f_motorSpeed, f_motorTorque);
 
 		qDebug() << b_enableMotor << f_motorSpeed << f_motorTorque;
-		PhysicsJoint* physicsJoint = _page->getPhysicsManager()->createPinJoint(
+		auto* physicsJoint = _page->getPhysicsManager()->createPinJoint(
 					c1, c2, scenePos,
 					b_enableMotor, false,
 					f_motorSpeed, f_motorTorque,
 					0, 0);
-		// Already set. Doesn't hurt to do so again
-		physicsJoint->setPos(c1->mapFromScene(scenePos));
 
-		// Disable motor because we are not in the play mode. Motor might ruin things
-		if (b_enableMotor)
-		{
-			b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->getcdjoint()->joint());
-			revoluteJoint->EnableMotor(false);
-		}
+		QLOG_INFO() << "Pin joint created w/" << physicsJoint->id().toString();
+
+//		// Already set. Doesn't hurt to do so again
+//		physicsJoint->setPos(c1->mapFromScene(scenePos));
+
+//		// Disable motor because we are not in the play mode. Motor might ruin things
+//		if (b_enableMotor)
+//		{
+//			b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->getcdjoint()->joint());
+//			revoluteJoint->EnableMotor(false);
+//		}
 		break;
 	}
 	case UI::Cancel :
@@ -1502,9 +1504,9 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 		 it != selectedItems.constEnd(); ++it)
 	{
 		QGraphicsItem* graphicsitem = (*it);
-		if (graphicsitem->type() == PhysicsJoint::Type)
+		if (graphicsitem->type() == cdJoint::Type)
 		{
-			PhysicsJoint* physicsJoint = qgraphicsitem_cast<PhysicsJoint*>(graphicsitem);
+			cdJoint* physicsJoint = qgraphicsitem_cast<cdJoint*>(graphicsitem);
 			touchholdController->enableOverlay(physicsJoint, scenePos);
 			//_view->centerOn(scenePos);
 			return;
@@ -1692,10 +1694,12 @@ void PlayGoController::onMouseEventFromView(QMouseEvent *event, QGraphicsView *v
 	}
 }
 
-bool eventAcceptedByJoint = false;
-PhysicsJoint *touchEventOwner = NULL;
-QPointF initialPos;
-
+namespace
+{
+	bool eventAcceptedByJoint = false;
+	cdJoint *touchEventOwner = NULL;
+	QPointF initialPos;
+}
 bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 {
 	QTransform inverted = _view->transform().inverted();
@@ -1711,16 +1715,15 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 				QPointF scenePos = _view->mapToScene(tp.pos().toPoint());//tp.scenePos();
 				QLOG_INFO() << scenePos << tp.scenePos();
 
-				QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
+				auto selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect,
 																	Qt::DescendingOrder, _view->transform());
-				PhysicsJoint* physicsJoint = nullptr;
 				for(QGraphicsItem* graphicsitem : selectedItems)
 				{
-					if (graphicsitem->type() == PhysicsJoint::Type && graphicsitem->parentItem())
+					if (graphicsitem->type() == cdJoint::Type && graphicsitem->parentItem())
 					{
 						if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
 						{
-							physicsJoint = qgraphicsitem_cast<PhysicsJoint*>(graphicsitem);
+							auto physicsJoint = qgraphicsitem_cast<cdJoint*>(graphicsitem);
 							eventAcceptedByJoint = true;
 							touchEventOwner = physicsJoint;
 							initialPos = physicsJoint->pos();
@@ -1741,11 +1744,7 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 			}
 			if (event->type() == QEvent::TouchEnd && eventAcceptedByJoint)
 			{
-				// Update joint
-				PhysicsJoint* physicsJoint = touchEventOwner->getPhysicsJoint();
-				QPointF scenePos = touchEventOwner->scenePos();
-				// TODO - Move these operations to the joint itself
-				_page->getPhysicsManager()->updateJoint(physicsJoint, scenePos);
+				_page->getPhysicsManager()->moveJoint(touchEventOwner, touchEventOwner->scenePos());
 
 				eventAcceptedByJoint = false;
 				touchEventOwner = 0;

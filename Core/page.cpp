@@ -22,7 +22,7 @@ namespace CDI
 		PhysicsSettings settings = PhysicsSettings();
 		settings.gravity = Point2D(0,0);
 		settings.timeStep = 1.0f/60.0f;
-		_physicsManager = new PhysicsManager(&settings, this);
+		_physicsManager = new PhysicsManager(settings, this);
 
 		_scene = new SketchScene(this);
 
@@ -53,7 +53,7 @@ namespace CDI
 		PhysicsSettings settings = PhysicsSettings();
 		settings.gravity = Point2D(0,0);
 		settings.timeStep = 1.0f/60.0f;
-		_physicsManager = new PhysicsManager(&settings, this);
+		_physicsManager = new PhysicsManager(settings, this);
 
 		_scene = new SketchScene(this);
 
@@ -323,7 +323,7 @@ namespace CDI
 			b2Body* physicsBody = component->physicsBody();
 			if (physicsBody)
 			{
-				foreach (PhysicsJoint* joint, component->_jointlist)
+				foreach (auto* joint, component->_jointlist)
 				{
 					_physicsManager->deleteJoint(joint);
 				}

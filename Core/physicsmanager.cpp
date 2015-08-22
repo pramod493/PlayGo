@@ -1,11 +1,10 @@
 #include <QList>
+#include "QsLog.h"
 #include "physicsmanager.h"
 #include "page.h"
-#include <QDebug>
-#include "QsLog.h"
 #include "component.h"
 #include "cdiboxdebugdraw.h"
-#include "Box2D/Common/b2Draw.h"
+#include "physicsjoint.h"
 
 namespace CDI
 {
@@ -19,39 +18,34 @@ namespace CDI
 		return _enableDebugView;
 	}
 
-	PhysicsManager::PhysicsManager(PhysicsSettings *settings, Page *parentPage) : QObject(parentPage)
+	PhysicsManager::PhysicsManager(PhysicsSettings& settings, QObject *parent) : QObject(parent)
 	{
 		defaultPhysicsScale = getPhysicsScale();
 
-		_jointList = QList<PhysicsJoint*>();
+		_jointList = QList<cdJoint*>();
 
-		_settings.timeStep = settings->timeStep;
-		_settings.velocityIterations = settings->velocityIterations;
-		_settings.positionIterations = settings->positionIterations;
-		_settings.gravity = settings->gravity;
-		_settings.enableSleep = settings->enableSleep;
-
+		_settings = settings;
 		_enableDebugView = true;
 		init();
 	}
 
 	PhysicsManager::PhysicsManager(QObject *parent)
-		:QObject(parent)
+		: PhysicsManager(PhysicsSettings(), parent)
 	{
-		defaultPhysicsScale = getPhysicsScale();
-		_settings = PhysicsSettings();
-		_enableDebugView = true;
-
-		init();
+//		defaultPhysicsScale = getPhysicsScale();
+//		_jointList = QList<cdJoint*>();
+//		_settings = PhysicsSettings();
+//		_enableDebugView = true;
+//		init();
 	}
 
 	PhysicsManager::PhysicsManager(const PhysicsManager &physicsManager)
-		:QObject(physicsManager.parent())
+		: QObject(physicsManager.parent())
 	{
 		defaultPhysicsScale = getPhysicsScale();
-		_settings = physicsManager._settings;
-		_enableDebugView = physicsManager.enableDebugView();
-
+		_jointList			= QList<cdJoint*>();
+		_settings			= physicsManager._settings;
+		_enableDebugView	= physicsManager._enableDebugView;
 		init();
 	}
 
@@ -63,8 +57,9 @@ namespace CDI
 
 		debugView = new BoxDebugScene(defaultPhysicsScale);
 		debugView->SetFlags(  b2Draw::e_shapeBit
-							  | b2Draw::e_pairBit | b2Draw::e_jointBit
-							  | b2Draw::e_centerOfMassBit);//b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
+							| b2Draw::e_pairBit
+							| b2Draw::e_jointBit
+							| b2Draw::e_centerOfMassBit);//b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
 		_b2World->SetDebugDraw(debugView);
 
 		_contactListener = new cdContactListener(this);
@@ -82,47 +77,26 @@ namespace CDI
 		if (_contactListener) delete _contactListener;
 	}
 
-	b2Body* PhysicsManager::createBody(const b2BodyDef &def)
-	{
-		if (_b2World!= NULL)
-		{
-			b2Body* body = _b2World->CreateBody(&def);
-			return body;
-		}
-		return NULL;
-	}
-
-	void PhysicsManager::destroyBody(b2Body *body)
-	{
-		_b2World->DestroyBody(body);
-	}
-
 	void PhysicsManager::destroyBody(Component *component)
 	{
 		destroyBody(component->physicsBody());
+		component->setPhysicsBody(nullptr);
 	}
 
-	b2Joint *PhysicsManager::createJoint(b2JointDef &jointDef)
-	{
-		b2Joint* joint = _b2World->CreateJoint(&jointDef);
-		return joint;
-	}
-
-	PhysicsJoint *PhysicsManager::createPinJoint(Component *c1, Component *c2, QPointF scenePos,
+	cdPinJoint *PhysicsManager::createPinJoint(Component *c1, Component *c2, QPointF scenePos,
 											bool enableMotor, bool enableLimits,
 											float motorSpeed, float motorTorque,
 											float lowerLimit, float upperLimit)
 	{
-		b2Body* bodyA = c1->physicsBody();
-		b2Body* bodyB = c2->physicsBody();
+		cdPinJoint* pinJoint = new cdPinJoint(c1);
+		c1->addToComponent(pinJoint);
+		pinJoint->setPos(c1->mapFromScene(scenePos));
+		pinJoint->_physicsmanager = this;	// call for everything
 
-		PhysicsJoint* physicsJoint = new PhysicsJoint(e_revoluteJoint, c1);
-		physicsJoint->setPos(c1->mapFromScene(scenePos));
-		cdPinJoint* pinJoint = dynamic_cast<cdPinJoint*>(physicsJoint->getcdjoint());
+		b2RevoluteJointDef* jointDef  = pinJoint->jointDef();
+		jointDef->bodyA = c1->physicsBody();
+		jointDef->bodyB = c2->physicsBody();
 
-		b2RevoluteJointDef* jointDef  = pinJoint->_jointDef;
-		jointDef->bodyA = bodyA;
-		jointDef->bodyB = bodyB;
 
 		QPointF localPosA = c1->mapFromScene(scenePos) * c1->scale();
 		QPointF localPosB = c2->mapFromScene(scenePos) * c2->scale();
@@ -133,33 +107,36 @@ namespace CDI
 								  localPosB.y()/defaultPhysicsScale);
 
 		jointDef->enableLimit = enableLimits;
-		jointDef->upperAngle = upperLimit;
-		jointDef->lowerAngle = lowerLimit;
+		jointDef->upperAngle = upperLimit * TO_RADIANS_FROM_DEG;
+		jointDef->lowerAngle = lowerLimit * TO_RADIANS_FROM_DEG;
 
 		jointDef->enableMotor = enableMotor;
-		jointDef->motorSpeed = motorSpeed;
+		jointDef->motorSpeed = motorSpeed * TO_RAD_SEC_FROM_RPM;
 		jointDef->maxMotorTorque = motorTorque;
 
-		b2RevoluteJoint* boxJoint = static_cast<b2RevoluteJoint *>(createJoint(*jointDef));
+		pinJoint->_joint = static_cast<b2RevoluteJoint *>(createJoint(*jointDef));
 
 		pinJoint->_componentA = c1;
 		pinJoint->_componentB = c2;
 		pinJoint->_relPosA = c1->mapFromScene(scenePos);
 		pinJoint->_relPosB = c2->mapFromScene(scenePos);
 
-		pinJoint->_joint = boxJoint;
-		boxJoint->SetUserData(static_cast<void*>(physicsJoint));
+		pinJoint->_joint->SetUserData(static_cast<void*>(pinJoint));
 
-		c1->addJoint(physicsJoint);
-		c2->addJoint(physicsJoint);
+		c1->addJoint(pinJoint);
+		c2->addJoint(pinJoint);
 
-		_jointList.push_back(physicsJoint);
-		boxJoint->EnableMotor(false);		// All motors are started as disabled
+		_jointList.push_back(pinJoint);
 
-		return physicsJoint;
+		pinJoint->initializeShape();
+
+		if (!isMotorEnabled())
+			pinJoint->joint()->EnableMotor(false);		// All motors are started as disabled
+
+		return pinJoint;
 	}
 
-	PhysicsJoint* PhysicsManager::createPrismaticJoint(Component *c1, Component *c2,
+	cdJoint *PhysicsManager::createPrismaticJoint(Component *c1, Component *c2,
 											   QPointF startPos, QPointF endPos,
 											   bool enableMotor, bool enableLimits,
 											   float motorSpeed, float motorForce,
@@ -182,64 +159,96 @@ namespace CDI
 		return NULL;
 	}
 
-	bool PhysicsManager::updateJoint(PhysicsJoint *physicsJoint)
+	bool PhysicsManager::updateJoint(cdJoint *physicsJoint)
 	{
-		cdPinJoint* joint =
-				dynamic_cast<cdPinJoint*>(physicsJoint->getcdjoint());
-		QPointF localPosA = joint->relPosA * joint->componentA->scale();
-		QPointF localPosB = joint->relPosB * joint->componentB->scale();
-
-		switch (joint->_box2dJointType)
+		switch (physicsJoint->jointType())
 		{
 		case e_revoluteJoint :
-		{
-			b2RevoluteJointDef* revoluteJointDef = static_cast<b2RevoluteJointDef*>(joint->_jointDef);
+			// Keep it east to copy
+			if (auto joint = dynamic_cast<cdPinJoint*>(physicsJoint))
+			{
+				auto localPosA = joint->_relPosA * joint->_componentA->scale();
+				auto localPosB = joint->_relPosB * joint->_componentB->scale();
 
-			revoluteJointDef->localAnchorA.Set
-					(localPosA.x()/defaultPhysicsScale, localPosA.y()/defaultPhysicsScale);
-			revoluteJointDef->localAnchorB.Set
-					(localPosB.x()/defaultPhysicsScale, localPosB.y()/defaultPhysicsScale);
+				auto jointDef = joint->jointDef();
 
-			b2RevoluteJoint* prevRevoluteJoint = static_cast<b2RevoluteJoint *>(joint->_joint);
-			b2RevoluteJoint* newRevoluteJoint = static_cast<b2RevoluteJoint*>(createJoint(*revoluteJointDef));
+				jointDef->localAnchorA.Set
+						(localPosA.x()/defaultPhysicsScale, localPosA.y()/defaultPhysicsScale);
+				jointDef->localAnchorB.Set
+						(localPosB.x()/defaultPhysicsScale, localPosB.y()/defaultPhysicsScale);
 
-			// Copy values before deleting previous joint
-			newRevoluteJoint->SetMaxMotorTorque(prevRevoluteJoint->GetMaxMotorTorque());
-			newRevoluteJoint->SetMotorSpeed(prevRevoluteJoint->GetMotorSpeed());
-			newRevoluteJoint->EnableMotor(prevRevoluteJoint->IsMotorEnabled());
-			newRevoluteJoint->SetLimits(prevRevoluteJoint->GetLowerLimit(),
-										prevRevoluteJoint->GetUpperLimit());
-			newRevoluteJoint->SetUserData(prevRevoluteJoint->GetUserData());
+				deleteJoint(joint->joint());
+				auto newb2Joint = static_cast<b2RevoluteJoint*>(createJoint(*jointDef));
+				// Do not copy params. This is why we are creating a new joint
+				newb2Joint->SetUserData(static_cast<void*>(joint));
+				joint->_joint = newb2Joint;
 
-			_b2World->DestroyJoint(joint->_joint);
-			joint->_joint = newRevoluteJoint;
-			return true;
-		}
+				// If motors are currently disabled, set it to disable as well
+				if (!isMotorEnabled() && newb2Joint->IsMotorEnabled())
+					newb2Joint->EnableMotor(false);
+				return true;
+			}
+		case e_prismaticJoint :
+			break;
+		default:
+			break;
 		}
 
 		return false;
 	}
 
-	bool PhysicsManager::updateJoint(PhysicsJoint *joint, QPointF newScenePos)
+	bool PhysicsManager::moveJoint(cdJoint *joint, QPointF newScenePos)
 	{
-		joint->_relPosA = joint->componentA->mapFromScene(newScenePos);
-		joint->_relPosB = joint->componentB->mapFromScene(newScenePos);
+		switch (joint->jointType()) {
+		case e_revoluteJoint:
+			if (auto cast_joint = dynamic_cast<cdPinJoint*>(joint))
+			{
+				cast_joint->_relPosA = cast_joint->_componentA->mapFromScene(newScenePos);
+				cast_joint->_relPosB = cast_joint->_componentB->mapFromScene(newScenePos);
+			}
+			break;
+		default:
+			break;
+		}
+		// update the joint regardless of success in position update
 		return updateJoint(joint);
 	}
-
-	bool PhysicsManager::deleteJoint(PhysicsJoint *joint)
+	bool PhysicsManager::deleteJoint(cdJoint *joint)
 	{
 		if (_jointList.contains(joint))
 			_jointList.removeOne(joint);
-		joint->_physicsManager = this;
-		delete joint;
+		deleteJoint(joint->joint());
 		return true;
+	}
+
+	/*-------------------------------------------------------------------------
+	 *  Protected functions for creating/deleting entities in Box2D
+	 * Not to be used directly
+	 *-----------------------------------------------------------------------*/
+	b2Body* PhysicsManager::createBody(const b2BodyDef &def)
+	{
+		if (_b2World == nullptr)
+			return nullptr;
+
+		b2Body* body = _b2World->CreateBody(&def);
+		return body;
+	}
+
+	void PhysicsManager::destroyBody(b2Body *body)
+	{
+		_b2World->DestroyBody(body);
+	}
+
+
+	b2Joint *PhysicsManager::createJoint(b2JointDef &jointDef)
+	{
+		b2Joint* joint = _b2World->CreateJoint(&jointDef);
+		return joint;
 	}
 
 	bool PhysicsManager::deleteJoint(b2Joint *joint)
 	{
-		if (joint == 0)	return false;
-
+		if (joint == nullptr) return false;
 		_b2World->DestroyJoint(joint);
 		return true;
 	}
@@ -310,9 +319,8 @@ namespace CDI
 
 	void PhysicsManager::quickPause(bool enable)
 	{
-		// NOTE - Not that good of an idea
+		QLOG_WARN() << "Quick pause is disabled!";
 		return;
-		qDebug() << "Pausing" << enable;
 		_quickpause = enable;
 	}
 
@@ -334,25 +342,42 @@ namespace CDI
 	void PhysicsManager::setEnableMotor(bool enable)
 	{
 		if (_settings.enableMotor == enable) return;	// Nothing to do
-
 		_settings.enableMotor = enable;
 
-		foreach (PhysicsJoint* physicsJoint, _jointList)
+		auto stopmotion = [](cdJoint *c)
 		{
-			switch (physicsJoint->_box2dJointType)
+			if (auto bodyA = c->joint()->GetBodyA())
+			{
+				bodyA->SetLinearVelocity(b2Vec2(0,0));
+				bodyA->SetAngularVelocity(0);
+			}
+			if (auto bodyB = c->joint()->GetBodyB())
+			{
+				bodyB->SetLinearVelocity(b2Vec2(0,0));
+				bodyB->SetAngularVelocity(0);
+			}
+		};
+
+		for (cdJoint* physicsJoint: _jointList)
+		{
+			switch (physicsJoint->jointType())
 			{
 				case e_revoluteJoint :
 				{
-					b2RevoluteJoint* pinJoint =	static_cast<b2RevoluteJoint*>(physicsJoint->_joint);
-					b2RevoluteJointDef* pinJointDef = static_cast<b2RevoluteJointDef*>(physicsJoint->_jointDef);
-					enable ? pinJoint->EnableMotor(pinJointDef->enableMotor) : pinJoint->EnableMotor(false);
+					if (cdPinJoint* pinjoint = dynamic_cast<cdPinJoint*>(physicsJoint))
+					{
+						b2RevoluteJoint* b2PinJoint =	pinjoint->joint();
+						b2RevoluteJointDef* b2PinJointDef = pinjoint->jointDef();
+						enable ? b2PinJoint->EnableMotor(b2PinJointDef->enableMotor) : b2PinJoint->EnableMotor(false);
+					} // Note- We can eliminate switch statements if we are using dynamic cast
 					break;
 				}
 				case e_prismaticJoint :
 				{
-					b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(physicsJoint->_joint);
+
+					/*b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(physicsJoint->_joint);
 					b2PrismaticJointDef* sliderJointDef = static_cast<b2PrismaticJointDef*>(physicsJoint->_jointDef);
-					enable ? sliderJoint->EnableMotor(sliderJointDef->enableMotor) : sliderJoint->EnableMotor(false);
+					enable ? sliderJoint->EnableMotor(sliderJointDef->enableMotor) : sliderJoint->EnableMotor(false);*/
 					break;
 				}
 			default:
@@ -360,19 +385,20 @@ namespace CDI
 			}
 
 			if (!enable)	// pause objects when disabling the motor
-			{
-				b2Body* bodyA = physicsJoint->_joint->GetBodyA();
-				b2Body* bodyB = physicsJoint->_joint->GetBodyB();
-
-				bodyA->SetLinearVelocity(b2Vec2(0,0));
-				bodyB->SetLinearVelocity(b2Vec2(0,0));
-
-				bodyA->SetAngularVelocity(0);
-				bodyB->SetAngularVelocity(0);
-			}
+				stopmotion(physicsJoint);
+//			{
+//				if (auto bodyA = physicsJoint->joint()->GetBodyA())
+//				{
+//					bodyA->SetLinearVelocity(b2Vec2(0,0));
+//					bodyA->SetAngularVelocity(0);
+//				}
+//				if (auto bodyB = physicsJoint->joint()->GetBodyB())
+//				{
+//					bodyB->SetLinearVelocity(b2Vec2(0,0));
+//					bodyB->SetAngularVelocity(0);
+//				}
+//			}
 		}
-
-
 	}
 
 	bool PhysicsManager::isMotorEnabled() const
@@ -383,7 +409,7 @@ namespace CDI
 	void PhysicsManager::setGlobalCollision
 			(QList<Component*> components, bool enableCollision)
 	{
-		foreach(Component* component, components)
+		for(Component* component : components)
 		{
 			b2Body* body = component->physicsBody();
 			body->playgoCollisionEnabled = enableCollision;
@@ -392,7 +418,7 @@ namespace CDI
 
 	void PhysicsManager::updateComponentPosition(QList<Component *> &components)
 	{
-		foreach(Component* component, components)
+		for(auto component: components)
 			updateComponentPosition(component);
 	}
 
@@ -412,7 +438,7 @@ namespace CDI
 
 	void PhysicsManager::updateFromComponentPosition(QList<Component *> &components)
 	{
-		foreach(Component* component, components)
+		for(Component* component : components)
 		{
 			if (component->requiresRegeneration || component->pendingPositionUpdate)
 				updateFromComponentPosition(component);
@@ -434,15 +460,7 @@ namespace CDI
 			Point2D pos = component->pos();
 			float rotation = component->rotation() * _PI_/180.0f;
 			b2Vec2 boxPos = b2Vec2(pos.x()/defaultPhysicsScale, pos.y()/defaultPhysicsScale);
-			b2Vec2 currentPos = body->GetPosition();
-//			if (true)	// NO velocity update
-//			{
-//				b2Vec2 velocity = body->GetLinearVelocity();
-//				b2Vec2 newVelocity = b2Vec2(velocity.x+boxPos.x-currentPos.x,
-//											velocity.y+boxPos.y-currentPos.y);
-//				body->SetLinearVelocity(newVelocity);
-//			} else
-//				body->SetLinearVelocity(b2Vec2(0,0));	// pause the object which is being moved.
+			//b2Vec2 currentPos = body->GetPosition();
 			body->SetTransform(boxPos, rotation);
 			body->SetAwake(true);
 		}
@@ -454,17 +472,20 @@ namespace CDI
 		// http://www.iforce2d.net/b2dtut/bodies
 		if (item->type() != Component::Type) return;
 		Component* component = qgraphicsitem_cast<Component*>(item);
-		if(component->physicsBody() == NULL)
-		{
-			b2BodyDef  def;
-			def.type = b2_dynamicBody;
-			Point2D pos = component->pos();
-			def.position = b2Vec2(pos.x()/defaultPhysicsScale, pos.y()/defaultPhysicsScale);
-			def.angle = component->rotation() * (_PI_ / 180.0f);	// Angle in radians
-			b2Body* newBody =_b2World->CreateBody(&def);
-			newBody->SetUserData(static_cast<void*>(component));
-			component->setPhysicsBody(newBody);
+		addPhysicsBody(component);
+	}
 
-		}
+	void PhysicsManager::addPhysicsBody(Component *component)
+	{
+		if (component->physicsBody()) return;
+
+		b2BodyDef  def;
+		def.type = b2_dynamicBody;
+		Point2D pos = component->pos();
+		def.position = b2Vec2(pos.x()/defaultPhysicsScale, pos.y()/defaultPhysicsScale);
+		def.angle = component->rotation() * TO_RADIANS_FROM_DEG;	// Angle in radians
+		b2Body* newBody =_b2World->CreateBody(&def);
+		newBody->SetUserData(static_cast<void*>(component));
+		component->setPhysicsBody(newBody);
 	}
 }

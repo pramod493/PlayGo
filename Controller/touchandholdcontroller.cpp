@@ -43,13 +43,12 @@ namespace CDI
 
 		parentGroup = nullptr;		//
 
-		_componentEditMode = false;
-		_jointEditMode = false;
+		_componentEditMode	= false;
+		_jointEditMode		= false;
 
 		_selectedComponent 		= nullptr;
 		_selectedJoint 			= nullptr;
-		_selectedPhysicsJoint 	= nullptr;
-		_jointParamsChanged = false;
+		_jointParamsChanged		= false;
 
 		// Connect actions to slots
 		// Close
@@ -223,11 +222,11 @@ namespace CDI
 		_mainController->setTapOverride(true);
 	}
 
-	void TouchAndHoldController::enableOverlay(PhysicsJoint *physicsJoint, QPointF scenePos)
+	void TouchAndHoldController::enableOverlay(cdJoint *physicsJoint, QPointF scenePos)
 	{
 		if (_mainController == nullptr || _view == nullptr) return;
 
-		if (physicsJoint->getcdjoint()->jointType() == e_revoluteJoint)
+		if (physicsJoint->jointType() == e_revoluteJoint)
 		{
 			_jointEditMode = true;
 			_selectedJoint = physicsJoint;
@@ -299,17 +298,19 @@ namespace CDI
 			_mainController->setTapOverride(true);
 
 			// Get the settings and use these to update the toolbar
-			b2RevoluteJointDef* jointDef = static_cast<b2RevoluteJointDef*>
-					(_selectedJoint->getPhysicsJoint()->jointDef());
+			b2RevoluteJointDef* jointDef = static_cast<b2RevoluteJointDef*>(_selectedJoint->jointDef());
 			// Setting up the correct values in the toolbar
-			_mainController->setMotorParams(jointDef->enableMotor,jointDef->motorSpeed, jointDef->maxMotorTorque);
+			_mainController->setMotorParams(jointDef->enableMotor,
+											jointDef->motorSpeed * TO_RPM_FROM_RAD_SEC,
+											jointDef->maxMotorTorque);
 		}
 	}
 
-	void TouchAndHoldController::enableJointLimitsSelection(PhysicsJoint *physicsJoint, QPointF scenePos)
+	void TouchAndHoldController::enableJointLimitsSelection(cdPinJoint *physicsJoint, QPointF scenePos)
 	{
 		if (_mainController == NULL || _view == NULL) return;
 		// This will enable us to call this function directly from main controller
+
 		_mainController->setTapOverride(true);
 
 		if (parentGroup) delete parentGroup;
@@ -343,8 +344,8 @@ namespace CDI
 		pen.setColor(Qt::black);
 		pen.setWidth(5);
 
-		/*PinJointLimitsSelector * limiter = */new PinJointLimitsSelector
-				(physicsJoint->getPhysicsJoint(), parentGroup);
+		/*PinJointLimitsSelector * limiter = */
+		new PinJointLimitsSelector (physicsJoint, parentGroup);
 
 		// Close button
 		SelectableActions* closeItem = new SelectableActions
@@ -361,7 +362,7 @@ namespace CDI
 		Q_UNUSED(component)
 	}
 
-	void TouchAndHoldController::overlayJointOptions(PhysicsJoint *physicsJoint)
+	void TouchAndHoldController::overlayJointOptions(cdJoint *physicsJoint)
 	{
 		Q_UNUSED(physicsJoint)
 	}
@@ -489,8 +490,7 @@ namespace CDI
 		{
 			// update the joint parameters
 			_jointParamsChanged = false;
-			_selectedJoint->getPhysicsJoint()->updateJoint();
-			_selectedJoint->initializePainterPath();	// Manages reupdate
+			_selectedJoint->updateJoint();
 		}
 
 		if (parentGroup)
@@ -580,8 +580,8 @@ namespace CDI
 	{
 		if (_jointDeleteAction)
 		{
-			_mainController->_page->getPhysicsManager()->deleteJoint(_selectedJoint->getPhysicsJoint());
-			delete _selectedJoint;
+			delete _selectedJoint;	// it takes care of stuff
+			_selectedJoint = nullptr;
 			slotCloseOverlay();
 		}
 	}
@@ -598,11 +598,14 @@ namespace CDI
 
 	void TouchAndHoldController::slotEnableLimits()
 	{
-		if (_jointEditMode)
+		if (_jointEditMode && _selectedJoint->jointType() == e_revoluteJoint)
 		{
 			if (parentGroup) delete parentGroup;
 			parentGroup = 0;	// Clean up
-			enableJointLimitsSelection(_selectedJoint, _scenePos);
+			enableJointLimitsSelection(static_cast<cdPinJoint*>(_selectedJoint), _scenePos);
+		} else
+		{
+			slotCloseOverlay();
 		}
 	}
 
@@ -629,14 +632,14 @@ namespace CDI
 			float motorSpeed = 0;
 			float motorTorque = 0;
 			_mainController->getMotorParams(&enableMotor, &motorSpeed, &motorTorque);
-			PhysicsJoint * physicsJoint = _selectedJoint->getPhysicsJoint();
-			if (physicsJoint->jointType() == e_revoluteJoint)
+
+			if (_selectedJoint->jointType() == e_revoluteJoint)
 			{
 				//b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
-				b2RevoluteJointDef* def = static_cast<b2RevoluteJointDef*>(physicsJoint->jointDef());
+				b2RevoluteJointDef* def = static_cast<b2RevoluteJointDef*>(_selectedJoint->jointDef());
 
 				def->enableMotor = enableMotor;
-				def->motorSpeed = motorSpeed;
+				def->motorSpeed = motorSpeed * TO_RAD_SEC_FROM_RPM;
 				def->maxMotorTorque = motorTorque;
 			}
 			_jointParamsChanged = true;

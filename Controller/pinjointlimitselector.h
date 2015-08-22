@@ -75,7 +75,8 @@ namespace CDI
 	{
 		Q_OBJECT
 	private:
-		PhysicsJoint* p_physicsJoint;
+		cdJoint* p_physicsJoint;
+		b2RevoluteJointDef* p_jointDef;	// shouldn't be needed
 		RangeDialHandle* p_lowerLimitHandle;
 		RangeDialHandle* p_upperLimitHandle;
 		CustomArc* p_connectorItem;
@@ -86,7 +87,7 @@ namespace CDI
 		int lowerAngle;
 		int upperAngle;
 	public:
-		PinJointLimitsSelector(PhysicsJoint* physicsJoint, QGraphicsItem *graphicsparent);
+		PinJointLimitsSelector(cdPinJoint *physicsJoint, QGraphicsItem *graphicsparent);
 		virtual ~PinJointLimitsSelector();
 
 		int getLowerLimitAngle() const;

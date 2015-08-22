@@ -21,7 +21,7 @@
 #define MASK_BIT5	32
 #define MASK_BIT6	64
 #define MASK_BIT7	128
-#define _PI_ 3.14159265358979323846
+#define _PI_ 3.14159265358979323846f
 
 namespace CDI
 {

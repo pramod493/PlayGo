@@ -15,16 +15,16 @@ namespace CDI
 {
 	class Page;
 	class Component;
+	class cdJoint;
 	// Use the b2BodyDef for setting the value of physics components
 	/**
-	 * @brief physicsBodyDef stores the definition of property of physics body
+	 * @brief b2BodyDef stores the definition of property of physics body
 	 * including
 	 * 1. Position & angle
 	 * 2. Initial linear and angular velocity
 	 * 3. Damping
 	 * 4. Gavity scale and other props
 	 */
-	typedef struct b2BodyDef physicsBodyDef;
 	const unsigned int physicsPaused 		= 0;
 	const unsigned int noGravity			= MASK_BIT0;
 	const unsigned int noCollision			= MASK_BIT1;
@@ -108,32 +108,30 @@ namespace CDI
 	class PhysicsManager : public QObject
 	{
 		Q_OBJECT
-
 	protected:
-		float defaultPhysicsScale;
+		float defaultPhysicsScale;	/**< Stores the global physics scale to apply to the system */
 
+		// Manage items and relationships
 		QHash<QUuid, b2Body*> _box2DBodies;
-		QHash<QUuid, PhysicsBody*> _physicsBodies;
+		QList<cdJoint*> _jointList;
 
-		QList<PhysicsJoint*> _jointList;
+		PhysicsSettings _settings;	/**< Settings for physics engigne */
 
-		PhysicsSettings _settings;
+		QTimer* timer;				/**< Timer to call the step function */
 
-		QTimer* timer;
+		bool _internalLock;			/**< Prevents looping while updating the component positions */
 
-		bool _internalLock;	/**< Prevents looping while updating the component positions */
+		bool _isRunning;			/**< True if the box2d is running, false otherwise */
 
-		bool _isRunning;	/**< True if the box2d is running, false otherwise */
+		bool _quickpause;			/**< Pauses the physics engine without stopping the timer*/
 
-		bool _quickpause;	/**< Pauses the physics engine without stopping the timer*/
+		b2World* _b2World;			/**< b2World pointer */
 
-		b2World* _b2World;
+		cdContactListener* _contactListener; /**< Implements collision listener */
 
-		cdContactListener* _contactListener;
-
-		bool _enableDebugView;
+		bool _enableDebugView;		/**< Determines whether debug view will be updated or not */
 	public:
-		BoxDebugScene* debugView;
+		BoxDebugScene* debugView;	/**< Renders the debug information */
 
 	public:
 		/**
@@ -142,13 +140,13 @@ namespace CDI
 		 * @param settings Physics settings at start
 		 * @param parentPage Parent Page. Deleted with page
 		 */
-		PhysicsManager(PhysicsSettings* settings, Page *parentPage);
+		PhysicsManager(PhysicsSettings& settings, QObject *parent);
 
 		/**
 		 * @brief For Q_METATYPE
 		 * @param parent parent QObject
 		 */
-		explicit PhysicsManager(QObject *parent = 0);
+		explicit PhysicsManager(QObject *parent = nullptr);
 
 		/**
 		 * @brief Instantiate PhysicsManager object with settings from given instance
@@ -161,20 +159,6 @@ namespace CDI
 		 * all the bodies in it
 		 */
 		virtual ~PhysicsManager();
-
-		/**
-		 * @brief Factory functions for creating joints. Keeping them here saves
-		 * from creating multiple derived classes for joints
-		 * @param def b2BodyDef
-		 * @return b2Body reference
-		 */
-		virtual b2Body *createBody(const b2BodyDef& def);
-
-		/**
-		 * @brief Destroys the b2Body
-		 * @param body b2Body to delete
-		 */
-		virtual void destroyBody(b2Body* body);
 
 		/**
 		 * @brief Destroys the b2Body associated with given Component
@@ -195,16 +179,31 @@ namespace CDI
 		 * @param upperLimit Upper limit of motion (angle in radians)
 		 * @return PhysicsJoint created
 		 */
-		virtual PhysicsJoint* createPinJoint
+		virtual cdPinJoint* createPinJoint
 		(Component *c1, Component *c2, QPointF scenePos,
 		 bool enableMotor, bool enableLimits,
 		 float motorSpeed, float motorTorque,
 		 float lowerLimit, float upperLimit);
 
-		virtual PhysicsJoint* createPrismaticJoint
+		/**
+		 * @brief createPrismaticJoint creates a prismatic joint between
+		 * Component c1 and c2 where the joint is limited to startPos and endPos.
+		 * @param c1 bodyA
+		 * @param c2 bodyB
+		 * @param startPos		Start of constraint
+		 * @param endPos		End of constraint
+		 * @param enableMotor	Turn motor on
+		 * @param enableLimits	Limit motion (true by default)
+		 * @param motorSpeed	Desired motor speed
+		 * @param motorForce	Maximum torque allowed
+		 * @param lowerLimit	Min limit of joint
+		 * @param upperLimit	Max limit of joint
+		 * @return new cdSliderJoint
+		 */
+		virtual cdJoint* createPrismaticJoint
 		(Component *c1, Component *c2,
 		 QPointF startPos, QPointF endPos,
-		 bool enableMotoe, bool enableLimits,
+		 bool enableMotor, bool enableLimits,
 		 float motorSpeed, float motorForce,
 		 float lowerLimit, float upperLimit);
 
@@ -213,29 +212,22 @@ namespace CDI
 		 * @param joint Joint to update
 		 * @return True if successfull, false otherwise
 		 */
-		virtual bool updateJoint(PhysicsJoint* physicsJoint);
+		virtual bool updateJoint(cdJoint* physicsJoint);
 
-		virtual bool updateJoint(PhysicsJoint* joint, QPointF newScenePos);
+		virtual bool moveJoint(cdJoint* joint, QPointF newScenePos);
 
-		virtual bool deleteJoint(PhysicsJoint* joint);
+		virtual bool deleteJoint(cdJoint* joint);
 
-		virtual bool deleteJoint(b2Joint* joint);
-
-		/*virtual b2Joint* createWheelJoint(Component* c1, Component* c2,
-											   b2WheelJointDef& def);
-		virtual b2Joint* createGearJoint(Component* j1, Component* j2,
-											  b2GearJointDef& def);
-		virtual b2Joint* createGearJoint(Component* j1, Component* j2,
-											  float gearRatio);
-		virtual b2Joint* createWeldJOint(Component* c1, Component* c2,
-											  b2WeldJointDef* def);
-											  */
 		/**
 		 * @brief updateSettings updates the settings of b2World object and applies to them
 		 * @param newSettings
 		 */
 		void updateSettings(PhysicsSettings* newSettings);
 
+		/**
+		 * @brief setEnableDebugView controls whether the debug information is displayed or not
+		 * @param enableDebugView
+		 */
 		void setEnableDebugView(bool enableDebugView);
 
 		bool enableDebugView() const;
@@ -245,6 +237,27 @@ namespace CDI
 	protected:
 		virtual void init();
 
+		/**
+		 * @brief Factory functions for creating joints. Keeping them here saves
+		 * from creating multiple derived classes for joints
+		 * @param def b2BodyDef
+		 * @return b2Body reference
+		 */
+		virtual b2Body *createBody(const b2BodyDef& def);
+
+		/**
+		 * @brief Destroys the b2Body
+		 * @param body b2Body to delete
+		 */
+		virtual void destroyBody(b2Body* body);
+
+		/**
+		 * @brief deleteJoint deletes b2Joint from box 2d
+		 * @param joint
+		 * @return
+		 */
+		virtual bool deleteJoint(b2Joint* joint);
+
 	signals:
 		void physicsStepStart();
 
@@ -253,6 +266,7 @@ namespace CDI
 		void physicsPartUpdate();
 
 	public slots:
+		/*----------- Simulation options ---------------*/
 		void pause();
 
 		void start(int timerStepIn_msecs);
@@ -261,25 +275,64 @@ namespace CDI
 
 		void quickPause(bool enable);
 
-		// Settings update
+		/*----------- Physics settings -----------------*/
 		void setEnableGravity(bool enable);
 		bool isGravityEnabled() const;
 
+		/*----------- Configure components and joints -*/
+		/**
+		 * @brief setEnableMotor updates the motor component of all joints
+		 * @param value
+		 */
 		void setEnableMotor(bool value);
+
+		/**
+		 * @brief isMotorEnabled returns the global override of motors/actuators
+		 * @return
+		 */
 		bool isMotorEnabled() const;
 
+		/**
+		 * @brief setGlobalCollision toggles the global override to enable/disable collision of components
+		 * @param components
+		 * @param enableCollision
+		 */
 		void setGlobalCollision(QList<Component*> components, bool enableCollision);	// use playgoCollision parameter
 
-		// Manage component state
+		/**
+		 * @brief updateComponentPosition updates component position from box
+		 * @param components
+		 */
 		void updateComponentPosition(QList<Component*>& components);
 
+		/**
+		 * @brief updateComponentPosition updates component position from box
+		 * @param component
+		 */
 		void updateComponentPosition(Component* component);
 
+		/**
+		 * @brief updateFromComponentPosition updates the b2Body tranform
+		 * based on the Component transform for list of components
+		 * @param components
+		 */
 		void updateFromComponentPosition(QList<Component*>& components);
 
+		/**
+		 * @brief updateFromComponentPosition updates the b2Body transform
+		 * based on component transform
+		 * @param component
+		 */
 		void updateFromComponentPosition(Component* component);
 
+		/**
+		 * @brief onItemAdd is called when a new GraphicsItem is added to scene
+		 * It adds a b2Body if the item is component
+		 * @param item
+		 */
 		void onItemAdd(QGraphicsItem* item);
+
+		void addPhysicsBody(Component* component);
 	};
 }
 
