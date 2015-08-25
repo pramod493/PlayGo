@@ -1,59 +1,31 @@
 #ifndef __LOADMODEL_H__
 #define __LOADMODEL_H__
-
+#include "QObject"
 #include "playgocontroller.h"
 #include "polygon2d.h"
 
 namespace CDI
 {
-	class LoadModel
+	class LoadModel : public QObject
 	{
+		Q_OBJECT
+	private:
 		PlayGoController* 	controller;
 		Page* 				page;
 
 	public:
-		LoadModel(PlayGoController* playgocontroller)
-		{
-			//
-			controller = playgocontroller;
-			page = controller->_page;
-		}
+		LoadModel(PlayGoController* playgocontroller);
 
-		void createComponents()
-		{
-			// 1
-			vector<Component*> componentList;
-			int num_componnets = 10;
+		virtual void createComponents();
 
-			// create 4 components
-			for (int i=0; i < num_componnets; i++)
-			{
-				Component* component = page->createComponent();
-				componentList.push_back(component);
-				component->setPos(0,0);
-			}
-			for (Component* component : componentList)
-			{
-				//
-				Polygon2D* polygon = new Polygon2D(component);
-				component->addToComponent(polygon);
-			}
-		}
+		virtual Polygon2D* createPolygon(Component *parent, QPointF pos, QVector<QPointF> points);
 
-		void createPolygon(QPointF pos, vector<QPointF> points)
-		{
+		virtual Pixmap* loadImage(QPointF pos, QString imagePath);
 
-		}
+		virtual Pixmap* loadImage(QPointF pos, QPixmap image);
 
-		void loadImage(QPointF pos, QString imagePath)
-		{
-
-		}
-
-		void loadImage(QPointF pos, QPixmap image)
-		{
-
-		}
+	public slots:
+		void runTest();
 	};
 }
 #endif //__LOADMODEL_H__

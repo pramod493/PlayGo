@@ -30,6 +30,8 @@
 
 #include "qCustomPlot/qcustomplot.h"
 
+#include "LoadModel.h"
+
 int main(int argc, char *argv[])
 {
 //	return grabcut_load("grabcut.png");
@@ -205,5 +207,14 @@ int main(int argc, char *argv[])
 		//window->sketchView->scene()->addItem(webwidget);
 		scene->addItem(webwidget);
 	}*/
+
+	/******************************************************************
+	 *  QT Web View test
+	 *****************************************************************/
+	{
+		LoadModel* test = new LoadModel(window->controller);
+		QObject::connect(window->saveImageAction, SIGNAL(triggered()),
+						 test, SLOT(runTest()));
+	}
 	return app.exec();
 }
