@@ -7,6 +7,7 @@ namespace CDI
 {
 	class PhysicsManager;
 	class PhysicsJoint;
+	class Stroke;
 	/**
 	 * @brief The cdJointDef class defines the abstract class for defining
 	 */
@@ -45,7 +46,7 @@ namespace CDI
 		 * @brief id returns the item id
 		 * @return Item ID
 		 */
-		QUuid id() const { return _id; }
+		virtual QUuid id() const { return _id; }
 
 		/**
 		 * @brief joint returns the box2d joint pointer. Derived classes must implement
@@ -99,6 +100,12 @@ namespace CDI
 		Point2D					_relPosA;
 		Point2D					_relPosB;
 
+		QGraphicsSimpleTextItem* _descriptionText;
+		Stroke*					 _motorDirectionItem;
+		// \todo - Need to implement the line item so that it gets
+		// deleted with the joint and is in right orientation
+		//QGraphicsLineItem*		 _partDirectionLine;
+
 	public:
 		cdPinJoint(QGraphicsItem* parent = nullptr);
 		virtual ~cdPinJoint();
@@ -121,7 +128,14 @@ namespace CDI
 		float maxMotorTorque() const;
 		float motorSpeed() const;
 
-		float isLimitsEnabled() const;
+		/**
+		 * @brief enableLimits enables/disabled the limit on joint
+		 * @param enable Enable/Disable
+		 * @param lowerAngle Lower angle (in degrees)
+		 * @param upperAngle (in degrees)
+		 */
+		void enableLimits(bool enable, float lowerAngle, float upperAngle);
+		bool isLimitsEnabled() const;
 		float lowerLimit() const;
 		float upperLimit() const;
 
@@ -135,33 +149,72 @@ namespace CDI
 		friend class PhysicsManager;
 	};
 
-//	class cdSliderJoint : public cdJoint
-//	{
-//	protected:
-//		PhysicsManager*			_physicsmanager;
-//		b2PrismaticJointDef*	_jointDef;
-//		b2PrismaticJoint*		_joint;
-//		Component*				_componentA;
-//		Component*				_componentB;
-//		Point2D					_relPosA;
-//		Point2D					_relPosB;
+	class cdSliderJoint : public cdJoint
+	{
+		Q_OBJECT
+		Q_PROPERTY(bool motorEnabled READ isMotorEnabled)
+		Q_PROPERTY(float maxMotorForce READ maxMotorForce)
+		Q_PROPERTY(float motorSpeed READ motorSpeed)
 
-//	public:
-//		cdSliderJoint();
+		Q_PROPERTY(bool limitsEnabled READ isLimitsEnabled())
+		Q_PROPERTY(float lowerLimit READ lowerLimit)
+		Q_PROPERTY(float upperLimit READ upperLimit)
+	protected:
+		PhysicsManager*			_physicsmanager;
+		b2PrismaticJointDef*	_jointDef;
+		b2PrismaticJoint*		_joint;
+		Component*				_componentA;
+		Component*				_componentB;
+		Point2D					_relPosA;
+		Point2D					_relPosB;
 
-//		virtual ~cdSliderJoint();
+		QGraphicsSimpleTextItem*	_descriptionText;
+		Stroke*						_motorDirectionItem;
 
-//		b2PrismaticJoint* joint() const override;
+	public:
+		cdSliderJoint(QGraphicsItem *parent = nullptr);
+		virtual ~cdSliderJoint();
 
-//		b2PrismaticJointDef* jointDef() const override;
+		b2PrismaticJoint* joint() const override;
+		b2PrismaticJointDef* jointDef() const override;
 
-//		Component *componentA() const;
-//		Component *componentB() const;
-//		Point2D relPosA() const;
-//		Point2D relPosB() const;
+		void updateJoint();
 
-//		friend class PhysicsManager;
-//	};
+		Component *componentA() const;
+		Component *componentB() const;
+		Point2D relPosA() const;
+		Point2D relPosB() const;
+		Point2D localAxisA() const;	// \note normalized??
+
+		bool isMotorEnabled() const;
+		float maxMotorForce() const;
+		float motorSpeed() const;
+
+		/**
+		 * @brief enableLimits enables/disables the limits on the slider joint. Limits
+		 * are enabled by default
+		 * @param enable
+		 * @param lowerLength Lower length in terms of bodyA
+		 * @param upperLength Upper length in terms of bodyB
+		 * @remarks The dimensions are in terms of the component local coordinate
+		 */
+		void enableLimits(bool enable, float lowerLength, float upperLength);
+		bool isLimitsEnabled() const;
+		float lowerLimit() const;
+		float upperLimit() const;
+
+		float referenceAngle() const;
+		float jointTranslation() const;
+
+	signals:
+		void onJointDelete(cdSliderJoint*);
+		void onJointChange(cdSliderJoint*);
+
+	public slots:
+		void initializeShape();
+
+		friend class PhysicsManager;
+	};
 
 //	class cdWeldJoint : public cdJoint
 //	{

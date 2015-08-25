@@ -122,6 +122,11 @@ namespace CDI
 
 		void lock(bool value);
 
+		/**
+		 * @brief sceneEvent receives all the events sent to the component from scene
+		 * @param event
+		 * @return
+		 */
 		bool sceneEvent(QEvent *event);
 
 		bool gestureEvent(QGestureEvent* gesture);

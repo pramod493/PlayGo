@@ -346,6 +346,8 @@ void PlayGoController::connectPress(QPointF scenePos)
 	case GestureSketch :
 		gestureSketchModeFilter(scenePos, UI::Began);
 		break;
+	case StaticJoint :
+		staticJointModeFilter(scenePos, UI::Began);
 	case HingeJoint :
 		hingeJointModeFilter(scenePos, UI::Began);
 		break;
@@ -366,6 +368,9 @@ void PlayGoController::connectMove(QPointF scenePos)
 	{
 	case GestureSketch :
 		gestureSketchModeFilter(scenePos, UI::Update);
+		break;
+	case StaticJoint :
+		staticJointModeFilter(scenePos, UI::Update);
 		break;
 	case HingeJoint :
 		hingeJointModeFilter(scenePos, UI::Update);
@@ -523,7 +528,7 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 			setMotorParams(false, f_motorSpeed, f_motorTorque);
 
 		qDebug() << b_enableMotor << f_motorSpeed << f_motorTorque;
-		auto* physicsJoint = _page->getPhysicsManager()->createPinJoint(
+		auto physicsJoint = _page->getPhysicsManager()->createPinJoint(
 					c1, c2, scenePos,
 					b_enableMotor, false,
 					f_motorSpeed, f_motorTorque,
@@ -560,6 +565,7 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 			_sliderStartPos = scenePos;
 			if (_sliderLineItem) delete _sliderLineItem;
 			_sliderLineItem = new QGraphicsLineItem(QLineF(_sliderStartPos, _sliderStartPos));
+			_sliderLineItem->setZValue(Z_UIVIEW);		// used for representing display
 			_scene->addItem(_sliderLineItem);
 		}
 		break;
@@ -575,7 +581,7 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 	}
 	case UI::End :
 	{
-		if (_sliderComponentA == NULL)
+		if (_sliderComponentA == nullptr)
 		{
 			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
 			if (selection.size())
@@ -583,7 +589,7 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 				_sliderComponentA = selection[0];
 				_sliderComponentA->setOpacity(1.0f);
 			}
-		} else if (_sliderComponentB == NULL)
+		} else if (_sliderComponentB == nullptr)
 		{
 			QList<Component*> selection = getSelectableComponentsByPhysics(scenePos);
 			if (selection.size())
@@ -631,69 +637,41 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 				pathitem->setPen(linePen);
 				_scene->addItem(pathitem);
 			}
-			// Check for lines
-			QLineF lineA = QLineF(_sliderComponentA->mapFromScene(_sliderStartPos),
-								  _sliderComponentA->mapFromScene(_sliderEndPos));
-			QLineF lineB = QLineF(_sliderComponentB->mapFromScene(_sliderStartPos),
-								  _sliderComponentB->mapFromScene(_sliderEndPos));
 
+			bool b_enableMotor = false;
+			float f_motorSpeed = 0;
+			float f_motorForce = 0;
+			getMotorParams(&b_enableMotor, &f_motorSpeed, &f_motorForce);
+			if (b_enableMotor)
+				setMotorParams(false, f_motorSpeed, f_motorForce);
 
+			auto physicsJoint = _page->getPhysicsManager()->createPrismaticJoint(
+						_sliderComponentA, _sliderComponentB,
+						_sliderStartPos, _sliderEndPos,
+						b_enableMotor, true,
+						f_motorSpeed, f_motorForce);	// Keep limits same ass start and end pos
+						//0, vectorGlobal.length());
 
-			QVector2D vecA = QVector2D(lineA.p2() - lineA.p1());
-			//QVector2D vecB = QVector2D(lineB.p2() - lineB.p1());
-			QVector2D vectorGlobal = QVector2D(_sliderEndPos-_sliderStartPos);
-
-			float physicsScale = getPhysicsScale();
-
-			b2PrismaticJointDef sliderDef;
-			sliderDef.bodyA = _sliderComponentA->physicsBody();
-			sliderDef.bodyB = _sliderComponentB->physicsBody();
-			sliderDef.collideConnected = false;
-
-			sliderDef.localAxisA.Set(vecA.x(), vecA.y());
-			sliderDef.localAxisA.Normalize();
-
-			sliderDef.localAnchorA.Set(lineA.p1().x()/physicsScale, lineA.p1().y()/physicsScale);
-			sliderDef.localAnchorB.Set(lineB.p1().x()/physicsScale, lineB.p1().y()/physicsScale);
-
-			sliderDef.enableLimit = true;
-			sliderDef.lowerTranslation = 0;
-			sliderDef.upperTranslation = vectorGlobal.length()/physicsScale;
-
-//			sliderDef.referenceAngle =
-//					_sliderComponentA->physicsBody()->GetAngle() -
-//					_sliderComponentB->physicsBody()->GetAngle();
-
-			if (enableMotorCheckbox->isChecked())
-			{
-				sliderDef.enableMotor = true;
-				bool ok;
-				int speed = motorSpeed->text().toInt(&ok);
-				if (ok) sliderDef.motorSpeed = speed;
-				int torque = motorTorque->text().toInt(&ok);
-				if (ok)	sliderDef.maxMotorForce = torque;
-			} else
-			{
-				sliderDef.enableMotor = false;
-			}
-
-			b2Joint* joint = _page->getPhysicsManager()->createJoint(sliderDef);
-			b2PrismaticJoint* sliderJoint = static_cast<b2PrismaticJoint*>(joint);
-			Q_UNUSED(sliderJoint)
-			//                _sliderComponentA->physicsBody()->SetType(b2_kinematicBody);
-			_sliderComponentA->addToComponent(_sliderLineItem);
+			QLOG_INFO() << "Slider joint created with ID:" << physicsJoint->id();
 
 			_sliderComponentA->setOpacity(0.5f);
 			_sliderComponentB->setOpacity(0.5f);
 
-			_sliderLineItem = 0;
-			_sliderComponentA = 0;
-			_sliderComponentB = 0;
+			if (_sliderLineItem) delete _sliderLineItem;
+			_sliderLineItem = nullptr;
+
+			_sliderComponentA = nullptr;
+			_sliderComponentB = nullptr;
 		}
 		break;
 	}
 	case UI::Cancel :
 	{
+		// Delete/reset eveything
+		if (_sliderLineItem) delete _sliderLineItem;
+		_sliderLineItem = nullptr;
+		_sliderComponentA = nullptr;
+		_sliderComponentB = nullptr;
 		break;
 	}
 	}

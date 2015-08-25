@@ -18,7 +18,7 @@ namespace CDI
 		enum { Type = UserType + STROKEVIEW };
 
 	protected:
-        bool _highlighted;
+		bool _highlighted;
 		QUuid _id;
 		QVector<Point2DPT*> _points;
 
@@ -47,6 +47,12 @@ namespace CDI
 
 		int size() { return _points.size(); }
 
+		/**
+		 * @brief setStrokePath sets the given vector as current stroke
+		 * @param points vector of points
+		 */
+		void setStrokePath(QVector<Point2DPT*> points);
+
 		bool contains(const QPointF& point) const;
 
 		virtual bool contains(const QPointF& point, float margin) const;
@@ -61,9 +67,9 @@ namespace CDI
 
 		void applySmoothing(int order);
 
-        bool isHighlighted() const;
+		bool isHighlighted() const;
 
-        void highlight(bool value);
+		void highlight(bool value);
 
 		QDataStream& serialize(QDataStream& stream) const;
 

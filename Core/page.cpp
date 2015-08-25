@@ -278,7 +278,7 @@ namespace CDI
 	{
 		// Do not delete the component if it is not contained in the page
 		bool markForDelete = false;
-		if (component == NULL)
+		if (component == nullptr)
 		{
 			QLOG_ERROR() << "Invalid component pointer";
 			return false;
@@ -289,7 +289,6 @@ namespace CDI
 		{
 			markForDelete = true;
 			_components.remove(component->id());
-			removeComponentConnections(component);
 		}
 
 		// Remove it from temp list
@@ -298,9 +297,10 @@ namespace CDI
 			transformedComponents.removeOne(component);
 		}
 
+		//If this is equal to current component
 		if (_currentComponent == component)
 		{
-			_currentComponent = NULL;
+			_currentComponent = nullptr;
 		}
 
 		// 1. Find the assembly which contains the components
@@ -319,17 +319,16 @@ namespace CDI
 		if (markForDelete)
 		{
 			emit signalItemDelete(component);
-			QList<QGraphicsItem*> childItems = component->childItems();
+
+			// Remove all joints before the physics component
+			// because it will automatically delete the joint
+			// NOTE that this might be different for jonts like gear joint etc..
+			removeComponentConnections(component);
+
 			b2Body* physicsBody = component->physicsBody();
 			if (physicsBody)
 			{
-				foreach (auto* joint, component->_jointlist)
-				{
-					_physicsManager->deleteJoint(joint);
-				}
-				component->_jointlist.clear();
-
-				foreach (b2Fixture* fixture, component->_fixtures)
+				for (b2Fixture* fixture : component->_fixtures)
 				{
 					physicsBody->DestroyFixture(fixture);
 				}
@@ -339,6 +338,8 @@ namespace CDI
 				component->_physicsBody = NULL;
 			}
 
+			// No need to do this specifically. Qt takes care of it
+			QList<QGraphicsItem*> childItems = component->childItems();
 			qDeleteAll(childItems);
 
 			delete component;
@@ -572,6 +573,7 @@ namespace CDI
 		return selectedStrokes;
 	}
 
+	// \todo Use the margin as rectangle size to select all components in the region
 	QList<QGraphicsItem *> Page::getSelectedItems(Point2D pos, float margin)
 	{
 		QList<QGraphicsItem*>  selectedItems;
@@ -604,14 +606,8 @@ namespace CDI
 				Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
 				if (stroke->isVisible() && stroke->contains(stroke->mapFromScene(pos), margin))
 				{
-					//					if (graphicsitem->parentItem())
-					//					{
-					//						selectParentItem = true;
-					//					} else
-					//					{
 					if ( selectedItems.contains(graphicsitem) == false)
 						selectedItems.push_back(graphicsitem);
-					//					}
 				}
 				break;
 			}
@@ -740,7 +736,10 @@ namespace CDI
 
 	void Page::removeComponentConnections(Component *component)
 	{
-		Q_UNUSED(component)
+		// Clean up all the components
+		for (auto joint : component->_jointlist)
+			delete joint;
+		component->_jointlist.clear();
 	}
 
 	// Slots

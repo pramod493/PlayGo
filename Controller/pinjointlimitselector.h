@@ -49,6 +49,7 @@ namespace CDI
 		 */
 		void setText(QString text);
 
+		void setText();
 	protected:
 		/**
 		 * @brief Manage the touch events received by the item
@@ -75,8 +76,7 @@ namespace CDI
 	{
 		Q_OBJECT
 	private:
-		cdJoint* p_physicsJoint;
-		b2RevoluteJointDef* p_jointDef;	// shouldn't be needed
+		cdPinJoint* p_physicsJoint;
 		RangeDialHandle* p_lowerLimitHandle;
 		RangeDialHandle* p_upperLimitHandle;
 		CustomArc* p_connectorItem;

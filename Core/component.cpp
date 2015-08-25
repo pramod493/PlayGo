@@ -21,7 +21,7 @@ namespace CDI
 		{
 		_id = uniqueHash();
 
-		_physicsBody = NULL;		// Creation is done outside but deletion is performed internally
+		_physicsBody = nullptr;		// Creation is done outside but deletion is performed internally
 		_fixtures	= QList<b2Fixture*>();
 		_jointlist = QList<cdJoint*>();
 
@@ -53,8 +53,8 @@ namespace CDI
 		maskBits		= 0xFFFF;
 		categoryBits	= 0x0000;
 
-		_anchorItem		= NULL;
-				_lockScaleItem	= NULL;
+		_anchorItem		= nullptr;
+		_lockScaleItem	= nullptr;
 
 		_lockItem = false;
 
@@ -317,7 +317,7 @@ namespace CDI
 		case QEvent::GraphicsSceneMouseMove :
 		case QEvent::GraphicsSceneMouseRelease :
 		{
-			event->accept();
+			event->accept();	// Do nothing?
 			return true;
 			break;
 		}
@@ -334,7 +334,7 @@ namespace CDI
 			event->accept();
 			return touchEvent(static_cast<QTouchEvent*>(event));
 			break;
-		case QEvent::Gesture :
+		case QEvent::Gesture :	// ignore
 			break;
 		}
 		return QGraphicsObject::sceneEvent(event);
@@ -391,8 +391,11 @@ namespace CDI
 			// Marks the start of touch event to the object
 			// Must accept this event to receive further events
 		}
+
 		if (event->touchPointStates() & Qt::TouchPointPressed)
 		{
+			qDebug() << "Extra touch point added" << "Ignoring..."
+					 << event->touchPoints().count() << "fingers now";
 			return false;
 		}
 
@@ -727,13 +730,54 @@ namespace CDI
 
 	QDataStream& Component::serialize(QDataStream& stream) const
 	{
+		float z_value = zValue();
+		bool anchor_present = (_anchorItem == nullptr ? false : true);
+
 		stream << _id;
+		stream << _density;
+		stream << disableScaling;
+		stream << groupIndex;
+		stream << maskBits;
+		stream << categoryBits;
+		stream << transform();
+
+		stream << _lockItem;
+
+		// derived components
+
+		stream << z_value;
+		stream << anchor_present;
+
+
 		return stream;
 	}
 
 	QDataStream& Component::deserialize(QDataStream& stream)
 	{
+		float z_value = 0;
+		float anchor_present = false;
+
 		stream >> _id;
+		stream >> _density;
+		stream >> disableScaling;
+		stream >> groupIndex;
+		stream >> maskBits;
+		stream >> categoryBits;
+		QTransform t;
+		stream >> t;
+		setTransform(t);
+
+		stream >> _lockItem;
+
+		// derived components
+
+		stream << z_value;
+		stream >> anchor_present;
+
+		setZValue(z_value);
+		if (anchor_present)
+		{}
+
 		return stream;
 	}
 
@@ -746,6 +790,11 @@ namespace CDI
 	{
 		// TODO on density change
 		_density = density;
+		// Update all the components density
+		for(auto fixture : _fixtures)
+		{
+			fixture->SetDensity(density);
+		}
 	}
 
 	void Component::onCollisionBitsUpdate()
@@ -872,7 +921,7 @@ namespace CDI
 					b2TriaShape.Set(vertices, 3);
 					b2FixtureDef fixtureDef;
 					fixtureDef.shape = &b2TriaShape;
-					fixtureDef.density = 1.0f;
+					fixtureDef.density = _density;
 					fixtureDef.filter.groupIndex = groupIndex;
 					fixtureDef.filter.categoryBits = categoryBits;
 					fixtureDef.filter.maskBits = maskBits;
@@ -925,6 +974,11 @@ namespace CDI
 				Polygon2D *polygon = qgraphicsitem_cast<Polygon2D*>(graphicsitem);
 				if (polygon->containsPoint(polygon->mapFromScene(pos)))
 					return true;
+				break;
+			}
+			case QGraphicsPolygonItem::Type :
+			{
+				if (graphicsitem->contains(graphicsitem->mapFromScene(pos))) return true;
 				break;
 			}
 			case Pixmap::Type :

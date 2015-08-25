@@ -200,12 +200,12 @@ namespace CDI
 		 * @param upperLimit	Max limit of joint
 		 * @return new cdSliderJoint
 		 */
-		virtual cdJoint* createPrismaticJoint
+		virtual cdSliderJoint* createPrismaticJoint
 		(Component *c1, Component *c2,
 		 QPointF startPos, QPointF endPos,
 		 bool enableMotor, bool enableLimits,
-		 float motorSpeed, float motorForce,
-		 float lowerLimit, float upperLimit);
+		 float motorSpeed, float motorForce/*,
+		 float lowerLimit, float upperLimit*/);
 
 		/**
 		 * @brief Updates the joint with updated definitions. Recreates b2Joint if needed

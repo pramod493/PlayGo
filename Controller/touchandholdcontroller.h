@@ -94,6 +94,10 @@ namespace CDI
 	protected:
 		void handleSelection(QPointF scenePos, UI::EventState inputState);
 
+		void enablePinJointOverlay(cdPinJoint* pinjoint, QPointF scenePos);
+
+		void enableSliderJointOverlay(cdSliderJoint* sliderjoint, QPointF scenePos);
+
 	signals:
 
 	public slots:

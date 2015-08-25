@@ -41,7 +41,7 @@ namespace CDI
 	}
 
 	Stroke::~Stroke()
-    {
+	{
 		if (parentItem()!= NULL)
 		{
 			QGraphicsItem* graphicsitem = parentItem();
@@ -53,10 +53,10 @@ namespace CDI
 			}
 		}
 		qDeleteAll(_points);
-    }
+	}
 
 	void Stroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
-    {
+	{
 		Q_UNUSED(widget)
 		Q_UNUSED(option)
 		// Hide when hidden
@@ -69,18 +69,18 @@ namespace CDI
 		// TODO - Get const_iterator
 		Point2DPT** data = _points.data();		// gives out the data. Careful not to overwrite that information
 		int num_points = _points.size();
-        if (_highlighted)
-        {
+		if (_highlighted)
+		{
 			QPen highlighter = QPen(_pen);
-            highlighter.setWidthF(width * 1.5f);
-            highlighter.setColor(Qt::red);
-            painter->setPen(highlighter);
-            for (int i=1; i< num_points; i++)
-            {
+			highlighter.setWidthF(width * 1.5f);
+			highlighter.setColor(Qt::red);
+			painter->setPen(highlighter);
+			for (int i=1; i< num_points; i++)
+			{
 				Point2DPT* p1 = data[i-1]; Point2DPT* p2 = data[i];
 				painter->drawLine(*p1, *p2);
-            }
-        }
+			}
+		}
 		for (int i=1; i< num_points; i++)
 		{
 			Point2DPT* p1 = data[i-1]; Point2DPT* p2 = data[i];
@@ -91,7 +91,13 @@ namespace CDI
 		painter->setPen((_pen.setWidth(0),_pen.setStyle(Qt::DashDotLine), _pen));
 		painter->drawRect(boundingRect());
 #endif
-    }
+	}
+
+	void Stroke::setStrokePath(QVector<Point2DPT *> points)
+	{
+		_points = points;
+		recalculateAABB();
+	}
 
 	bool Stroke::contains(const QPointF &point) const
 	{
@@ -154,18 +160,18 @@ namespace CDI
 		Point2D pt = mapFromScene(point);
 		_points.push_back(new Point2DPT(pt.x(),pt.y(), pressure, time));
 		updateAABB(pt.x(),pt.y());
-    }
+	}
 
 	void Stroke::push_point(Point2DPT point)
-    {
+	{
 		Point2D pt = mapFromScene(point);
 		_points.push_back
 				(new Point2DPT(pt.x(), pt.y(), point.pressure(), point.time()));
 		updateAABB(pt.x(),pt.y());
-    }
+	}
 
 	void Stroke::applySmoothing(int order)
-    {
+	{
 		int num_points = _points.size()-1;
 		Point2DPT** points = _points.data();
 		for (int j =0; j< order; j++)
@@ -186,19 +192,19 @@ namespace CDI
 		setPath(localPath);
 		_isStrokeFinalized = true;
 		recalculateAABB();
-    }
+	}
 
 	bool Stroke::isHighlighted() const
-    {
-        return _highlighted;
-    }
+	{
+		return _highlighted;
+	}
 
 	void Stroke::highlight(bool value)
-    {
-        if (_highlighted == value) return;
-        _highlighted = value;
-        update(boundingRect());
-    }
+	{
+		if (_highlighted == value) return;
+		_highlighted = value;
+		update(boundingRect());
+	}
 
 	QDataStream& Stroke::serialize(QDataStream &stream) const
 	{

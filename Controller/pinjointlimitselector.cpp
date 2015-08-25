@@ -33,9 +33,21 @@ namespace CDI
 		{
 			Q_UNUSED(option)
 			Q_UNUSED(widget)
+			return;
+			painter->drawArc(boundingRect(), startAngle*16, (endAngle-startAngle)*16);
+			return;
 			painter->setPen(arcPen);
 			painter->setBrush(arcBrush);
-			painter->drawArc(boundingRect(), startAngle*16, (endAngle-startAngle)*16);
+			QPointF startPos = QPointF(radius*sin(startAngle*TO_RADIANS_FROM_DEG),
+									   radius*cos(startAngle*TO_RADIANS_FROM_DEG));
+			for (int i = startAngle; i < endAngle; i+=3)
+			{
+				QPointF nextPos = QPointF(radius*sin(i*TO_RADIANS_FROM_DEG),
+										   radius*cos(i*TO_RADIANS_FROM_DEG));
+				painter->drawLine(startPos, nextPos);
+				startPos = nextPos;
+			}
+
 		}
 	};
 
@@ -215,13 +227,18 @@ namespace CDI
 		return QGraphicsPathItem::sceneEvent(event);
 	}
 
+	void RangeDialHandle::setText(QString text)
+	{
+		textItem->setText(text);
+		//textItem->setText(QString::number(_angle) + QString("°"));
+	}
+
 	void RangeDialHandle::setAngle(int value)
 	{
 		if (_angle == value) return;
 		_angle = value;
 		_tmpAngle = _angle;
 		setRotation(_angle);
-		textItem->setText(QString::number(_angle) + QString("°"));
 		emit signalAngleChanged();
 	}
 
@@ -233,7 +250,6 @@ namespace CDI
 		: QObject (0), QGraphicsItemGroup(graphicsparent)
 	{
 		p_physicsJoint = physicsJoint;
-		p_jointDef = physicsJoint->jointDef();
 		p_upperLimitHandle = new RangeDialHandle(175, 30, this);	// Keeps it under the next one
 		p_lowerLimitHandle = new RangeDialHandle(100, 30, this);
 
@@ -243,14 +259,12 @@ namespace CDI
 
 		p_lowerLimitHandle->setPen(pen);
 		p_lowerLimitHandle->setBrush(QBrush(QColor(255,100,100)));
-		p_lowerLimitHandle->setAngle(0);	// start angle
 
 		p_upperLimitHandle->setPen(pen);
 		p_upperLimitHandle->setBrush(QBrush(QColor(100,100,255)));
-		p_upperLimitHandle->setAngle(45);	// end angle
 
-		p_lowerLimitHandle->setAngle(p_jointDef->lowerAngle * TO_DEGREES_FROM_RAD);
-		p_upperLimitHandle->setAngle(p_jointDef->upperAngle * TO_DEGREES_FROM_RAD);
+		p_lowerLimitHandle->setAngle(p_physicsJoint->lowerLimit());
+		p_upperLimitHandle->setAngle(p_physicsJoint->upperLimit());
 
 		p_connectorItem = new CustomArc(this);
 		onAngleChanged();
@@ -259,6 +273,17 @@ namespace CDI
 				this, SLOT(onAngleChanged()));
 		connect(p_upperLimitHandle, SIGNAL(signalAngleChanged()),
 				this, SLOT(onAngleChanged()));
+
+		// create handle for current angle
+		auto currentAngleHandle = new RangeDialHandle(250, 15, this);
+		currentAngleHandle->setAngle(p_physicsJoint->jointAngle());
+		currentAngleHandle->setPen((pen.setWidth(2), pen));
+		currentAngleHandle->setBrush(QBrush(Qt::yellow));
+		currentAngleHandle->setAcceptTouchEvents(false);
+		currentAngleHandle->setAcceptedMouseButtons(false);
+		currentAngleHandle->setText(
+					QString("Current angle=") +
+					QString::number((int)p_physicsJoint->jointAngle())+ QString("°"));
 	}
 
 	PinJointLimitsSelector::~PinJointLimitsSelector()
@@ -281,17 +306,18 @@ namespace CDI
 		lowerAngle = p_lowerLimitHandle->currentAngle();
 		upperAngle = p_upperLimitHandle->currentAngle();
 
-		if (lowerAngle < 0) lowerAngle += 360;
-		if (upperAngle < 0) upperAngle += 360;
+//		if (lowerAngle < 0) lowerAngle += 360;
+//		if (upperAngle < 0) upperAngle += 360;
+		// update the text
+		p_lowerLimitHandle->setText(QString::number(lowerAngle) + QString("°"));
+		p_upperLimitHandle->setText(QString::number(upperAngle) + QString("°"));
 
 		p_connectorItem->radius = 70;
-		p_connectorItem->startAngle = min(-lowerAngle, -upperAngle);
-		p_connectorItem->endAngle = max(-lowerAngle, -upperAngle);
+		p_connectorItem->startAngle = min(lowerAngle, upperAngle);
+		p_connectorItem->endAngle = max(lowerAngle, upperAngle);
 		p_connectorItem->scene()->update(p_connectorItem->mapRectToScene(p_connectorItem->boundingRect()));
-		qDebug() << "Limit value changed" << lowerAngle << upperAngle;
 
-		p_jointDef->lowerAngle = lowerAngle * TO_RADIANS_FROM_DEG;
-		p_jointDef->upperAngle = upperAngle * TO_RADIANS_FROM_DEG;
+		p_physicsJoint->enableLimits(true, min(lowerAngle, upperAngle),  max(lowerAngle, upperAngle));
 	}
 }
 

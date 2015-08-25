@@ -226,83 +226,21 @@ namespace CDI
 	{
 		if (_mainController == nullptr || _view == nullptr) return;
 
+		_scenePos = scenePos;
+		if (parentGroup) delete parentGroup;
+
 		if (physicsJoint->jointType() == e_revoluteJoint)
 		{
 			_jointEditMode = true;
 			_selectedJoint = physicsJoint;
-			_scenePos = scenePos;
 
-			if (parentGroup)
-				delete parentGroup;
+			enablePinJointOverlay(dynamic_cast<cdPinJoint*>(physicsJoint), scenePos);
+		} else if (physicsJoint->jointType() == e_prismaticJoint)
+		{
+			_jointEditMode = true;
+			_selectedJoint = physicsJoint;
 
-			float center_radius = 0.25f * dpi;
-			float ring_radius = 1.0f * dpi;
-
-			parentGroup = new QGraphicsItemGroup;
-			_selectedJoint->scene()->addItem(parentGroup);
-			parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-			QGraphicsPathItem* decor =new QGraphicsPathItem(parentGroup);
-			decor->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-			// Set up colors
-			QPen pen = QPen();
-			QColor penColor = Qt::blue;
-			pen.setColor(penColor);
-			pen.setWidth(3);
-			QBrush brush = QBrush(Qt::SolidPattern);
-			brush.setColor((penColor.setAlpha(150), penColor));
-
-			// Set up decor
-			QPainterPath path;
-			path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
-			path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
-			path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
-			path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
-			decor->setPath(path);
-			decor->setPen(pen);
-			decor->setBrush(brush);
-
-			// Add actual stuff
-			float angle = 0;
-			float length = 0.75 * dpi;
-
-			SelectableActions* deleteItem = new SelectableActions
-					(_jointDeleteAction, parentGroup);
-			deleteItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-			deleteItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-			angle += 60;
-
-			SelectableActions* closeItem = new SelectableActions
-					(_closeOverlayAction, parentGroup);
-			closeItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-			closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-			angle += 60;
-
-			SelectableActions* enableLimitItem = new SelectableActions
-					(_enableLimitsAction, parentGroup);
-			enableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-			enableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-			angle += 60;
-
-			SelectableActions* disableLimitItem = new SelectableActions
-					(_disableLimitsAction, parentGroup);
-			disableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-			disableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-			angle += 60;
-
-			parentGroup->setPos(scenePos);
-			parentGroup->setZValue(Z_UIVIEW);
-			parentGroup->setPanelModality(QGraphicsItem::SceneModal);
-			parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
-			_mainController->setTapOverride(true);
-
-			// Get the settings and use these to update the toolbar
-			b2RevoluteJointDef* jointDef = static_cast<b2RevoluteJointDef*>(_selectedJoint->jointDef());
-			// Setting up the correct values in the toolbar
-			_mainController->setMotorParams(jointDef->enableMotor,
-											jointDef->motorSpeed * TO_RPM_FROM_RAD_SEC,
-											jointDef->maxMotorTorque);
+			enableSliderJointOverlay(dynamic_cast<cdSliderJoint*>(physicsJoint), scenePos);
 		}
 	}
 
@@ -484,6 +422,158 @@ namespace CDI
 		}
 	}
 
+	void TouchAndHoldController::enablePinJointOverlay(cdPinJoint *pinjoint, QPointF scenePos)
+	{
+
+		float center_radius = 0.25f * dpi;
+		float ring_radius = 1.0f * dpi;
+
+		parentGroup = new QGraphicsItemGroup;
+		pinjoint->scene()->addItem(parentGroup);
+		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		QGraphicsPathItem* decor =new QGraphicsPathItem(parentGroup);
+		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		// Set up colors
+		QPen pen = QPen();
+		QColor penColor = Qt::blue;
+		pen.setColor(penColor);
+		pen.setWidth(3);
+		QBrush brush = QBrush(Qt::SolidPattern);
+		brush.setColor((penColor.setAlpha(150), penColor));
+
+		// Set up decor
+		QPainterPath path;
+		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
+		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
+		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
+		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
+		decor->setPath(path);
+		decor->setPen(pen);
+		decor->setBrush(brush);
+
+		// Add actual stuff
+		float angle = 0;
+		float length = 0.75 * dpi;
+
+		SelectableActions* deleteItem = new SelectableActions
+				(_jointDeleteAction, parentGroup);
+		deleteItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		deleteItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+
+		SelectableActions* closeItem = new SelectableActions
+				(_closeOverlayAction, parentGroup);
+		closeItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+
+		SelectableActions* enableLimitItem = new SelectableActions
+				(_enableLimitsAction, parentGroup);
+		enableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		enableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+
+		if (!pinjoint->isLimitsEnabled())
+		{	// already disabled
+			SelectableActions* disableLimitItem = new SelectableActions
+					(_disableLimitsAction, parentGroup);
+			disableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+			disableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+			angle += 60;
+		}
+		parentGroup->setPos(scenePos);
+		parentGroup->setZValue(Z_UIVIEW);
+		parentGroup->setPanelModality(QGraphicsItem::SceneModal);
+		parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
+		_mainController->setTapOverride(true);
+
+		// Get the settings and use these to update the toolbar
+		auto jointDef = pinjoint->jointDef();
+		// Setting up the correct values in the toolbar
+		// \todo Use the converted values. Avoid calling the jointDef.
+		_mainController->setMotorParams(jointDef->enableMotor,
+										jointDef->motorSpeed * TO_RPM_FROM_RAD_SEC,
+										jointDef->maxMotorTorque);
+	}
+
+	void TouchAndHoldController::enableSliderJointOverlay(cdSliderJoint *sliderjoint, QPointF scenePos)
+	{
+		float center_radius = 0.25f * dpi;
+		float ring_radius = 1.0f * dpi;
+
+		parentGroup = new QGraphicsItemGroup;
+		sliderjoint->scene()->addItem(parentGroup);
+		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		QGraphicsPathItem* decor =new QGraphicsPathItem(parentGroup);
+		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		// Set up colors
+		QPen pen = QPen();
+		QColor penColor = Qt::blue;
+		pen.setColor(penColor);
+		pen.setWidth(3);
+		QBrush brush = QBrush(Qt::SolidPattern);
+		brush.setColor((penColor.setAlpha(150), penColor));
+
+		// Set up decor
+		QPainterPath path;
+		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
+		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
+		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
+		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
+		decor->setPath(path);
+		decor->setPen(pen);
+		decor->setBrush(brush);
+
+		// Add actual stuff
+		float angle = 0;
+		float length = 0.75 * dpi;
+
+		SelectableActions* deleteItem = new SelectableActions
+				(_jointDeleteAction, parentGroup);
+		deleteItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		deleteItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+
+		SelectableActions* closeItem = new SelectableActions
+				(_closeOverlayAction, parentGroup);
+		closeItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+
+		/* Limit the options for slider joint to delete and close
+		 *
+		SelectableActions* enableLimitItem = new SelectableActions
+				(_enableLimitsAction, parentGroup);
+		enableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		enableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+
+		// already disabled
+		SelectableActions* disableLimitItem = new SelectableActions
+				(_disableLimitsAction, parentGroup);
+		disableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+		disableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		angle += 60;
+		*/
+		parentGroup->setPos(scenePos);
+		parentGroup->setZValue(Z_UIVIEW);
+		parentGroup->setPanelModality(QGraphicsItem::SceneModal);
+		parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
+		_mainController->setTapOverride(true);
+
+		// Get the settings and use these to update the toolbar
+		auto jointDef = sliderjoint->jointDef();
+		// Setting up the correct values in the toolbar
+		// \todo Use the converted values. Avoid calling the jointDef.
+		_mainController->setMotorParams(jointDef->enableMotor,
+										jointDef->motorSpeed * TO_RPM_FROM_RAD_SEC,
+										jointDef->maxMotorForce);
+	}
+
 	void TouchAndHoldController::slotCloseOverlay()
 	{
 		if (_jointEditMode && _jointParamsChanged && (_selectedJoint != nullptr))
@@ -611,7 +701,13 @@ namespace CDI
 
 	void TouchAndHoldController::slotDisableLimits()
 	{
-
+		if (_jointEditMode && _selectedJoint->jointType() == e_revoluteJoint)
+		{
+			auto pinjoint = dynamic_cast<cdPinJoint*>(_selectedJoint);
+			pinjoint->joint()->EnableLimit(false);
+			pinjoint->jointDef()->enableLimit = false;
+		}
+		slotCloseOverlay();
 	}
 
 	void TouchAndHoldController::slotEditJointSpeed()

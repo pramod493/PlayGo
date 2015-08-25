@@ -31,7 +31,8 @@ include ($$PWD/Indexer-Minimal/External Libraries.pri)
 SOURCES += $$PWD/main.cpp \
 		$$PWD/miscfunctions.cpp \
 		$$PWD/converttopolygons.cpp \
-		$$PWD/batchpolygonize.cpp
+		$$PWD/batchpolygonize.cpp \
+		$$PWD/loadmodel.cpp
 HEADERS += \
 		$$PWD/converttopolygons.h \
 		$$PWD/batchpolygonize.h \

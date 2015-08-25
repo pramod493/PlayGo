@@ -31,13 +31,7 @@ namespace CDI
 
 	PhysicsManager::PhysicsManager(QObject *parent)
 		: PhysicsManager(PhysicsSettings(), parent)
-	{
-//		defaultPhysicsScale = getPhysicsScale();
-//		_jointList = QList<cdJoint*>();
-//		_settings = PhysicsSettings();
-//		_enableDebugView = true;
-//		init();
-	}
+	{	}
 
 	PhysicsManager::PhysicsManager(const PhysicsManager &physicsManager)
 		: QObject(physicsManager.parent())
@@ -75,6 +69,19 @@ namespace CDI
 	{
 		if (_b2World) delete _b2World;
 		if (_contactListener) delete _contactListener;
+
+		for (auto joint : _jointList)
+			delete joint;
+
+		// Remove physics component from all bodies
+		QList<b2Body*> bodies = _box2DBodies.values();
+		for(auto boxbody : bodies)
+		{
+			if (auto component = static_cast<Component*>(boxbody->GetUserData()))
+			{
+				component->setPhysicsBody(nullptr);
+			}
+		}
 	}
 
 	void PhysicsManager::destroyBody(Component *component)
@@ -89,7 +96,7 @@ namespace CDI
 											float lowerLimit, float upperLimit)
 	{
 		cdPinJoint* pinJoint = new cdPinJoint(c1);
-		c1->addToComponent(pinJoint);
+		c1->addToComponent(pinJoint);		// why?
 		pinJoint->setPos(c1->mapFromScene(scenePos));
 		pinJoint->_physicsmanager = this;	// call for everything
 
@@ -136,27 +143,79 @@ namespace CDI
 		return pinJoint;
 	}
 
-	cdJoint *PhysicsManager::createPrismaticJoint(Component *c1, Component *c2,
+	cdSliderJoint *PhysicsManager::createPrismaticJoint(Component *c1, Component *c2,
 											   QPointF startPos, QPointF endPos,
 											   bool enableMotor, bool enableLimits,
-											   float motorSpeed, float motorForce,
-											   float lowerLimit, float upperLimit)
+											   float motorSpeed, float motorForce)
 	{
-		Q_UNUSED(startPos)
-		Q_UNUSED(endPos)
-		Q_UNUSED(enableMotor)
-		Q_UNUSED(enableLimits)
-		Q_UNUSED(motorSpeed)
-		Q_UNUSED(motorForce)
-		Q_UNUSED(lowerLimit)
-		Q_UNUSED(upperLimit)
+		// create new joint
+		cdSliderJoint* sliderJoint = new cdSliderJoint(c1);
+		c1->addToComponent(sliderJoint);
+		sliderJoint->setPos(c1->mapFromScene(startPos));
+		sliderJoint->_physicsmanager = this;
 
-		b2PrismaticJointDef* jointDef = new b2PrismaticJointDef;
+		// Add components
+		auto jointDef = sliderJoint->jointDef();
 		jointDef->bodyA = c1->physicsBody();
 		jointDef->bodyB = c2->physicsBody();
+		jointDef->collideConnected = false;
 
-		//QPointF direction = endPos - startPos;
-		return NULL;
+		// Define anchor points
+		QPointF localPosA = c1->mapFromScene(startPos) * c1->scale();
+		QPointF localPosB = c2->mapFromScene(startPos) * c2->scale();
+
+		jointDef->localAnchorA.Set(localPosA.x()/defaultPhysicsScale,
+								  localPosA.y()/defaultPhysicsScale);
+		jointDef->localAnchorB.Set(localPosB.x()/defaultPhysicsScale,
+								  localPosB.y()/defaultPhysicsScale);
+
+		// \todo Check if the reference angle is correct
+		jointDef->referenceAngle =
+				jointDef->bodyA->GetAngle() - jointDef->bodyB->GetAngle();
+
+		// Set up axis
+		auto localStart = c1->mapFromScene(startPos) * c1->scale();
+		auto localEnd   = c1->mapFromScene(endPos) * c1->scale();
+		auto lineVector = QVector2D(localEnd-localStart);
+		jointDef->localAxisA.Set(lineVector.x(), lineVector.y());
+		jointDef->localAxisA.Normalize();
+
+		// Joint limit definition
+		jointDef->enableLimit = enableLimits;
+		if (enableLimits)
+		{
+			jointDef->lowerTranslation = 0;
+			jointDef->upperTranslation = lineVector.length()/defaultPhysicsScale;
+		}
+
+		// Define motor params
+		jointDef->enableMotor = enableMotor;
+		jointDef->motorSpeed = motorSpeed;
+		jointDef->maxMotorForce = motorForce;
+
+		// create joint in box2d
+		sliderJoint->_joint = static_cast<b2PrismaticJoint*>(createJoint(*jointDef));
+
+		sliderJoint->_componentA = c1;
+		sliderJoint->_componentB = c2;
+
+		sliderJoint->_relPosA = c1->mapFromScene(startPos);
+		sliderJoint->_relPosB = c2->mapFromScene(startPos);
+
+		c1->addJoint(sliderJoint);
+		c2->addJoint(sliderJoint);
+		_jointList.push_back(sliderJoint);
+
+		sliderJoint->initializeShape();
+
+		if (!isMotorEnabled())
+			sliderJoint->joint()->EnableMotor(false);
+
+		// Connect to change in component trasnformation.  Actually we should
+		// have updated the joint instead. But that is for later
+		connect(c1, SIGNAL(onTransformChange(QGraphicsItem*)),
+				sliderJoint, SLOT(initializeShape()));
+		return sliderJoint;
 	}
 
 	bool PhysicsManager::updateJoint(cdJoint *physicsJoint)
@@ -315,6 +374,37 @@ namespace CDI
 			_b2World->DrawDebugData();
 		}
 		emit physicsStepComplete();
+
+		{
+			for(auto joint : _jointList)
+			{
+				if(auto pinjoint = dynamic_cast<cdPinJoint*>(joint))
+				{
+//					qDebug() <<"Ref:" << pinjoint->referenceAngle()
+//							<< "Ang:" << pinjoint->jointAngle()
+//							<< "Vel:" << pinjoint->motorSpeed();
+					b2RevoluteJoint* b2_pinjoint = pinjoint->joint();
+					if (b2_pinjoint->IsLimitEnabled() && b2_pinjoint->IsMotorEnabled())
+					{
+						if (b2_pinjoint->GetJointAngle() < b2_pinjoint->GetLowerLimit() ||
+								b2_pinjoint->GetJointAngle() > b2_pinjoint->GetUpperLimit())
+						{
+							/* Reached limits. Reverse the direction of torque on this one
+							 * qDebug()<< "@limits" <<
+									   b2_pinjoint->GetJointAngle() <<
+									   b2_pinjoint->GetLowerLimit() <<
+									   b2_pinjoint->GetUpperLimit() <<
+									   pinjoint->jointDef()->motorSpeed <<
+									   b2_pinjoint->GetMotorSpeed();*/
+							if (b2_pinjoint->GetJointAngle() < b2_pinjoint->GetLowerLimit())
+								b2_pinjoint->SetMotorSpeed(abs(pinjoint->jointDef()->motorSpeed));
+							else
+								b2_pinjoint->SetMotorSpeed(-abs(pinjoint->jointDef()->motorSpeed));
+						}
+					}
+				}
+			}
+		}
 	}
 
 	void PhysicsManager::quickPause(bool enable)
