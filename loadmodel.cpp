@@ -22,11 +22,10 @@ namespace CDI
 			c->pendingPositionUpdate = true;
 			emit c->onTransformChange(c);
 		};
-
+		// Do not try setting density to zero... doesn't turn out to be good
 		Component *c1 = page->createComponent();
 		c1->setPos(100,200);
 		c1->setStatic(true);
-
 		{
 			QVector<QPointF> points;
 			points.reserve(4);
@@ -58,7 +57,6 @@ namespace CDI
 			points.push_back(QPointF(200,0));
 			createPolygon(c3, QPointF(0,0), points);
 		}
-
 		Component *c4 = page->createComponent();
 		c4->setPos(280,200);
 		{
@@ -72,9 +70,11 @@ namespace CDI
 		}
 
 		// create joints
+		{
 		page->getPhysicsManager()->createPinJoint
 				(c1, c2, QPointF(100,200),
 				 true, false, 100, 50, 0, 720);
+
 		page->getPhysicsManager()->createPinJoint
 				(c2, c3, QPointF(200,100),
 				 false, false, 100, 50, 0, 720);
@@ -84,11 +84,11 @@ namespace CDI
 		page->getPhysicsManager()->createPinJoint
 				(c4, c1, QPointF(300,200),
 				 false, false, 100, 50, 0, 720);
+		}
+		updateComponentScale(c1, 0.90f);
+		updateComponentScale(c4, 1.25f);
 
-		updateComponentScale(c1, 1.5f);
-		updateComponentScale(c3, 1.25f);
-
-		return;
+		return;	// stop at 4-bar
 		// 1
 		QVector<Component*> componentList;
 		int num_componnets = 10;
@@ -131,15 +131,23 @@ namespace CDI
 		{
 			// Create a slider joint
 			auto sliderStartPos = componentList[2]->mapToScene(QPointF(0,0));
-			page->getPhysicsManager()->createPrismaticJoint
+			auto slider = page->getPhysicsManager()->createPrismaticJoint
 					(componentList[1], componentList[2], sliderStartPos, sliderStartPos+QPointF(100,-150),
 					 true, true, 10, 50);
+			slider->joint()->EnableMotor(true);
+
+			componentList[1]->physicsBody()->SetActive(true);
+			componentList[1]->physicsBody()->SetAwake(true);
+
+			componentList[2]->physicsBody()->SetActive(true);
+			componentList[2]->physicsBody()->SetAwake(true);
 		}
 	}
 
 	Polygon2D *LoadModel::createPolygon(Component* parent, QPointF pos, QVector<QPointF> points)
 	{
-		Polygon2D* polygon = new Polygon2D(parent);
+		auto polygon = new Polygon2D(parent);
+		//auto polygon = new QGraphicsPolygonItem(parent);
 		parent->addToComponent(polygon);
 		polygon->setPos(pos.x(), pos.y());
 

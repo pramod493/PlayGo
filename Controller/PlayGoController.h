@@ -378,11 +378,6 @@ namespace CDI
 
 		void connectionModeReset();
 
-		void setToDraw();
-		void setToShape();
-		void setToErase();
-		void setToConnectorMode();
-		void setToSelect();
 		void setToEdit();
 
 		void setModeScribble();

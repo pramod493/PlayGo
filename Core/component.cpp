@@ -45,6 +45,7 @@ namespace CDI
 
 		disableScaling = false;
 
+		//TODO - Think more on this part on how can dynamics be changed
 		groupIndex		= -1;	// positive and same to enable collision
 								// negative and same to disable collision
 								// non-zero & different - use category and mask
@@ -53,8 +54,17 @@ namespace CDI
 		maskBits		= 0xFFFF;
 		categoryBits	= 0x0000;
 
+		componentFilter.groupIndex = groupIndex;
+		componentFilter.maskBits = maskBits;
+		componentFilter.categoryBits = categoryBits;
+
 		_anchorItem		= nullptr;
 		_lockScaleItem	= nullptr;
+
+		_layerText = new QGraphicsSimpleTextItem(this);
+		_layerText->setPos(0,0);
+		_layerText->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+		_layerText->setText(QString::number(groupIndex));
 
 		_lockItem = false;
 
@@ -94,6 +104,7 @@ namespace CDI
 
 		disableScaling	= copy.disableScaling;
 		previousScale	= copy.previousScale;
+		componentFilter = copy.componentFilter;
 		groupIndex		= copy.groupIndex;
 		maskBits		= copy.maskBits;
 		categoryBits	= copy.categoryBits;
@@ -736,9 +747,9 @@ namespace CDI
 		stream << _id;
 		stream << _density;
 		stream << disableScaling;
-		stream << groupIndex;
-		stream << maskBits;
-		stream << categoryBits;
+//		stream << groupIndex;
+//		stream << maskBits;
+//		stream << categoryBits;
 		stream << transform();
 
 		stream << _lockItem;
@@ -760,9 +771,9 @@ namespace CDI
 		stream >> _id;
 		stream >> _density;
 		stream >> disableScaling;
-		stream >> groupIndex;
-		stream >> maskBits;
-		stream >> categoryBits;
+//		stream >> groupIndex;
+//		stream >> maskBits;
+//		stream >> categoryBits;
 		QTransform t;
 		stream >> t;
 		setTransform(t);
@@ -788,6 +799,9 @@ namespace CDI
 
 	void Component::setDensity(float density)
 	{
+		if (density < 0.00001f) {
+			QLOG_ERROR() << "@Component::setDensity("<< density <<") is too less. Density unchanged.";
+		}
 		// TODO on density change
 		_density = density;
 		// Update all the components density
@@ -799,13 +813,9 @@ namespace CDI
 
 	void Component::onCollisionBitsUpdate()
 	{
-		b2Filter filter;
-		filter.categoryBits = categoryBits;
-		filter.maskBits = maskBits;
-		filter.groupIndex = groupIndex;
-		foreach(b2Fixture* fixture, _fixtures)
+		for(auto fixture : _fixtures)
 		{
-			fixture->SetFilterData(filter);
+			fixture->SetFilterData(componentFilter);
 		}
 		if (_physicsBody)
 			_physicsBody->SetAwake(true);
@@ -922,9 +932,7 @@ namespace CDI
 					b2FixtureDef fixtureDef;
 					fixtureDef.shape = &b2TriaShape;
 					fixtureDef.density = _density;
-					fixtureDef.filter.groupIndex = groupIndex;
-					fixtureDef.filter.categoryBits = categoryBits;
-					fixtureDef.filter.maskBits = maskBits;
+					fixtureDef.filter = componentFilter;
 					b2Fixture* fixture = _physicsBody->CreateFixture(&fixtureDef);
 					_fixtures.push_back(fixture);
 				}
@@ -937,8 +945,7 @@ namespace CDI
 
 	bool Component::isTouchEventAcceptable(QTouchEvent *event)
 	{
-		QList<QTouchEvent::TouchPoint> touchpoints = event->touchPoints();
-		bool retval = false;
+		auto touchpoints = event->touchPoints();
 		for (QList<QTouchEvent::TouchPoint>::const_iterator it = touchpoints.constBegin();
 			 it != touchpoints.constEnd(); ++it)
 		{
@@ -946,20 +953,20 @@ namespace CDI
 			QPointF pos = tp.scenePos();
 			if (containsPoint(pos))
 			{
-				retval = true;
-				break;
+				return true;
 			}
 		}
-		return retval;
+		return false;
 	}
 
 	bool Component::containsPoint(QPointF pos)
 	{
 		QList<QGraphicsItem*> items = childItems();
-		for(QList<QGraphicsItem*>::const_iterator it = items.constBegin();
-			it != items.constEnd(); ++it)
+		for(auto graphicsitem: items)
 		{
-			QGraphicsItem *graphicsitem = (*it);
+			// NOTE - Apart from stroke, all the other object types are using
+			// reimplementation of base class function and therefore need not
+			// have a separate call
 			switch (graphicsitem->type())
 			{
 			case Stroke::Type :
@@ -986,6 +993,7 @@ namespace CDI
 				Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
 				if (pixmap->contains(pixmap->mapFromScene(pos)))
 					return true;
+				// TODO check if the point lies within one of the interior curves
 				break;
 			}
 				// No other object allowed for selection.

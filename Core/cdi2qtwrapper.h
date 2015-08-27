@@ -37,7 +37,7 @@ namespace CDI
 	namespace UI
 	{
 		enum MODE {None, Sketch, Shapes, Erase, Transform,
-					 Edit, Select, Connect};
+					 Edit, Select, Connect, PhysicsON, PhysicsOFF};
 
 		enum EventState {Began = 1, Update, End, Cancel};
 	}

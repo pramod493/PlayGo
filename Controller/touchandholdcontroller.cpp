@@ -111,13 +111,49 @@ namespace CDI
 	{
 		_mainController = mainController;
 		_view = static_cast<QGraphicsView*>(_mainController->_view);
+
+		auto motorparamsupdate = [&]()
+		{
+			if (_jointEditMode && _selectedJoint != NULL)
+			{
+				bool enableMotor = false;
+				float motorSpeed = 0;
+				float motorTorque = 0;
+				_mainController->getMotorParams(&enableMotor, &motorSpeed, &motorTorque);
+
+				if (auto pinjoint = dynamic_cast<cdPinJoint*>(_selectedJoint))
+				{
+					//b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
+					auto def = pinjoint->jointDef();
+
+					def->enableMotor = enableMotor;
+					def->motorSpeed = motorSpeed * TO_RAD_SEC_FROM_RPM;
+					def->maxMotorTorque = motorTorque;
+				} else if  (auto sliderjoint = dynamic_cast<cdSliderJoint*>(_selectedJoint))
+				{
+					//b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
+					auto def = sliderjoint->jointDef();
+
+					def->enableMotor = enableMotor;
+					def->motorSpeed = motorSpeed;
+					def->maxMotorForce = motorTorque;
+				}
+				_jointParamsChanged = true;
+			}
+		};
+
+		connect(_mainController->motorTorque, &QLineEdit::textChanged, motorparamsupdate);
+		connect(_mainController->motorSpeed, &QLineEdit::textChanged, motorparamsupdate);
+		connect(_mainController->enableMotorCheckbox, &QCheckBox::toggled, motorparamsupdate);
+
 		// create connections with tool bar changes
-		connect(_mainController->motorTorque, SIGNAL(textChanged(QString)),
+		/* No need of this one
+		 * connect(_mainController->motorTorque, SIGNAL(textChanged(QString)),
 				this, SLOT(slotMotorParamsChange()));
 		connect(_mainController->motorSpeed, SIGNAL(textChanged(QString)),
 				this, SLOT(slotMotorParamsChange()));
 		connect(_mainController->enableMotorCheckbox, SIGNAL(toggled(bool)),
-				this, SLOT(slotMotorParamsChange()));
+				this, SLOT(slotMotorParamsChange()));*/
 
 	}
 
@@ -475,7 +511,7 @@ namespace CDI
 		enableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 		angle += 60;
 
-		if (!pinjoint->isLimitsEnabled())
+		if (pinjoint->isLimitsEnabled())
 		{	// already disabled
 			SelectableActions* disableLimitItem = new SelectableActions
 					(_disableLimitsAction, parentGroup);
@@ -722,23 +758,32 @@ namespace CDI
 
 	void TouchAndHoldController::slotMotorParamsChange()
 	{
-		if (_jointEditMode && _selectedJoint != NULL)
+		QMessageBox::about(nullptr, "Wrong place", "Noting sud call @slotMotorParamsChange");
+		/*if (_jointEditMode && _selectedJoint != NULL)
 		{
 			bool enableMotor = false;
 			float motorSpeed = 0;
 			float motorTorque = 0;
 			_mainController->getMotorParams(&enableMotor, &motorSpeed, &motorTorque);
 
-			if (_selectedJoint->jointType() == e_revoluteJoint)
+			if (auto pinjoint = dynamic_cast<cdPinJoint*>(_selectedJoint))
 			{
 				//b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
-				b2RevoluteJointDef* def = static_cast<b2RevoluteJointDef*>(_selectedJoint->jointDef());
+				auto def = pinjoint->jointDef();
 
 				def->enableMotor = enableMotor;
 				def->motorSpeed = motorSpeed * TO_RAD_SEC_FROM_RPM;
 				def->maxMotorTorque = motorTorque;
+			} else if  (auto sliderjoint = dynamic_cast<cdSliderJoint*>(_selectedJoint))
+			{
+				//b2RevoluteJoint* revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->joint());
+				auto def = sliderjoint->jointDef();
+
+				def->enableMotor = enableMotor;
+				def->motorSpeed = motorSpeed;
+				def->maxMotorForce = motorTorque;
 			}
 			_jointParamsChanged = true;
-		}
+		}*/
 	}
 }

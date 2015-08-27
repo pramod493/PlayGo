@@ -23,6 +23,7 @@
 #include "sketchscene.h"
 #include "PlayGoController.h"
 #include "playgocore.h"
+#include "cdi2qtwrapper.h"
 
 class QDockWidget;
 
@@ -116,15 +117,7 @@ namespace CDI
 
 		void exit();
 
-		void setToDraw();
-
-		void setToShape();
-
-		void setToConnectorMode();
-
-		void setToErase();
-
-		void setToSelect();
+		void setMode(UI::MODE newmode);
 
 		void setBrushWidth(int size);
 

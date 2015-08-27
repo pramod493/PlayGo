@@ -13,14 +13,8 @@ namespace CDI
 		playgo = new PlayGo();
 
 //		playgo->ReadModel("PlayGoData.dat");
-		Page* newPage = NULL;
-		if (playgo->currentPage()!= NULL)
-		{
-			newPage = playgo->currentPage();
-		} else
-		{
-			newPage = playgo->addNewPage();
-		}
+		Page* newPage = (playgo->currentPage()!= nullptr) ?
+					playgo->currentPage() : playgo->addNewPage();
 		playgo->setCurrentPage(newPage);
 
 		tabletDevice = QTabletEvent::NoDevice;
@@ -28,7 +22,7 @@ namespace CDI
 
 	CDIWindow::~CDIWindow()
 	{
-		if(playgo!= NULL)
+		if(playgo)
 		{
 			playgo->SaveModel("PlayGoData.dat");
 		}
@@ -102,50 +96,33 @@ namespace CDI
 		// Sketching related operations
 		QActionGroup *sketchActions = new QActionGroup(this);
 
-		brushSelectAction = new QAction(QIcon(":/images/spline.png"), tr("Draw strokes"), sketchActions);
-		brushSelectAction->setCheckable(true);
+		auto initGroupAction = [&](QString iconname, QString text){
+			QAction* tmpAction = new QAction(QIcon(iconname), text, sketchActions);
+			tmpAction->setCheckable(true);
+			tmpAction->setChecked(false);
+			return tmpAction;
+		};
+		brushSelectAction = initGroupAction(":/images/spline.png", "Draw strokes");
 		brushSelectAction->setChecked(true);
 
-		polygonSelectAction = new QAction(QIcon(":/images/polygon.png"), tr("Sketch polygon"), sketchActions);
-		polygonSelectAction->setCheckable(true);
-		polygonSelectAction->setChecked(false);
+		polygonSelectAction	= initGroupAction(":/images/polygon.png", "Sketch polygon");
+		eraseSelectAction	= initGroupAction(":/images/eraser.png", "Eraser");
+		marqueeAction		= initGroupAction(":/images/marquee.png", "Select");
+		connectModeAction	= initGroupAction(":/images/connect.png", "Create joints");
 
-		eraseSelectAction = new QAction(QIcon(":/images/eraser.png"), tr("Eraser"), sketchActions);
-		eraseSelectAction->setCheckable(true);
-		eraseSelectAction->setChecked(false);
-
-		marqueeAction = new QAction(QIcon(":/images/marquee.png"), tr("Select"), sketchActions);
-		marqueeAction->setCheckable(true);
-		marqueeAction->setChecked(false);
-
-		connectModeAction = new QAction(QIcon(":/images/connect.png"), tr("Create joints"), sketchActions);
-		connectModeAction->setCheckable(true);
-		connectModeAction->setChecked(false);
-
-		// Physics simulation related actions
-//		QActionGroup *playActions = new QActionGroup(this);	// Put all actions in one group
-
-		playAction = new QAction(QIcon(":/images/play.png"), tr("Play simulation"), sketchActions);
-		playAction->setCheckable(true);
-		playAction->setChecked(false);
-
-		pauseAction = new QAction(QIcon(":/images/pause.png"), tr("Pause simulation"), sketchActions);
-		pauseAction->setCheckable(true);
-		playAction->setChecked(false);
-
-		resetAction = new QAction(QIcon(":/images/reset.png"), tr("Reset simulation"), sketchActions);
-		pauseAction->setCheckable(true);
-		pauseAction->setChecked(false);
+		playAction			= initGroupAction(":/images/play.png", "Play simulation");
+		pauseAction			= initGroupAction(":/images/pause.png","Pause simulation");
+		resetAction			= initGroupAction(":/images/reset.png", "Reset simulation");
 
 		// Trigger search of either all free strokes or selected strokes
-		searchAction = new QAction(QIcon(":/images/search.png"), tr("Search selection"), this);
+		searchAction		= new QAction(QIcon(":/images/search.png"), tr("Search selection"), this);
 
 		// File opertaions
-		newAction = new QAction(QIcon(":/images/new.png"), tr("New"), this);
-		openPageAction = new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
-		saveImageAction = new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
-		cameraLoadAction = new QAction(QIcon(":/images/Camera.png"), tr("Import from camera"), this);
-		closeAction = new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
+		newAction			= new QAction(QIcon(":/images/new.png"), tr("New"), this);
+		openPageAction		= new QAction(QIcon(":/images/open.png"), tr("Open Page"), this);
+		saveImageAction		= new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
+		cameraLoadAction	= new QAction(QIcon(":/images/Camera.png"), tr("Import from camera"), this);
+		closeAction			= new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
 	}
 
 	void CDIWindow::setupToolbar()
@@ -221,7 +198,8 @@ namespace CDI
 		// Save
 		connect(saveImageAction, SIGNAL(triggered()),
 				this, SLOT(save()));
-		// Draw
+
+		/*// Draw
 		connect(brushSelectAction, SIGNAL(triggered()),
 				this,SLOT(setToDraw()));
 
@@ -239,6 +217,18 @@ namespace CDI
 		// Select
 		connect(marqueeAction, SIGNAL(triggered()),
 				this,SLOT(setToSelect()));
+				*/
+		// Alternate approach to connecting with signals
+		connect(brushSelectAction, &QAction::triggered,
+				[&](){this->setMode(UI::Sketch);});
+		connect(polygonSelectAction, &QAction::triggered,
+				[&](){this->setMode(UI::Shapes);});
+		connect(eraseSelectAction, &QAction::triggered,
+				[&](){this->setMode(UI::Erase);});
+		connect(connectModeAction, &QAction::triggered,
+				[&](){this->setMode(UI::Connect);});
+		connect(marqueeAction, &QAction::triggered,
+				[&](){this->setMode(UI::Select);});
 		// Pen width
 		connect(brushWidthSlider, SIGNAL(valueChanged(int)),
 				this, SLOT(setBrushWidth(int)));
@@ -300,29 +290,9 @@ namespace CDI
 		}
 	}
 
-	void CDIWindow::setToDraw()
+	void CDIWindow::setMode(UI::MODE newmode)
 	{
-		controller->setToDraw();
-	}
-
-	void CDIWindow::setToShape()
-	{
-		controller->setToShape();
-	}
-
-	void CDIWindow::setToConnectorMode()
-	{
-		controller->setToConnectorMode();
-	}
-
-	void CDIWindow::setToErase()
-	{
-		controller->setToErase();
-	}
-
-	void CDIWindow::setToSelect()
-	{
-		controller->setToSelect();
+		controller->setMode(newmode);
 	}
 
 	void CDIWindow::setBrushWidth(int size)

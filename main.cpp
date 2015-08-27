@@ -166,6 +166,10 @@ int main(int argc, char *argv[])
 //	window->showFullScreen();
 	window->show();
 
+	// Now that we have done loading the workspace, let's set the intial values
+	window->brushSelectAction->trigger();
+	window->brushWidthSlider->setValue(7);
+
 	/****************************************************************
 	 * Initialize TUIO and attach to the sketch view
 	 * **************************************************************/

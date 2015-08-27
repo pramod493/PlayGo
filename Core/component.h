@@ -40,6 +40,8 @@ namespace CDI
 		uint16 maskBits;			/**< Box2D maskBits for fixtures */
 		int16 categoryBits;			/**< Box2D categoryBits for fixtures */
 
+		b2Filter componentFilter;
+
 	protected:
 		QRectF itemBoundingRect;
 
@@ -55,6 +57,8 @@ namespace CDI
 		QGraphicsPathItem* _anchorItem;
 
 		QGraphicsPixmapItem* _lockScaleItem;
+
+		QGraphicsSimpleTextItem* _layerText;
 
 		float _density;
 
@@ -203,6 +207,7 @@ namespace CDI
 			pendingPositionUpdate = true;
 			emit onTransformChange(this);
 		}
+
 		friend class Page;
 	};
 }

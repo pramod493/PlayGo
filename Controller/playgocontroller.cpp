@@ -493,6 +493,33 @@ void PlayGoController::staticJointModeFilter(QPointF scenePos, UI::EventState ev
 
 void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eventState)
 {
+	auto createConnection = [&](Component *c1, Component *c2, QPointF scenePos)
+	{
+		// Actually create connections here. This way we can forward the
+		// operation to another object in case of conflict
+
+		bool b_enableMotor = false;
+		float f_motorSpeed = 0;
+		float f_motorTorque = 0;
+		getMotorParams(&b_enableMotor, &f_motorSpeed, &f_motorTorque);
+		if (b_enableMotor)	// Disable motor after first pin joint is created
+			setMotorParams(false, f_motorSpeed, f_motorTorque);
+
+		// Set the motor limits value if the motor is enabled
+		auto limitMotion = b_enableMotor ? true : false;
+		int lowerLimit = 0;
+		int upperLimit = 360;
+
+		qDebug() << b_enableMotor << f_motorSpeed << f_motorTorque;
+		auto physicsJoint = _page->getPhysicsManager()->createPinJoint(
+					c1, c2, scenePos,
+					b_enableMotor, limitMotion,
+					f_motorSpeed, f_motorTorque,
+					lowerLimit, upperLimit);
+
+		QLOG_INFO() << "Pin joint created w/" << physicsJoint->id().toString();
+	};
+
 	switch(eventState)
 	{
 	case UI::Began :
@@ -505,46 +532,17 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 	}
 	case UI::End :
 	{
-		/*QList<Component*>*/ auto itemsToUse = getSelectableComponentsByPhysics(scenePos);
+		auto itemsToUse = getSelectableComponentsByPhysics(scenePos);
 
 		if (itemsToUse.size() < 2) break;
+		if (itemsToUse.size() > 2)
+		{
+			QMessageBox::about(nullptr, "Confused!", "Multiple components under selection");
+		}
 		// Ignore all other components under selection
 		Component *c1 = itemsToUse[0];
 		Component *c2 = itemsToUse[1];
-
-		if (c1->id() == c2->id())
-		{
-			if (itemsToUse.size() > 2)
-			{
-				c2 = itemsToUse[2];
-			}
-		}
-
-		bool b_enableMotor = false;
-		float f_motorSpeed = 0;
-		float f_motorTorque = 0;
-		getMotorParams(&b_enableMotor, &f_motorSpeed, &f_motorTorque);
-		if (b_enableMotor)	// Disable motor after first pin joint is created
-			setMotorParams(false, f_motorSpeed, f_motorTorque);
-
-		qDebug() << b_enableMotor << f_motorSpeed << f_motorTorque;
-		auto physicsJoint = _page->getPhysicsManager()->createPinJoint(
-					c1, c2, scenePos,
-					b_enableMotor, false,
-					f_motorSpeed, f_motorTorque,
-					0, 0);
-
-		QLOG_INFO() << "Pin joint created w/" << physicsJoint->id().toString();
-
-//		// Already set. Doesn't hurt to do so again
-//		physicsJoint->setPos(c1->mapFromScene(scenePos));
-
-//		// Disable motor because we are not in the play mode. Motor might ruin things
-//		if (b_enableMotor)
-//		{
-//			b2RevoluteJoint *revoluteJoint = static_cast<b2RevoluteJoint*>(physicsJoint->getcdjoint()->joint());
-//			revoluteJoint->EnableMotor(false);
-//		}
+		createConnection(c1, c2, scenePos);
 		break;
 	}
 	case UI::Cancel :
@@ -556,6 +554,16 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 
 void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState eventState)
 {
+	auto cleanup = [&]() {
+		if (_sliderLineItem) delete _sliderLineItem;
+		if (_sliderComponentA) _sliderComponentA->setOpacity(0.5f);
+		if (_sliderComponentB) _sliderComponentB->setOpacity(0.5f);
+
+		_sliderLineItem = nullptr;
+		_sliderComponentA = nullptr;
+		_sliderComponentB = nullptr;
+	};
+
 	switch(eventState)
 	{
 	case UI::Began :
@@ -654,24 +662,13 @@ void PlayGoController::sliderJointModeFilter(QPointF scenePos, UI::EventState ev
 
 			QLOG_INFO() << "Slider joint created with ID:" << physicsJoint->id();
 
-			_sliderComponentA->setOpacity(0.5f);
-			_sliderComponentB->setOpacity(0.5f);
-
-			if (_sliderLineItem) delete _sliderLineItem;
-			_sliderLineItem = nullptr;
-
-			_sliderComponentA = nullptr;
-			_sliderComponentB = nullptr;
+			cleanup();
 		}
 		break;
 	}
 	case UI::Cancel :
 	{
-		// Delete/reset eveything
-		if (_sliderLineItem) delete _sliderLineItem;
-		_sliderLineItem = nullptr;
-		_sliderComponentA = nullptr;
-		_sliderComponentB = nullptr;
+		cleanup();
 		break;
 	}
 	}
@@ -876,14 +873,43 @@ void PlayGoController::setMotorParams(bool motorEnable, float speed, float torqu
 
 bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 {
+	// Define select lambda function to reduce the overwrite
+	auto runFullPhysics= [&]()
+	{
+		// In UI connect mode, keep physics engine ON but disable many options
+		auto* physicsManager = _page->getPhysicsManager();
+		physicsManager->start(1000/30);	// keep it super slow. Do not hamper the interactions
+		physicsManager->setEnableGravity(true);
+		physicsManager->setEnableMotor(true);
+		physicsManager->setGlobalCollision(_page->getComponents(), true);
+	};
+
+	auto runSimplePhysics= [&]()
+	{
+		// In UI connect mode, keep physics engine ON but disable many options
+		auto* physicsManager = _page->getPhysicsManager();
+		physicsManager->start(100);	// keep it super slow. Do not hamper the interactions
+		physicsManager->setEnableGravity(false);
+		physicsManager->setEnableMotor(false);
+		auto components = _page->getComponents();
+		physicsManager->setGlobalCollision(components, false);
+
+		// Pause everything at the start
+		for (auto component : components)
+		{
+			component->physicsBody()->SetLinearVelocity(b2Vec2(0,0));
+			component->physicsBody()->SetAngularVelocity(0);
+		}
+	};
+
 	bool retval = true;
+
 	if (oldmode == UI::Select)
 	{
 		if (newmode == UI::Erase) // delete highlight
 		{
-			QList<Stroke*> highlihghtedItems = _page->getHighlightedStrokes();
-			for (int i=0; i < highlihghtedItems.size(); i++)
-				delete highlihghtedItems[i];
+			auto highlightedItems = _page->getHighlightedStrokes();
+			qDeleteAll(highlightedItems);
 		}
 		if (_itemHighlighted)
 				_page->clearStrokeHighlight();
@@ -894,40 +920,38 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 
 	if (oldmode == UI::Sketch)
 	{
-		_currentStroke = NULL;
-				_isDrawingStroke = false;
+		_currentStroke = nullptr;
+		_isDrawingStroke = false;
 	}
 
 	if (oldmode == UI::Connect)
 	{
-		QList<Component*> components = _page->getComponents();
-		foreach (Component* component, components)
+		auto components = _page->getComponents();
+		for (auto component : components)
 			component->setOpacity(1.0f);
 		hideConnectionsToolbar();
 		connectionModeReset();
 	}
 
+	if (oldmode == UI::None)
+	{
+		runSimplePhysics();
+	}
+
 	if (newmode == UI::Connect)
 	{
-		QList<Component*> components = _page->getComponents();
-		foreach (Component* component, components)
+		auto components = _page->getComponents();
+		for (Component* component: components)
 			component->setOpacity(0.75f);
 		showConnectionsToolbar();
 		connectionModeReset();
 
-		// In UI connect mode, keep physics engine ON but disable many options
-		PhysicsManager* physicsManager = _page->getPhysicsManager();
-		physicsManager->start(100);	// keep it super slow. Do not hamper the interactions
-		physicsManager->setEnableGravity(false);
-		physicsManager->setEnableMotor(false);
-
+		runSimplePhysics();
 	}
 
 	if (newmode == UI::None)
 	{
-		// In this case we are mostly entering the
-		// physics state whether play/pause
-
+		runFullPhysics();
 	}
 	return retval;
 }
@@ -941,9 +965,9 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 	// Test out auto generated mouse events
 	switch (eventType)
 	{
-	case QEvent::MouseButtonDblClick :
+	/*case QEvent::MouseButtonDblClick :
 		qDebug() << "Double click detected @ filtering" << "use only if from touch";
-		break;
+		break;*/
 	case QEvent::MouseButtonPress :
 	case QEvent::MouseButtonRelease :
 	case QEvent::MouseMove :
@@ -1052,12 +1076,12 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 
 QList<Component*> PlayGoController::getSelectableComponentsByPhysics(QPointF scenePos)
 {
-	QList<QGraphicsItem*> selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect);
+	auto selectedItems = _scene->items(scenePos, Qt::IntersectsItemBoundingRect);
 	QList<Component*> itemsToUse;
 	if (selectedItems.size() == 0) return itemsToUse;
-	foreach (QGraphicsItem* graphicsitem, selectedItems)
+	for(auto graphicsitem : selectedItems)
 	{
-		if (graphicsitem->parentItem() == NULL) continue;
+		if (graphicsitem->parentItem() == nullptr) continue;
 		if (graphicsitem->parentItem()->type() != Component::Type) continue;
 		if (graphicsitem->type() == Pixmap::Type
 				|| graphicsitem->type() == Polygon2D::Type  ) // Replace to accomodate other widgets
@@ -1065,7 +1089,8 @@ QList<Component*> PlayGoController::getSelectableComponentsByPhysics(QPointF sce
 			if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
 			{
 				Component* c = qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
-				itemsToUse.push_back(c);
+				if (!itemsToUse.contains(c))	// avoid duplicates though not possible at present
+					itemsToUse.push_back(c);
 			}
 		}
 	}
@@ -1359,6 +1384,7 @@ void PlayGoController::searchAction()
 	}
 }
 
+//todo This is not used and now sounds stupid. Remove this one
 unsigned int PlayGoController::getPhysicsMask() const
 {
 	return _physicsMask;
@@ -1473,15 +1499,12 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 	}
 
 	// Get underlying component
-	QList<QGraphicsItem*> selectedItems = _page->scene()->items(scenePos,
-																Qt::IntersectsItemBoundingRect,
-																Qt::AscendingOrder, _view->transform());
+	auto selectedItems = _page->scene()->items
+			(scenePos, Qt::IntersectsItemBoundingRect, Qt::AscendingOrder, _view->transform());
 
 	//look for joints first
-	for (QList<QGraphicsItem*>::const_iterator it = selectedItems.constBegin();
-		 it != selectedItems.constEnd(); ++it)
+	for (auto graphicsitem : selectedItems)
 	{
-		QGraphicsItem* graphicsitem = (*it);
 		if (graphicsitem->type() == cdJoint::Type)
 		{
 			cdJoint* physicsJoint = qgraphicsitem_cast<cdJoint*>(graphicsitem);
@@ -1492,10 +1515,8 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 	}
 	// create component radial menu first
 	Component * selectedComponent = 0;
-	for (QList<QGraphicsItem*>::const_iterator it = selectedItems.constBegin();
-		 it != selectedItems.constEnd(); ++it)
+	for (auto graphicsitem : selectedItems)
 	{
-		QGraphicsItem* graphicsitem = (*it);
 		if (graphicsitem->type() == Component::Type)
 		{
 			selectedComponent = qgraphicsitem_cast<Component*>(graphicsitem);
@@ -1511,8 +1532,6 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 	if (selectedComponent)
 	{
 		touchholdController->enableOverlay(selectedComponent, scenePos);
-
-		// _view->centerOn(scenePos);	// centering has odd effect on eyes
 	}
 }
 
@@ -1528,13 +1547,9 @@ void PlayGoController::stylusLeave()
 
 void PlayGoController::setAcceptComponentTouch(bool value)
 {
-	QList<Component*> components = _page->getComponents();
-	for (QList<Component*>::const_iterator iter = components.constBegin();
-		 iter != components.constEnd(); ++iter)
-	{
-		Component *component = (*iter);
+	auto components = _page->getComponents();
+	for (auto component : components)
 		component->setAcceptTouchEvents(value);
-	}
 }
 
 // Slot functions
@@ -1560,7 +1575,7 @@ void PlayGoController::onSearchComplete()
 
 void PlayGoController::onSearchItemSelect(SearchResult *result)
 {
-	QList<Stroke*> selectedStrokes = _page->getHighlightedStrokes();
+	auto selectedStrokes = _page->getHighlightedStrokes();
 	if (selectedStrokes.size() == 0)
 	{
 		// If selected strokes are empty.. this will create
@@ -1571,8 +1586,8 @@ void PlayGoController::onSearchItemSelect(SearchResult *result)
 	}
 
 	QList<QGraphicsItem*> graphicsitems;
-	for (int i=0; i < selectedStrokes.size(); i++)
-		graphicsitems.push_back(selectedStrokes[i]);
+	for (auto stroke : selectedStrokes)
+		graphicsitems.push_back(stroke);
 
 	QRectF itemRect = _page->getBoundingBox(graphicsitems);
 	qDeleteAll(selectedStrokes);
@@ -1602,7 +1617,6 @@ void PlayGoController::onSearchItemSelect(SearchResult *result)
 }
 
 void PlayGoController::onSearchItemSelect(cdSearchGraphicsItem *result)
-
 {
 	onSearchItemSelect(&result->getResult());
 	closeSearchResultDisplay();
@@ -1920,37 +1934,13 @@ void PlayGoController::onPhysicsMaskUpdate()
 
 void PlayGoController::connectionModeReset()
 {
-	forceLine = NULL;
+	forceLine = nullptr;
 
-	_sliderComponentA = NULL;
-	_sliderComponentB = NULL;
+	_sliderComponentA = nullptr;
+	_sliderComponentB = nullptr;
 	_sliderStartPos = QPointF();
 	_sliderEndPos = QPointF();
-	_sliderLineItem = NULL;
-}
-
-void PlayGoController::setToDraw()
-{
-	setMode(UI::Sketch);
-}
-
-void PlayGoController::setToShape()
-{
-	setMode(UI::Shapes);	// allow drawing of polygons
-}
-
-void PlayGoController::setToConnectorMode()
-{
-	setMode(UI::Connect);
-}
-
-void PlayGoController::setToErase()
-{
-	setMode(UI::Erase);
-}
-void PlayGoController::setToSelect()
-{
-	setMode(UI::Select);
+	_sliderLineItem = nullptr;
 }
 
 void PlayGoController::setToEdit()

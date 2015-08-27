@@ -93,6 +93,40 @@ namespace CDI
 
 	bool RangeDialHandle::sceneEvent(QEvent* event)
 	{
+		// ensures that changes have to be made only in one place
+		auto updateEvent = [&](QPointF scenePos)
+		{
+			QPointF origin = mapToScene(0,0);
+			QPointF currentPos = scenePos - origin;
+			QPointF initialPos = _startPos - origin;
+			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
+			_tmpAngle = _angle + deltaAngle;
+			setRotation(_angle + deltaAngle);
+			emit signalAngleChanged();
+			textItem->setText(QString::number(static_cast<int>(_angle+deltaAngle)) + QString("°"));
+			event->accept();
+		};
+		auto endEvent = [&](QPointF scenePos)
+		{
+			QPointF origin = mapToScene(0,0);
+			QPointF currentPos = scenePos - origin;
+			QPointF initialPos = _startPos - origin;
+
+			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
+			if (abs(deltaAngle) > 1.0f) {
+				_angle += static_cast<int>(deltaAngle);
+				setRotation(_angle);
+				emit signalAngleChanged();
+			} else
+			{
+				setRotation(_angle);
+			}
+			_tmpAngle = _angle;
+			emit signalAngleChanged();
+			textItem->setText(QString::number(_angle) + QString("°"));
+			event->accept();
+		};
+
 		switch (event->type())
 		{
 		case QEvent::GraphicsSceneMousePress :
@@ -108,22 +142,9 @@ namespace CDI
 		{
 			// TODO - Use ID so that we can manage this even when multi-fingers are involved
 			if (!_itemIsLocked) return false;	// Item is not locked for some reason
-
 			QGraphicsSceneMouseEvent* mouseEvent =
 					static_cast<QGraphicsSceneMouseEvent*>(event);
-
-			QPointF origin = mapToScene(0,0);
-			QPointF currentPos = mouseEvent->scenePos() - origin;
-			QPointF initialPos = _startPos - origin;
-
-			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
-			_tmpAngle = _angle + deltaAngle;
-			setRotation(_angle + deltaAngle);
-
-			emit signalAngleChanged();
-
-			textItem->setText(QString::number(static_cast<int>(_angle+deltaAngle)) + QString("°"));
-			event->accept();
+			updateEvent(mouseEvent->scenePos());
 			return true;
 		}
 		case QEvent::GraphicsSceneMouseRelease :
@@ -132,26 +153,7 @@ namespace CDI
 
 			QGraphicsSceneMouseEvent* mouseEvent =
 					static_cast<QGraphicsSceneMouseEvent*>(event);
-
-			QPointF origin = mapToScene(0,0);
-			QPointF currentPos = mouseEvent->scenePos() - origin;
-			QPointF initialPos = _startPos - origin;
-
-			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
-			if (abs(deltaAngle) > 1.0f) {
-				_angle += static_cast<int>(deltaAngle);
-				setRotation(_angle);
-				emit signalAngleChanged();
-			} else
-			{
-				setRotation(_angle);
-			}
-			_tmpAngle = _angle;
-
-			emit signalAngleChanged();
-
-			textItem->setText(QString::number(_angle) + QString("°"));
-			event->accept();
+			endEvent(mouseEvent->scenePos());
 			_itemIsLocked = false;
 			return true;
 		}
@@ -168,21 +170,9 @@ namespace CDI
 		{
 			// TODO - Use ID so that we can manage this even when multi-fingers are involved
 			if (!_itemIsLocked) return false;	// Item is not locked for some reason
-
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
 			const QTouchEvent::TouchPoint &tp = touchEvent->touchPoints().first();
-			QPointF origin = mapToScene(0,0);
-			QPointF currentPos = tp.scenePos() - origin;
-			QPointF initialPos = _startPos - origin;
-
-			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
-			_tmpAngle = _angle + deltaAngle;
-
-			emit signalAngleChanged();
-
-			setRotation(_angle + deltaAngle);
-			textItem->setText(QString::number(static_cast<int>(_angle+deltaAngle)) + QString("°"));
-			event->accept();
+			updateEvent(tp.scenePos());
 			return true;
 		}
 		case QEvent::TouchEnd :
@@ -191,24 +181,7 @@ namespace CDI
 
 			QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
 			const QTouchEvent::TouchPoint &tp = touchEvent->touchPoints().first();
-			QPointF origin = mapToScene(0,0);
-			QPointF currentPos = tp.scenePos() - origin;
-			QPointF initialPos = _startPos - origin;
-
-			float deltaAngle = (angleWithX(&currentPos) - angleWithX(&initialPos)) * 180.0f/_PI_;
-			if (abs(deltaAngle) > 1.0f) {
-				_angle += static_cast<int>(deltaAngle);
-				setRotation(_angle);
-			} else
-			{
-				setRotation(_angle);
-			}
-			_tmpAngle = _angle;
-
-			emit signalAngleChanged();
-
-			textItem->setText(QString::number(_angle) + QString("°"));
-			event->accept();
+			endEvent(tp.scenePos());
 			_itemIsLocked = false;
 			return true;
 		}
