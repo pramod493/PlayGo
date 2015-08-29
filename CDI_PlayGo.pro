@@ -2,9 +2,9 @@
 # Pramod Kumar
 # Purdue University
 #----------------------------------------------------------------------
-QT       += core gui widgets multimedia network #webkitwidgets
+QT       += core gui widgets multimedia network webkitwidgets
 
-QT      += sensors printsupport
+QT      += sensors printsupport sql
 
 TARGET = PlayGo
 
