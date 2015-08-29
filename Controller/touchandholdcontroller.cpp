@@ -580,21 +580,6 @@ namespace CDI
 		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 		angle += 60;
 
-		/* Limit the options for slider joint to delete and close
-		 *
-		SelectableActions* enableLimitItem = new SelectableActions
-				(_enableLimitsAction, parentGroup);
-		enableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		enableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
-
-		// already disabled
-		SelectableActions* disableLimitItem = new SelectableActions
-				(_disableLimitsAction, parentGroup);
-		disableLimitItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		disableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += 60;
-		*/
 		parentGroup->setPos(scenePos);
 		parentGroup->setZValue(Z_UIVIEW);
 		parentGroup->setPanelModality(QGraphicsItem::SceneModal);
@@ -651,8 +636,14 @@ namespace CDI
 
 	void TouchAndHoldController::slotComponentEditAction()
 	{
-			if (!_componentEditMode) return;
+			if (!_componentEditMode && _selectedComponent) return;
 			// TODO - launch edit window
+			auto children = _selectedComponent->childItemByType(Pixmap::Type);
+			if (children.size())
+			{
+				// Component contains an image and can be edited
+
+			}
 	}
 
 	void TouchAndHoldController::slotComponentCopyAction()
@@ -686,6 +677,8 @@ namespace CDI
 	{
 		if (_componentEditMode)
 		{
+			QMessageBox::about(nullptr, "Collision layer update",
+							   "feature implementation is partial!@slotEnableCollisionAction");
 			_selectedComponent->groupIndex = 1;
 			_selectedComponent->onCollisionBitsUpdate();
 			slotCloseOverlay();
@@ -696,6 +689,8 @@ namespace CDI
 	{
 		if (_componentEditMode)
 		{
+			QMessageBox::about(nullptr, "Collision layer update",
+							   "feature implementation is partial!@slotEnableCollisionAction");
 			_selectedComponent->groupIndex = -1;
 			_selectedComponent->onCollisionBitsUpdate();
 			slotCloseOverlay();
@@ -748,12 +743,12 @@ namespace CDI
 
 	void TouchAndHoldController::slotEditJointSpeed()
 	{
-
+		QMessageBox::about(nullptr, "Motor speed", "Edit the motor speed from the entry box");
 	}
 
 	void TouchAndHoldController::slotEditJointTorque()
 	{
-
+		QMessageBox::about(nullptr, "Motor speed", "Edit the motor speed from the entry box");
 	}
 
 	void TouchAndHoldController::slotMotorParamsChange()

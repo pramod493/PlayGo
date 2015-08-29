@@ -199,25 +199,6 @@ namespace CDI
 		connect(saveImageAction, SIGNAL(triggered()),
 				this, SLOT(save()));
 
-		/*// Draw
-		connect(brushSelectAction, SIGNAL(triggered()),
-				this,SLOT(setToDraw()));
-
-		// Polygon shape
-		connect(polygonSelectAction, SIGNAL(triggered()),
-				this, SLOT(setToShape()));
-
-		// Connector Mode
-		connect(connectModeAction, SIGNAL(triggered()),
-				this, SLOT(setToConnectorMode()));
-
-		// Erase
-		connect(eraseSelectAction, SIGNAL(triggered()),
-				this,SLOT(setToErase()));
-		// Select
-		connect(marqueeAction, SIGNAL(triggered()),
-				this,SLOT(setToSelect()));
-				*/
 		// Alternate approach to connecting with signals
 		connect(brushSelectAction, &QAction::triggered,
 				[&](){this->setMode(UI::Sketch);});

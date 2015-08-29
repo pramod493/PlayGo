@@ -69,5 +69,12 @@ namespace CDI
 		_materialName = materialName;
 		emit materialChanged(this);
 	}
+
+	/*------------------------------------*/
+	MaterialDb::MaterialDb()
+	{
+//		pInternalList.in(new Material(0.5, 0.5, 7750, "steel"));
+//		pInternalList(new Material(0.5, 0.603, 1000, "wood"));
+	}
 }
 

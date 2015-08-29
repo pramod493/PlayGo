@@ -1,14 +1,19 @@
 #pragma once
 #include "component.h"
+#include <boost/graph/adjacency_list.hpp>	// how about adjacency_matrix?
+
+using namespace boost;
 
 namespace CDI
 {
 	class Assembly;
+	class Component;
+	class cdJoint;
+
 	class AssemblyData
 	{
 		QHash<QUuid, Component*> components;
 		QHash<QUuid, QGraphicsItem*> joints;	// TODO
-
 
 		friend class Assembly;
 	};

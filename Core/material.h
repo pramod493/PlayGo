@@ -39,5 +39,14 @@ namespace CDI
 	signals:
 		void materialChanged(Material* mat);
 	};
+
+	class MaterialDb : public QObject
+	{
+		Q_OBJECT
+		//QHash<QString, Material*> pInternalList;
+
+	public :
+		MaterialDb();
+	};
 }
 #endif // __MATERIAL_H__

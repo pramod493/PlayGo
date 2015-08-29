@@ -533,8 +533,17 @@ void PlayGoController::hingeJointModeFilter(QPointF scenePos, UI::EventState eve
 	case UI::End :
 	{
 		auto itemsToUse = getSelectableComponentsByPhysics(scenePos);
-
-		if (itemsToUse.size() < 2) break;
+		if (itemsToUse.size() == 0) break;
+		if (itemsToUse.size() == 1)
+		{
+			createConnection(itemsToUse[0], _page->getStaticPart(), scenePos);
+			break;
+		}
+		if (itemsToUse.size() == 2)
+		{
+			createConnection(itemsToUse[0], itemsToUse[1], scenePos);
+			break;
+		}
 		if (itemsToUse.size() > 2)
 		{
 			QMessageBox::about(nullptr, "Confused!", "Multiple components under selection");
@@ -878,17 +887,18 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 	{
 		// In UI connect mode, keep physics engine ON but disable many options
 		auto* physicsManager = _page->getPhysicsManager();
-		physicsManager->start(1000/30);	// keep it super slow. Do not hamper the interactions
+		physicsManager->pause();
 		physicsManager->setEnableGravity(true);
 		physicsManager->setEnableMotor(true);
 		physicsManager->setGlobalCollision(_page->getComponents(), true);
+		physicsManager->start(1000/30);	// keep it super slow. Do not hamper the interactions
 	};
 
 	auto runSimplePhysics= [&]()
 	{
 		// In UI connect mode, keep physics engine ON but disable many options
 		auto* physicsManager = _page->getPhysicsManager();
-		physicsManager->start(100);	// keep it super slow. Do not hamper the interactions
+		physicsManager->pause();
 		physicsManager->setEnableGravity(false);
 		physicsManager->setEnableMotor(false);
 		auto components = _page->getComponents();
@@ -897,9 +907,13 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 		// Pause everything at the start
 		for (auto component : components)
 		{
-			component->physicsBody()->SetLinearVelocity(b2Vec2(0,0));
-			component->physicsBody()->SetAngularVelocity(0);
+			if (component->physicsBody())
+			{
+				component->physicsBody()->SetLinearVelocity(b2Vec2(0,0));
+				component->physicsBody()->SetAngularVelocity(0);
+			}
 		}
+		physicsManager->start(100);	// keep it super slow. Do not hamper the interactions
 	};
 
 	bool retval = true;
@@ -955,7 +969,9 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 	}
 	return retval;
 }
+namespace {
 
+}
 bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 {
 	if (obj != _viewport) return false;
@@ -1688,13 +1704,33 @@ void PlayGoController::onMouseEventFromView(QMouseEvent *event, QGraphicsView *v
 
 namespace
 {
-	bool eventAcceptedByJoint = false;
-	cdJoint *touchEventOwner = NULL;
+	bool eventAcceptedByJoint				= false;
+	bool currently_accepting_touch_events	= false;
+	cdJoint *touchEventOwner				= nullptr;
 	QPointF initialPos;
 }
 bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 {
 	QTransform inverted = _view->transform().inverted();
+	// see if it goes to a component
+	if (event->type() == QEvent::TouchBegin)
+	{
+		auto touchpoints = event->touchPoints();
+		bool pointOnComponent = false;
+		currently_accepting_touch_events = false;
+		for (auto tp : touchpoints)
+		{
+			if (_page->scene()->items(tp.scenePos(), Qt::IntersectsItemBoundingRect, Qt::AscendingOrder, _view->transform()).size())
+			{
+				pointOnComponent = true;
+				break;
+			}
+		}
+		// \todo Use when surface is available
+		if (pointOnComponent == false)
+			currently_accepting_touch_events = true;
+	}
+
 	if (event->touchPoints().count() == 1)
 	{
 		if (_activeMode == UI::Connect)
@@ -1747,8 +1783,8 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 				touchEventOwner->setPos(initialPos);
 				eventAcceptedByJoint = false;
 				touchEventOwner = 0;
+				return false;
 			}
-			return false;
 		}
 	}
 	else if (event->touchPoints().count() == 2)

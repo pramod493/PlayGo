@@ -17,13 +17,13 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-using namespace boost::graph;
+using namespace boost;
 
 namespace CDI
 {
 	class PlayGo;
 
-
+	using cdComponentGraph = adjacency_list<vecS, vecS, bidirectionalS, Component*, cdJoint*>;
 	/**
 	 * @brief The Page class is the top level item which contains self sufficient information regarding a scene.
 	 * It also serves the function of factory class to create objects
@@ -75,6 +75,8 @@ namespace CDI
 		Component* _currentComponent;
 
 		QList<Component*> transformedComponents;
+
+		Component* static_component;
 
 	protected :
 		void setScene(QGraphicsScene* scene);	// Do not allow changing of scene
@@ -255,6 +257,8 @@ namespace CDI
 		QRectF getBoundingBox(QList<QGraphicsItem*> listOfItems);
 
 		void clearStrokeHighlight();
+
+		Component* getStaticPart();
 
 		/*---------------------------------------------------------------------------------
 		 * Scene query and paint related functions

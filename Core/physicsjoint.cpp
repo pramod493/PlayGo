@@ -213,7 +213,6 @@ namespace CDI
 			_jointDef->lowerAngle = lowerAngle * TO_RADIANS_FROM_DEG;
 			_jointDef->upperAngle = upperAngle * TO_RADIANS_FROM_DEG;
 		}
-
 		initializeShape();
 	}
 

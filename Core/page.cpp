@@ -30,43 +30,24 @@ namespace CDI
 
 		transformedComponents = QList<Component*>();
 
-		connect(this, SIGNAL(signalItemAdd(QGraphicsItem*)),
-				_physicsManager, SLOT(onItemAdd(QGraphicsItem*)));
+		static_component = nullptr;
+
 		connect(_physicsManager, SIGNAL(physicsStepComplete()),
 				this, SLOT(onSimulationStepComplete()));
 		connect(_physicsManager, SIGNAL(physicsStepStart()),
 				this, SLOT(onSimulationStepStart()));
-
 	}
 
 	Page::Page(const Page &page)
-		:QObject(page.parent())
+		: Page(page._playgo)
 	{
-		_id = uniqueHash();
-		_playgo = NULL;
-
-		_assemblies = QHash<QUuid, Assembly*>();
-		_components = QHash<QUuid, Component*>();
-
-		_searchManager = new SearchManager(this);
-
-		PhysicsSettings settings = PhysicsSettings();
-		settings.gravity = Point2D(0,0);
-		settings.timeStep = 1.0f/60.0f;
-		_physicsManager = new PhysicsManager(settings, this);
-
-		_scene = new SketchScene(this);
-
-		_currentComponent = NULL;
-
-		transformedComponents = QList<Component*>();
-
-		connect(this, SIGNAL(signalItemAdd(QGraphicsItem*)),
-				_physicsManager, SLOT(onItemAdd(QGraphicsItem*)));
-		connect(_physicsManager, SIGNAL(physicsStepComplete()),
-				this, SLOT(onSimulationStepComplete()));
-		connect(_physicsManager, SIGNAL(physicsStepStart()),
-				this, SLOT(onSimulationStepStart()));
+		auto others_components = page.getComponents();
+		_components.reserve(others_components.size());
+		for (auto component : others_components)
+		{
+			auto newComponent = createComponent(component);
+			_components.insert(newComponent->id(), newComponent);
+		}
 	}
 
 	Page::~Page()
@@ -217,13 +198,16 @@ namespace CDI
 	{
 		Component* newComponent = new Component();
 		addComponent(newComponent);
+		_physicsManager->addPhysicsBody(newComponent);
 		return newComponent;
 	}
 
 	Component* Page::createComponent(Component* copy)
 	{
 		Component* newComponent = new Component(*copy);
+		newComponent->setParent(this);	// set as parent (in QObject)
 		addComponent(newComponent);
+		_physicsManager->addPhysicsBody(newComponent);
 		return newComponent;
 	}
 
@@ -653,6 +637,17 @@ namespace CDI
 			Stroke* stroke = qgraphicsitem_cast<Stroke*>(graphicsitem);
 			if (stroke->isHighlighted()) stroke->highlight(false);
 		}
+	}
+
+	Component* Page::getStaticPart()
+	{
+		if (static_component == nullptr)
+		{
+			static_component = createComponent();
+			static_component->setParent(this);
+			static_component->physicsBody()->SetType(b2_staticBody);
+		}
+		return static_component;
 	}
 
 	/*---------------------------------------------------------------------------------
