@@ -243,6 +243,58 @@ namespace CDI
 		return _joint->GetJointAngle() * TO_DEGREES_FROM_RAD;
 	}
 
+	namespace {
+		// If the event is not accepted at press/touch start, it will not be passed on to the item
+		// therefre there is not need to have a flag to show if the item has/has not accepted the
+		// event. Also, mouse and touch event generally won't occur at the same time
+		Point2D initialTouchPos;
+		QTransform initialTransform;
+		int touchPointID;
+	}
+
+	bool cdPinJoint::sceneEvent(QEvent *event)
+	{
+		// Ignore implementation for now
+		return QGraphicsPathItem::sceneEvent(event);
+		switch (event->type())
+		{
+			case QEvent::GraphicsSceneMousePress :
+			{
+				break;
+			}
+			case QEvent::GraphicsSceneMouseMove :
+			{
+				break;
+			}
+			case QEvent::GraphicsSceneMouseRelease :
+			{
+				break;
+			}
+			case QEvent::TouchBegin :
+			{
+				event->accept();
+				auto touchEvent = static_cast<QTouchEvent*>(event);
+				auto &tp = touchEvent->touchPoints().first();
+				return true;
+			}
+			case QEvent::TouchUpdate :
+			{
+				break;
+			}
+			case QEvent::TouchEnd :
+			{
+				break;
+			}
+			case QEvent::TouchCancel :
+			{
+				break;
+			}
+			default :
+				break;
+		}
+		return true;
+	}
+
 	/*-------------------------------------------------------------------------
 	 * cdPinJoint class member definitions
 	 * ----------------------------------------------------------------------*/

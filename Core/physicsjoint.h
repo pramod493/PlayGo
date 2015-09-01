@@ -142,6 +142,9 @@ namespace CDI
 		float referenceAngle() const;
 		float jointAngle() const;
 
+	protected:
+		bool sceneEvent(QEvent* event);
+
 	signals:
 		void onJointDelete(cdPinJoint*);
 		void onJointChange(cdPinJoint*);
