@@ -57,6 +57,8 @@
 #include <ostream>
 #include <functional>
 #include <queue>
+#include <QPoint>
+#include <QPointF>
 
 namespace ClipperLib {
 
@@ -107,6 +109,7 @@ typedef std::vector< Path > Paths;
 
 inline Path& operator <<(Path& poly, const IntPoint& p) {poly.push_back(p); return poly;}
 inline Paths& operator <<(Paths& polys, const Path& p) {polys.push_back(p); return polys;}
+inline Path& operator <<(Path& poly, const QPoint& p) {poly.push_back(IntPoint(p.x(), p.y())); return poly;}
 
 std::ostream& operator <<(std::ostream &s, const IntPoint &p);
 std::ostream& operator <<(std::ostream &s, const Path &p);
