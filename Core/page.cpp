@@ -32,6 +32,8 @@ namespace CDI
 
 		static_component = nullptr;
 
+		_currentLayerIndex = LAYER_01;
+
 		connect(_physicsManager, SIGNAL(physicsStepComplete()),
 				this, SLOT(onSimulationStepComplete()));
 		connect(_physicsManager, SIGNAL(physicsStepStart()),
@@ -41,6 +43,7 @@ namespace CDI
 	Page::Page(const Page &page)
 		: Page(page._playgo)
 	{
+		_currentLayerIndex = page._currentLayerIndex;
 		auto others_components = page.getComponents();
 		_components.reserve(others_components.size());
 		for (auto component : others_components)
@@ -131,6 +134,17 @@ namespace CDI
 		_currentComponent = currentComp;
 	}
 
+	void Page::setCurrentLayer(cdLayerIndex newindex)
+	{
+		// Should we highlight all items in the current layer?
+		_currentLayerIndex = newindex;
+	}
+
+	cdLayerIndex Page::currentLayer() const
+	{
+		return _currentLayerIndex;
+	}
+
 	QGraphicsItem* Page::getItemPtrById(QUuid id)
 	{
 		// NOTE - No check has been to verify if the item is of type
@@ -197,6 +211,7 @@ namespace CDI
 	Component* Page::createComponent()
 	{
 		Component* newComponent = new Component();
+		newComponent->setLayerIndex(_currentLayerIndex);
 		addComponent(newComponent);
 		_physicsManager->addPhysicsBody(newComponent);
 		return newComponent;
@@ -644,6 +659,7 @@ namespace CDI
 		if (static_component == nullptr)
 		{
 			static_component = createComponent();
+			static_component->_layerText->hide();	// Do not attempt at home ;)
 			static_component->setParent(this);
 			static_component->physicsBody()->SetType(b2_staticBody);
 		}
@@ -667,8 +683,8 @@ namespace CDI
 		if (num_components == 0 && num_assemblies == 0) return stream;
 
 		QHash<QUuid, Component*>::const_iterator componentiter;
-		for (componentiter = _components.constBegin();
-			 componentiter != _components.constEnd(); ++componentiter)
+		for (componentiter = _components.cbegin();
+			 componentiter != _components.cend(); ++componentiter)
 		{
 			Component* component = componentiter.value();
 			component->serialize(stream);

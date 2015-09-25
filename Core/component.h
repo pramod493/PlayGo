@@ -36,12 +36,6 @@ namespace CDI
 		float previousScale;		/**< Stores the previous scale. Allows for regenration only when scaled beyong a value */
 		bool disableScaling;		/**< Disables the scaling on touch gestures */
 
-		uint16 groupIndex;			/**< Box2D groupIndex for fixtures */
-		uint16 maskBits;			/**< Box2D maskBits for fixtures */
-		int16 categoryBits;			/**< Box2D categoryBits for fixtures */
-
-		b2Filter componentFilter;
-
 	protected:
 		QRectF itemBoundingRect;
 
@@ -50,6 +44,10 @@ namespace CDI
 		b2Body* _physicsBody;
 
 		QList<b2Fixture*> _fixtures;
+
+		cdLayerIndex _componentLayer;			/**< Box2D groupIndex for fixtures */
+
+		b2Filter componentFilter;
 
 		// Store the joint as well as its position w.r.t. unscaled component
 		QList<cdJoint*> _jointlist;
@@ -67,8 +65,15 @@ namespace CDI
 	public:
 		Component(QGraphicsItem* parent = 0);
 
+		/**
+		 * @brief Component copy construct
+		 * @param copy Original component
+		 */
 		Component(const Component& copy);
 
+		/**
+		 * @brief ~Component virtual destructor. Does nothing
+		 */
 		virtual ~Component();
 
 		/**
@@ -109,6 +114,12 @@ namespace CDI
 		b2Body* physicsBody() const { return _physicsBody; }
 
 		void setPhysicsBody(b2Body* body);
+
+		void setLayerIndex(cdLayerIndex index);
+
+		cdLayerIndex layerIndex() const;
+
+		b2Filter filter() const;
 
 		bool isStatic() const;
 
@@ -164,8 +175,6 @@ namespace CDI
 		float getDensity() const;
 
 		void setDensity(float density);
-
-		void onCollisionBitsUpdate();
 
 		QList<QGraphicsItem*> childItemByType(int itemType);
 

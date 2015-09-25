@@ -1,3 +1,4 @@
+#include "commonfunctions.h"
 #include "LoadModel.h"
 #include "stroke.h"
 #include "QsLog.h"
@@ -26,6 +27,7 @@ namespace CDI
 		Component *c1 = page->createComponent();
 		c1->setPos(100,200);
 		c1->setStatic(true);
+		c1->setLayerIndex(LAYER_01);
 		{
 			QVector<QPointF> points;
 			points.reserve(4);
@@ -37,6 +39,7 @@ namespace CDI
 		}
 		Component *c2 = page->createComponent();
 		c2->setPos(100,200);
+		c2->setLayerIndex(LAYER_02);
 		{
 			QVector<QPointF> points;
 			points.reserve(4);
@@ -48,6 +51,7 @@ namespace CDI
 		}
 		Component *c3 = page->createComponent();
 		c3->setPos(200,100);
+		c3->setLayerIndex(LAYER_03);
 		{	// same as component c1
 			QVector<QPointF> points;
 			points.reserve(4);
@@ -59,6 +63,7 @@ namespace CDI
 		}
 		Component *c4 = page->createComponent();
 		c4->setPos(280,200);
+		c4->setLayerIndex(LAYER_02);
 		{
 			QVector<QPointF> points;
 			points.reserve(4);

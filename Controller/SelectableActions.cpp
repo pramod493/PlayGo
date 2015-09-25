@@ -12,7 +12,6 @@ namespace CDI
 		:QGraphicsEllipseItem(parent)
 	{
 		_action = action;
-		_text = _action->text();
 		QIcon tmpIcon = _action->icon();
 		int _dim = SelectableActions::dim;
 		float ellipseDim = _dim*1.45f;
@@ -30,7 +29,7 @@ namespace CDI
 		QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(tmpPixmap, this);
 		pixmapItem->setPos(-_dim/2,-_dim/2);
 		pixmapItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		QGraphicsSimpleTextItem* textItem = new QGraphicsSimpleTextItem(_action->text(), this);
+		textItem = new QGraphicsSimpleTextItem(_action->text(), this);
 		textItem->setPos(-_dim/2, _dim/2);
 		textItem->setScale(1.5f);
 		textItem->setBrush(QBrush(Qt::red));
@@ -95,5 +94,22 @@ namespace CDI
 		}
 		}
 		return QGraphicsEllipseItem::sceneEvent(event);
+	}
+
+	LayerSelectorActions::LayerSelectorActions(QString text, cdLayerIndex index,
+											   QAction *action, QGraphicsItem *parent)
+		: QObject(nullptr), SelectableActions(action, parent)
+	{
+		if (textItem) textItem->setText(text);
+		_index = index;
+	}
+
+	LayerSelectorActions::~LayerSelectorActions()
+	{
+	}
+
+	void LayerSelectorActions::trigger()
+	{
+		emit onTrigger(_index);
 	}
 }

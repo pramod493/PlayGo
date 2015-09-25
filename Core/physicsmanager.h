@@ -10,12 +10,32 @@
 #include "cdcontactlistener.h"
 #include <QTimer>
 
+#include <algorithm>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+
+using namespace boost;
+
 class BoxDebugScene;
+
+struct GraphProperty
+{
+	QString name;
+	QUuid graphID;
+};
+
 namespace CDI
 {
 	class Page;
 	class Component;
 	class cdJoint;
+
+	using cdComponentGraph
+	= adjacency_list<vecS, vecS, undirectedS, Component*/*, cdJoint*, GraphProperty*/>;
+	using componentVertex = graph_traits<cdComponentGraph>::vertex_descriptor;
+	using componentEdge = graph_traits<cdComponentGraph>::edge_descriptor;
+	//typedef std::pair<Component*, Component*> Edge;
 	// Use the b2BodyDef for setting the value of physics components
 	/**
 	 * @brief b2BodyDef stores the definition of property of physics body
@@ -29,28 +49,6 @@ namespace CDI
 	const unsigned int noGravity			= MASK_BIT0;
 	const unsigned int noCollision			= MASK_BIT1;
 	const unsigned int noMotor				= MASK_BIT2;
-
-	enum cdEntityCategory {
-		ENTITY_GROUND	= 0x0001,
-		ENTITY_LAYER_01	= 0x0002,
-		ENTITY_LAYER_02	= 0x0004,
-		ENTITY_LAYER_03	= 0x0008,
-		ENTITY_LAYER_04	= 0x0010,
-		ENTITY_LAYER_05	= 0x0020,
-		ENTITY_LAYER_06	= 0x0040,
-		ENTITY_LAYER_07	= 0x0080
-	};
-
-	enum cdMaskCategory {
-		MASK_GROUND		= 0x0001,
-		MASK_LAYER_01	= 0x0002,
-		MASK_LAYER_02	= 0x0004,
-		MASK_LAYER_03	= 0x0008,
-		MASK_LAYER_04	= 0x0010,
-		MASK_LAYER_05	= 0x0020,
-		MASK_LAYER_06	= 0x0040,
-		MASK_LAYER_07	= 0x0080
-	};
 
 	class PhysicsSettings {
 	public:
@@ -132,6 +130,8 @@ namespace CDI
 		bool _enableDebugView;		/**< Determines whether debug view will be updated or not */
 	public:
 		BoxDebugScene* debugView;	/**< Renders the debug information */
+
+		cdComponentGraph connectionsGraph;
 
 	public:
 		/**

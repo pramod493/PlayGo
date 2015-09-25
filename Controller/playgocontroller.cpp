@@ -885,6 +885,7 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 	// Define select lambda function to reduce the overwrite
 	auto runFullPhysics= [&]()
 	{
+		qDebug() << "Running full physics";
 		// In UI connect mode, keep physics engine ON but disable many options
 		auto* physicsManager = _page->getPhysicsManager();
 		physicsManager->pause();
@@ -896,6 +897,7 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 
 	auto runSimplePhysics= [&]()
 	{
+		qDebug() << "Running interactive physics";
 		// In UI connect mode, keep physics engine ON but disable many options
 		auto* physicsManager = _page->getPhysicsManager();
 		physicsManager->pause();
@@ -2027,11 +2029,9 @@ void PlayGoController::setMode(UI::MODE newMode)
 	if (_tapOverrideEnabled)
 		touchholdController->slotCloseOverlay();
 	_page->getPhysicsManager()->setEnableDebugView(false);
+
 	onModeChange(_activeMode, newMode);
-	if (_activeMode == newMode)
-	{
-		return;
-	}
+	if (_activeMode == newMode)		return;
 	_lastActiveMode		= _activeMode;
 	_activeMode			= newMode;
 }

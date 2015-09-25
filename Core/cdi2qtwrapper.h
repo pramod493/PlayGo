@@ -44,6 +44,8 @@ namespace CDI
 
 	const float Z_UIVIEW			= 2.5f;
 	const float Z_COMPONENTVIEW		= 1.0f;
+	const float Z_TEXTVIEW			= 2.0f;	// Always keep the text on top
+	const float Z_COMP_SELECT 		= 1.5f;
 	const float Z_IMAGEVIEW			= 0.1f;
 	const float Z_POLYGONVIEW		= 0.2f;
 	const float Z_STROKEVIEW		= 0.3f;

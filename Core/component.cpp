@@ -16,9 +16,9 @@
 
 namespace CDI
 {
-		Component::Component(QGraphicsItem *parent)
-				: QGraphicsObject(parent)
-		{
+	Component::Component(QGraphicsItem *parent)
+		: QGraphicsObject(parent)
+	{
 		_id = uniqueHash();
 
 		_physicsBody = nullptr;		// Creation is done outside but deletion is performed internally
@@ -45,27 +45,32 @@ namespace CDI
 
 		disableScaling = false;
 
+		// NOTES we set 'groupIndex = 0 and thereby forcing maskBits and categoryBits
+		// check on all fixtures
+		// Next we define layer and create maskbits an categoryBits based on their relationship
+
 		//TODO - Think more on this part on how can dynamics be changed
-		groupIndex		= -1;	// positive and same to enable collision
-								// negative and same to disable collision
-								// non-zero & different - use category and mask
-								// zero - user category and mask
-								// http://www.iforce2d.net/b2dtut/collision-filtering
-		maskBits		= 0xFFFF;
-		categoryBits	= 0x0000;
+//		groupIndex		= -1;	// positive and same to enable collision
+//								// negative and same to disable collision
+//								// non-zero & different - use category and mask
+//								// zero - user category and mask
+//								// http://www.iforce2d.net/b2dtut/collision-filtering
+//		maskBits		= 0xFFFF;
+//		categoryBits	= 0x0000;
 
-		componentFilter.groupIndex = groupIndex;
-		componentFilter.maskBits = maskBits;
-		componentFilter.categoryBits = categoryBits;
-
-		_anchorItem		= nullptr;
-		_lockScaleItem	= nullptr;
+		_componentLayer = LAYER_01;
+		componentFilter = generateFilter(_componentLayer);
 
 		_layerText = new QGraphicsSimpleTextItem(this);
 		_layerText->setPos(0,0);
 		_layerText->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		_layerText->setText(QString::number(groupIndex));
+		_layerText->setText(getLayerName(_componentLayer));
+		_layerText->setZValue(Z_TEXTVIEW);
+		_layerText->setScale(1.250f);
+		_layerText->setBrush(QBrush(QColor(70,70,250,255)));
 
+		_anchorItem		= nullptr;
+		_lockScaleItem	= nullptr;
 		_lockItem = false;
 
 		_density = 1.0f;
@@ -105,9 +110,8 @@ namespace CDI
 		disableScaling	= copy.disableScaling;
 		previousScale	= copy.previousScale;
 		componentFilter = copy.componentFilter;
-		groupIndex		= copy.groupIndex;
-		maskBits		= copy.maskBits;
-		categoryBits	= copy.categoryBits;
+		setLayerIndex(copy._componentLayer);
+
 		_density		= copy._density;
 
 		////// Copy all the children
@@ -145,18 +149,6 @@ namespace CDI
 				break;
 			}
 		}
-
-		connect(this, SIGNAL(xChanged()),
-				this, SLOT(internalTransformChanged()));
-
-		connect(this, SIGNAL(yChanged()),
-				this, SLOT(internalTransformChanged()));
-
-		connect(this, SIGNAL(scaleChanged()),
-				this, SLOT(internalTransformChanged()));
-
-		connect(this, SIGNAL(rotationChanged()),
-				this, SLOT(internalTransformChanged()));
 
 		setTransform(copy.transform());
 	}
@@ -203,6 +195,29 @@ namespace CDI
 					_physicsBody->DestroyFixture(fixture);
 			_physicsBody = body;
 		}
+	}
+
+	void Component::setLayerIndex(cdLayerIndex index)
+	{
+		if (index == _componentLayer) return;
+		_componentLayer = index;
+		_layerText->setText(getLayerName(_componentLayer));
+
+		componentFilter = generateFilter(_componentLayer);
+		for (auto fixture : _fixtures)
+			fixture->SetFilterData(componentFilter);
+		if (_physicsBody)
+			_physicsBody->SetAwake(true);
+	}
+
+	cdLayerIndex Component::layerIndex() const
+	{
+		return _componentLayer;
+	}
+
+	b2Filter Component::filter() const
+	{
+		return componentFilter;
 	}
 
 	bool Component::isStatic() const
@@ -809,16 +824,6 @@ namespace CDI
 		{
 			fixture->SetDensity(density);
 		}
-	}
-
-	void Component::onCollisionBitsUpdate()
-	{
-		for(auto fixture : _fixtures)
-		{
-			fixture->SetFilterData(componentFilter);
-		}
-		if (_physicsBody)
-			_physicsBody->SetAwake(true);
 	}
 
 	QList<QGraphicsItem*> Component::childItemByType(int itemType)

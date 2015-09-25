@@ -87,7 +87,7 @@ namespace CDI
 		Q_PROPERTY(float maxMotorTorque READ maxMotorTorque)
 		Q_PROPERTY(float motorSpeed READ motorSpeed)
 
-		Q_PROPERTY(bool limitsEnabled READ isLimitsEnabled())
+		Q_PROPERTY(bool limitsEnabled READ isLimitsEnabled)
 		Q_PROPERTY(float lowerLimit READ lowerLimit)
 		Q_PROPERTY(float upperLimit READ upperLimit)
 

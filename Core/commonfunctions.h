@@ -10,6 +10,9 @@
 #include <QVector>
 #include "FindContours.h"
 #include "poly2tri.h"
+
+#include "box2dworld.h"
+
 #define _USE_NATH_DEFINES
 #include <math.h>
 
@@ -26,7 +29,8 @@
 namespace CDI
 {
 	class Polygon2D;
-
+	class Triangle;
+	class PhysicsShape;
 	// Program constant
 	#define CDI_MAX_FLOAT FLT_MAX;
 	#define CDI_MIN_FLOAT FLT_MIN;
@@ -65,6 +69,33 @@ namespace CDI
 		Outside,
 		Nearby
 	};
+
+	enum cdLayerIndex : int16 {
+		GROUND		= 0x0001,
+		LAYER_01	= 0x0002,
+		LAYER_02	= 0x0004,
+		LAYER_03	= 0x0008,
+		LAYER_04	= 0x0010,
+		LAYER_05	= 0x0020,
+		LAYER_06	= 0x0040,
+		LAYER_07	= 0x0080
+	};
+
+	/**
+	 * @brief getLayerName returns the layer name
+	 * @param index
+	 * @return
+	 */
+	QString getLayerName(cdLayerIndex index);
+
+	/**
+	 * @brief generateFilter returns appropriate filter based on layer index
+	 * @param index
+	 * @return
+	 * @remarks GROUND will collide with everything. All other layers will collide with
+	 * themselves and GROUND
+	 */
+	b2Filter generateFilter(cdLayerIndex index);
 
 	ItemType getItemType(int i);
 	SelectionType getSelectionType(int i);

@@ -27,6 +27,7 @@ namespace CDI
 	class TouchAndHoldController : public QObject
 	{
 		Q_OBJECT
+		Q_PROPERTY(float menuScale READ getMenuScale WRITE setMenuScale)
 	public:
 		int dpi;
 	protected:
@@ -42,6 +43,7 @@ namespace CDI
 		QAction *_componentDisableScaleAction;
 		QAction *_componentDeleteAction;
 		QAction *_startLayerManager;
+		QAction *_selectLayer;
 		QAction *_addTrackerAction;
 		QAction *_removeTrackerAction;
 		QAction *_disableComponentCollision;
@@ -70,12 +72,32 @@ namespace CDI
 		PlayGoController *mainController() const;
 		void setMainController(PlayGoController *mainController);
 
+		float getMenuScale()
+		{
+			if (parentGroup)
+				return parentGroup->scale();
+			return 1.0f;
+		}
+
+		void setMenuScale(float value)
+		{
+			if (parentGroup)
+				parentGroup->setScale(value);
+		}
+
 		/**
 		 * @brief Display overlay with options related to component
 		 * @param component
 		 * @param scenePos
 		 */
 		void enableOverlay(Component* component, QPointF scenePos);
+
+		/**
+		 * @brief Display overlay with available layer options
+		 * @param component
+		 * @param scenePos
+		 */
+		void enableLayerOverlay(Component* component, QPointF scenePos);
 
 		/**
 		 * @brief Dispay overlay with options related to joint
@@ -98,6 +120,8 @@ namespace CDI
 
 		void enableSliderJointOverlay(cdSliderJoint* sliderjoint, QPointF scenePos);
 
+		void drawDecor();
+
 	signals:
 
 	public slots:
@@ -108,6 +132,8 @@ namespace CDI
 		void slotComponentCopyAction();
 		void slotComponentDisableScaleAction();
 		void slotComponentDeleteAction();
+		void slotInitLayerselectAction();
+		void slotLayerUpdate(cdLayerIndex index);
 		void slotEnableCollisionAction();
 		void slotDisableCollisionAction();
 

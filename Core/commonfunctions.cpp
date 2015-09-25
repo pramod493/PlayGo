@@ -13,10 +13,41 @@
 #include <vector>
 #include "FindContours.h"
 #include "QsLog.h"
+#include "physicsshape.h"
+
 using namespace std;
 
 namespace CDI
 {
+	QString getLayerName(cdLayerIndex index)
+	{
+		switch (index)
+		{
+		case GROUND	  : { return "Ground"; }
+		case LAYER_01 : { return "Layer #01"; }
+		case LAYER_02 : { return "Layer #02"; }
+		case LAYER_03 : { return "Layer #03"; }
+		case LAYER_04 : { return "Layer #04"; }
+		case LAYER_05 : { return "Layer #05"; }
+		case LAYER_06 : { return "Layer #06"; }
+		case LAYER_07 : { return "Layer #07"; }
+		}
+		return "Unknown layer";
+	}
+
+	b2Filter generateFilter(cdLayerIndex index)
+	{
+		b2Filter filter;
+		filter.groupIndex = index;
+		filter.categoryBits = index;
+		if (index == GROUND)
+			filter.maskBits = 0xFFFF;
+		else
+			filter.maskBits = GROUND | index;
+
+		return filter;
+	}
+
 	////////////// ENUM conversion from int
 	ItemType getItemType(int i)
 	{
@@ -202,7 +233,8 @@ namespace CDI
 		return OnSegment;
 	}
 
-	bool extractTransformComponents(QTransform& t, float* rotation, float* scale, Point2D* translation)
+	bool extractTransformComponents
+	(QTransform& t, float* rotation, float* scale, Point2D* translation)
 	{
 		Point2D origin = t.map(Point2D(0,0));
 
@@ -234,7 +266,9 @@ namespace CDI
 		if (numPoints <= 3) return true;	// triangle are always convex
 		// Assuming all the points form a polygon
 		// reference
-		// https://github.com/pramod493/box2d-editor/blob/eb5aec8cfb26ceeda811398200d680d9baeceb86/editor/src/aurelienribon/bodyeditor/maths/earclipping/ewjordan/Polygon.java
+		// https://github.com/pramod493/box2d-editor/blob/...
+		// eb5aec8cfb26ceeda811398200d680d9baeceb86/editor/...
+		// src/aurelienribon/bodyeditor/maths/earclipping/ewjordan/Polygon.java
 		bool isPositive = false;
 		for (int i =0; i < numPoints; i++)
 		{
@@ -352,7 +386,8 @@ namespace CDI
 		return triangles;
 	}
 
-	vector<p2t::Triangle*> triangularizeImage(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
+	vector<p2t::Triangle*> triangularizeImage
+	(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
 	{
 		vector<p2t::Triangle*> triangles;
 
@@ -506,11 +541,13 @@ namespace CDI
 		return triangles;
 	}
 
-	vector<p2t::Triangle*> generatePolygonFromImage(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
+	vector<p2t::Triangle*> generatePolygonFromImage
+	(QString imagePath, float deltaOutside, float deltaInside, float minPolygonSize, bool ignoreSmalls)
 	{
 		// Initialize the list
 		QList<Polygon2D*> polygons;
-		vector<p2t::Triangle*> triangles = triangularizeImage(imagePath, deltaOutside, deltaInside, minPolygonSize, ignoreSmalls);
+		vector<p2t::Triangle*> triangles
+				= triangularizeImage(imagePath, deltaOutside, deltaInside, minPolygonSize, ignoreSmalls);
 		return triangles;
 	}
 }

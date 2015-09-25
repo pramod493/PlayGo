@@ -546,6 +546,8 @@ namespace CDI
 				!cdCompare(component->previousScale, component->scale()))
 				component->regenerateInternals();
 
+			// TODO if any of the joints are connected to fixed object, update the joint position
+
 			b2Body* body = component->physicsBody();
 			Point2D pos = component->pos();
 			float rotation = component->rotation() * _PI_/180.0f;

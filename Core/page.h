@@ -12,18 +12,12 @@
 #include "searchmanager.h"
 #include "physicsmanager.h"
 
-#include <algorithm>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/graph_traits.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-
 using namespace boost;
 
 namespace CDI
 {
 	class PlayGo;
 
-	using cdComponentGraph = adjacency_list<vecS, vecS, bidirectionalS, Component*, cdJoint*>;
 	/**
 	 * @brief The Page class is the top level item which contains self sufficient information regarding a scene.
 	 * It also serves the function of factory class to create objects
@@ -78,6 +72,8 @@ namespace CDI
 
 		Component* static_component;
 
+		cdLayerIndex _currentLayerIndex;
+
 	protected :
 		void setScene(QGraphicsScene* scene);	// Do not allow changing of scene
 
@@ -110,6 +106,10 @@ namespace CDI
 		Component* currentComponent();
 
 		void setCurrentComponent(Component* currentComp);
+
+		void setCurrentLayer(cdLayerIndex newindex);
+
+		cdLayerIndex currentLayer() const;
 
 		/**
 		 * @brief getParent returns the immediate parent Component or

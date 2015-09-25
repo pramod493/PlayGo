@@ -2,7 +2,8 @@
 #include <QAction>
 #include <QTouchEvent>
 #include <QGraphicsSimpleTextItem>
-#include <QGraphicsObject>
+#include <QGraphicsColorizeEffect>
+#include <QPropertyAnimation>
 
 #include "QsLog.h"
 #include "PlayGoController.h"
@@ -28,6 +29,10 @@ namespace CDI
 		_componentDisableScaleAction = new QAction(QIcon(":/images/overlay/anchor.png"), tr("Disable scaling"), this);
 		_componentDeleteAction		= new QAction(QIcon(":/images/overlay/delete-01.png"), tr("Delete"), this);
 		_startLayerManager			= new QAction(QIcon(":/images/overlay/layers.png"), tr("Layers"), this);
+
+		// Placeholder for layer information
+		_selectLayer				= new QAction(QIcon(":/images/overlay/layers.png"), tr("Layers"), this);
+
 		_addTrackerAction			= new QAction(QIcon(":/images/overlay/dummy.png"), tr("Add tracker"), this);
 		_removeTrackerAction		= new QAction(QIcon(":/images/overlay/dummy.png"), tr("Remove tracker"), this);
 		_disableComponentCollision	= new QAction(QIcon(":/images/overlay/dummy.png"), tr("Disable collision"), this);
@@ -72,6 +77,10 @@ namespace CDI
 		// Delete
 		connect(_componentDeleteAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentDeleteAction()));
+		// Layers
+		connect(_startLayerManager, SIGNAL(triggered()),
+				this, SLOT(slotInitLayerselectAction()));
+
 		// Enable collision
 		connect(_enableComponentCollision, SIGNAL(triggered()),
 				this, SLOT(slotEnableCollisionAction()));
@@ -165,97 +174,91 @@ namespace CDI
 		_selectedComponent = component;
 		_scenePos = scenePos;
 
-		if (parentGroup)
-			delete parentGroup;
-
-		float center_radius = 0.25f * dpi;
-		float ring_radius = 1.0f * dpi;
-
-		parentGroup = new QGraphicsItemGroup;
-		component->scene()->addItem(parentGroup);
-		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		bool isItemLocked = (component->isStatic() ? true : false);
-		bool isScaleLocked = (component->disableScaling);
-
-		bool itemCollides = (component->groupIndex == 1 ? true : false);
-
-		if (isScaleLocked)
-			_componentDisableScaleAction->setText("Enable scaling");
-		else
-			_componentDisableScaleAction->setText("Disable scaling");
-
-		QGraphicsPathItem* decor =new QGraphicsPathItem(parentGroup);
-		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		// Set up colors
-		QPen pen = QPen();
-		QColor penColor = Qt::green; //QColor(200,200,255);
-		pen.setColor(penColor);
-		pen.setWidth(3);
-		QBrush brush = QBrush(Qt::SolidPattern);
-		brush.setColor((penColor.setAlpha(200), penColor.lighter(75)));
-
-		// Set up decor
-		QPainterPath path;
-		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
-		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
-		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
-		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
-		decor->setPath(path);
-		decor->setPen(pen);
-		decor->setBrush(brush);
+		drawDecor();
 
 		// Add actual stuff
 		float angle = 0;
 		float delta = 60;	// deg
 		float length = 0.75f * dpi;
 
-		SelectableActions* lockItem = new SelectableActions
-				((isItemLocked ? _componentUnlockAction : _componentLockAction), parentGroup);
-		lockItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		lockItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
+		auto addOverlayItem = [&](QAction* action)
+		{
+			auto selectableAction = new SelectableActions(action, parentGroup);
+			selectableAction->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+			selectableAction->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+			angle += delta;
+			return selectableAction;
+		};
 
-		SelectableActions* collisionItem = new SelectableActions
-				((itemCollides ? _disableComponentCollision : _enableComponentCollision), parentGroup);
-		collisionItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		collisionItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
+		addOverlayItem(_selectedComponent->isStatic() ? _componentUnlockAction : _componentLockAction);
+		//addOverlayItem(itemCollides ? _disableComponentCollision : _enableComponentCollision);
+		addOverlayItem(_componentDisableScaleAction);
+		addOverlayItem(_componentDeleteAction);
+		addOverlayItem(_componentCopyAction);
+		addOverlayItem(_startLayerManager);
 
-		SelectableActions* scaleLockItem = new SelectableActions
-				(_componentDisableScaleAction, parentGroup);
-		scaleLockItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		scaleLockItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
+		auto item = new SelectableActions(_closeOverlayAction, parentGroup);
+		item->setPos(0,0);
+		item->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
-		SelectableActions* deleteItem = new SelectableActions
-				(_componentDeleteAction, parentGroup);
-		deleteItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		deleteItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
-
-		SelectableActions* closeItem = new SelectableActions
-				(_closeOverlayAction, parentGroup);
-		closeItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
-
-		SelectableActions* copyItem = new SelectableActions
-				(_componentCopyAction, parentGroup);
-		copyItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		copyItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;
-
-		/*SelectableActions* layerItem = new SelectableActions
-				(_startLayerManager, parentGroup);
-		layerItem->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
-		layerItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-		angle += delta;*/
-
-		parentGroup->setPos(scenePos);
-		parentGroup->setZValue(Z_UIVIEW);
 		_mainController->setTapOverride(true);
+	}
+
+	void TouchAndHoldController::enableLayerOverlay(Component *component, QPointF scenePos)
+	{
+		if (_mainController == nullptr || _view == nullptr) return;
+
+		_componentEditMode = true;
+		_selectedComponent = component;
+		_scenePos = scenePos;
+
+		drawDecor();
+
+		// Add actual stuff
+		float angle = 0;
+		float delta = 60;	// deg
+		float length = 0.75f * dpi;
+
+		auto addLayerItem = [&] (cdLayerIndex index) {
+			auto item = new LayerSelectorActions(getLayerName(index), index,
+												 _selectLayer, parentGroup);
+			item->setPos(length * cos(angle * _PI_/180.0f), length * sin(angle * _PI_/180.0f));
+			// It's ok.. we will delete these at the end
+			connect(item, SIGNAL(onTrigger(cdLayerIndex)),
+					this, SLOT(slotLayerUpdate(cdLayerIndex)));
+
+			item->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+			angle += delta;
+
+			if (index == _selectedComponent->layerIndex())
+			{
+				// This guy is special
+				QGraphicsColorizeEffect* effect = new QGraphicsColorizeEffect(item);
+				effect->setColor(QColor(0,0,255,255));
+				effect->setStrength(0.75f);
+				item->setGraphicsEffect(effect);
+
+				QPropertyAnimation *animation = new QPropertyAnimation(effect, "strength");
+				animation->setDuration(2000);
+				animation->setStartValue(0);
+				animation->setEndValue(0.75f);
+				animation->setLoopCount(25);
+				animation->setEasingCurve(QEasingCurve::OutInBounce);
+				animation->start();
+			}
+		};
+
+		addLayerItem(GROUND);
+		addLayerItem(LAYER_01);
+		addLayerItem(LAYER_02);
+		addLayerItem(LAYER_03);
+		addLayerItem(LAYER_04);
+		addLayerItem(LAYER_05);
+
+		auto item = new SelectableActions(_closeOverlayAction, parentGroup);
+		item->setPos(0,0);
+		item->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
 	}
 
 	void TouchAndHoldController::enableOverlay(cdJoint *physicsJoint, QPointF scenePos)
@@ -287,36 +290,7 @@ namespace CDI
 
 		_mainController->setTapOverride(true);
 
-		if (parentGroup) delete parentGroup;
-
-		float center_radius = 0.15f * dpi;
-
-		parentGroup = new QGraphicsItemGroup;
-		_mainController->_scene->addItem(parentGroup);
-
-		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
-		QGraphicsPathItem* decor = new QGraphicsPathItem(parentGroup);
-		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
-
-		// Set up colors
-		QPen pen = QPen();
-		QColor penColor = QColor(100,100,100); //QColor(200,200,255);
-		pen.setColor(penColor);
-		pen.setWidth(3);
-		QBrush brush = QBrush(Qt::SolidPattern);
-		brush.setColor((penColor.setAlpha(245), penColor.lighter(20)));
-
-		// Set up decor
-		QPainterPath path;
-		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
-		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
-		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
-		decor->setPath(path);
-		decor->setPen(pen);
-		decor->setBrush(brush);
-
-		pen.setColor(Qt::black);
-		pen.setWidth(5);
+		drawDecor();
 
 		/*PinJointLimitsSelector * limiter = */
 		new PinJointLimitsSelector (physicsJoint, parentGroup);
@@ -326,9 +300,6 @@ namespace CDI
 				(_closeOverlayAction, parentGroup);
 		closeItem->setPos(0,0);
 		closeItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		parentGroup->setPos(scenePos);
-		parentGroup->setZValue(Z_UIVIEW);
 	}
 
 	void TouchAndHoldController::overlayComponentOptions(Component* component)
@@ -460,34 +431,11 @@ namespace CDI
 
 	void TouchAndHoldController::enablePinJointOverlay(cdPinJoint *pinjoint, QPointF scenePos)
 	{
+		_jointEditMode = true;
+		_selectedJoint = pinjoint;
+		_scenePos = scenePos;
 
-		float center_radius = 0.25f * dpi;
-		float ring_radius = 1.0f * dpi;
-
-		parentGroup = new QGraphicsItemGroup;
-		pinjoint->scene()->addItem(parentGroup);
-		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		QGraphicsPathItem* decor =new QGraphicsPathItem(parentGroup);
-		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-		// Set up colors
-		QPen pen = QPen();
-		QColor penColor = Qt::blue;
-		pen.setColor(penColor);
-		pen.setWidth(3);
-		QBrush brush = QBrush(Qt::SolidPattern);
-		brush.setColor((penColor.setAlpha(150), penColor));
-
-		// Set up decor
-		QPainterPath path;
-		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
-		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
-		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
-		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
-		decor->setPath(path);
-		decor->setPen(pen);
-		decor->setBrush(brush);
+		drawDecor();
 
 		// Add actual stuff
 		float angle = 0;
@@ -519,10 +467,7 @@ namespace CDI
 			disableLimitItem->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 			angle += 60;
 		}
-		parentGroup->setPos(scenePos);
-		parentGroup->setZValue(Z_UIVIEW);
-		parentGroup->setPanelModality(QGraphicsItem::SceneModal);
-		parentGroup->setFlag(QGraphicsItem::ItemIsPanel);
+
 		_mainController->setTapOverride(true);
 
 		// Get the settings and use these to update the toolbar
@@ -593,6 +538,64 @@ namespace CDI
 		_mainController->setMotorParams(jointDef->enableMotor,
 										jointDef->motorSpeed * TO_RPM_FROM_RAD_SEC,
 										jointDef->maxMotorForce);
+	}
+
+	void TouchAndHoldController::drawDecor()
+	{
+		if (parentGroup) delete parentGroup;
+
+		float center_radius = 0.1f * dpi;
+		float ring_radius = 1.0f * dpi;
+
+		parentGroup = new QGraphicsItemGroup;
+		if (_selectedComponent && _componentEditMode)
+			_selectedComponent->scene()->addItem(parentGroup);
+		else if (_selectedJoint && _jointEditMode)
+			_selectedJoint->scene()->addItem(parentGroup);
+
+		parentGroup->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		QGraphicsPathItem* decor =new QGraphicsPathItem(parentGroup);
+		decor->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+		// Set up colors
+		QPen pen = QPen();
+		QColor penColor = Qt::green; //QColor(200,200,255);
+		pen.setColor(penColor);
+		pen.setWidth(3);
+		QBrush brush = QBrush(Qt::SolidPattern);
+		brush.setColor((penColor.setAlpha(200), penColor.lighter(75)));
+
+		// Set up decor
+		QPainterPath path;
+		path.addEllipse(QRectF(-center_radius, -center_radius, 2*center_radius, 2*center_radius));
+		path.addEllipse(QRectF(-ring_radius, -ring_radius, 2*ring_radius, 2*ring_radius));
+		path.moveTo(0, -center_radius); path.lineTo(0, center_radius);
+		path.moveTo(-center_radius, 0); path.lineTo(center_radius, 0);
+		decor->setPath(path);
+		decor->setPen(pen);
+		decor->setBrush(brush);
+
+		// animate the decor
+		QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
+		effect->setOpacity(1.0f);
+		decor->setGraphicsEffect(effect);
+		QPropertyAnimation *animation = new QPropertyAnimation(effect, "opacity");
+		animation->setDuration(2000);
+		animation->setStartValue(0.1f);
+		animation->setEndValue(1.0f);
+		animation->start(QAbstractAnimation::DeleteWhenStopped);
+		effect->setParent(animation);	// delete the effect when animation is over
+
+		// scale the menu
+		QPropertyAnimation * scaleAnimation = new QPropertyAnimation(this, "menuScale");
+		scaleAnimation->setDuration(1500);
+		scaleAnimation->setStartValue(0.01f);
+		scaleAnimation->setEndValue(1.0f);
+		scaleAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+
+		parentGroup->setPos(_scenePos);
+		parentGroup->setZValue(Z_UIVIEW);
 	}
 
 	void TouchAndHoldController::slotCloseOverlay()
@@ -673,14 +676,30 @@ namespace CDI
 		slotCloseOverlay();
 	}
 
+	void TouchAndHoldController::slotInitLayerselectAction()
+	{
+		if (!_componentEditMode) return;
+		// Just initialize this shit
+		enableLayerOverlay(_selectedComponent, _scenePos);
+	}
+
+	void TouchAndHoldController::slotLayerUpdate(cdLayerIndex index)
+	{
+		if (!_componentEditMode) return;
+		qDebug() << "updating the layer from " << _selectedComponent->layerIndex()
+				 << "to " << index;
+		_selectedComponent->setLayerIndex(index);
+		// Also updates the current layer of the page
+		_mainController->page()->setCurrentLayer(index);
+		slotCloseOverlay();
+	}
+
 	void TouchAndHoldController::slotEnableCollisionAction()
 	{
 		if (_componentEditMode)
 		{
 			QMessageBox::about(nullptr, "Collision layer update",
 							   "feature implementation is partial!@slotEnableCollisionAction");
-			_selectedComponent->groupIndex = 1;
-			_selectedComponent->onCollisionBitsUpdate();
 			slotCloseOverlay();
 		}
 	}
@@ -691,8 +710,6 @@ namespace CDI
 		{
 			QMessageBox::about(nullptr, "Collision layer update",
 							   "feature implementation is partial!@slotEnableCollisionAction");
-			_selectedComponent->groupIndex = -1;
-			_selectedComponent->onCollisionBitsUpdate();
 			slotCloseOverlay();
 		}
 	}
