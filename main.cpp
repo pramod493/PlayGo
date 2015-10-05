@@ -30,7 +30,9 @@
 #include <QGraphicsScene>
 
 #ifdef Q_OS_LINUX
+#ifdef ENABLE_TUIO
 #include <qtuio.h>
+#endif //ENABLE_TUIO
 #endif //Q_OS_LINUX
 
 #include "qCustomPlot/qcustomplot.h"
@@ -179,6 +181,7 @@ int main(int argc, char *argv[])
 	 * Initialize TUIO and attach to the sketch view
 	 * **************************************************************/
 #ifdef Q_OS_LINUX
+#ifdef ENABLE_TUIO
 	bool tuio_enabled = false;
 	if (tuio_enabled)	// Set to true if TUIO is enabled
 	{
@@ -186,6 +189,7 @@ int main(int argc, char *argv[])
 		QTuio* tuio = new QTuio(window->sketchView);
 		tuio->run();
 	}
+#endif //ENABLE_TUIO
 #endif //Q_OS_LINUX
 	/****************************************************************
 	 * Launch polygonizer in the main window

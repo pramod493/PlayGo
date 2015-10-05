@@ -14,9 +14,9 @@ TEMPLATE = app
 
 RESOURCES += images.qrc \
 	overlayimages.qrc
-unix {
-include ($$PWD/QtTuio/qTUIO.pri)
-}
+#unix {
+#include ($$PWD/QtTuio/qTUIO.pri)
+#}
 
 include ($$PWD/Core/PlayGoCore.pri)
 
