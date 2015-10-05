@@ -338,7 +338,7 @@ namespace CDI
 
 Q_DECLARE_METATYPE(CDI::Material)
 Q_DECLARE_METATYPE(CDI::PhysicsSettings)
-Q_DECLARE_METATYPE(CDI::PhysicsManager)
+//Q_DECLARE_METATYPE(CDI::PhysicsManager)
 
 /* Random code snippets
  *

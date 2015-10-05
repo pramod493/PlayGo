@@ -1636,7 +1636,8 @@ void PlayGoController::onSearchItemSelect(SearchResult *result)
 
 void PlayGoController::onSearchItemSelect(cdSearchGraphicsItem *result)
 {
-	onSearchItemSelect(&result->getResult());
+	SearchResult sr = result->getResult();
+	onSearchItemSelect(&sr);
 	closeSearchResultDisplay();
 }
 

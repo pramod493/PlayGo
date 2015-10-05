@@ -1,4 +1,4 @@
-#include "cdiSearchGraphicsItem.h"
+#include "cdisearchgraphicsitem.h"
 #include <QGraphicsScene>
 #include "QsLog.h"
 #include "sketchscene.h"

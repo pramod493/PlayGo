@@ -1,7 +1,7 @@
 #ifndef __LOADMODEL_H__
 #define __LOADMODEL_H__
 #include "QObject"
-#include "playgocontroller.h"
+#include "PlayGoController.h"
 #include "polygon2d.h"
 
 namespace CDI

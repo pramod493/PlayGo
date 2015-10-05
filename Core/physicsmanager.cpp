@@ -30,8 +30,17 @@ namespace CDI
 	}
 
 	PhysicsManager::PhysicsManager(QObject *parent)
-		: PhysicsManager(PhysicsSettings(), parent)
-	{	}
+		: QObject(parent)
+	//: PhysicsManager(PhysicsSettings(), parent)
+	{
+		defaultPhysicsScale = getPhysicsScale();
+
+		_jointList = QList<cdJoint*>();
+
+		_settings = PhysicsSettings();
+		_enableDebugView = true;
+		init();
+	}
 
 	PhysicsManager::PhysicsManager(const PhysicsManager &physicsManager)
 		: QObject(physicsManager.parent())
