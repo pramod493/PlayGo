@@ -18,6 +18,7 @@ namespace CDI
 	TouchAndHoldController::TouchAndHoldController(QObject *parent) : QObject(parent)
 	{
 		dpi = 175;
+		menuAnimationTime = 1200;	// ms
 
 		_mainController = NULL;
 
@@ -239,7 +240,7 @@ namespace CDI
 				item->setGraphicsEffect(effect);
 
 				QPropertyAnimation *animation = new QPropertyAnimation(effect, "strength");
-				animation->setDuration(2000);
+				animation->setDuration(menuAnimationTime);
 				animation->setStartValue(0);
 				animation->setEndValue(0.75f);
 				animation->setLoopCount(25);
@@ -581,7 +582,7 @@ namespace CDI
 		effect->setOpacity(1.0f);
 		decor->setGraphicsEffect(effect);
 		QPropertyAnimation *animation = new QPropertyAnimation(effect, "opacity");
-		animation->setDuration(2000);
+		animation->setDuration(menuAnimationTime);
 		animation->setStartValue(0.1f);
 		animation->setEndValue(1.0f);
 		animation->start(QAbstractAnimation::DeleteWhenStopped);

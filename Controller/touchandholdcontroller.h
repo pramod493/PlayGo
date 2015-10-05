@@ -30,6 +30,7 @@ namespace CDI
 		Q_PROPERTY(float menuScale READ getMenuScale WRITE setMenuScale)
 	public:
 		int dpi;
+		int menuAnimationTime;	//in ms
 	protected:
 		PlayGoController *_mainController;
 		QGraphicsView *_view;
