@@ -3,6 +3,7 @@
 #include "QObject"
 #include "PlayGoController.h"
 #include "polygon2d.h"
+#include "qCustomPlot/qcustomplot.h"
 
 namespace CDI
 {
@@ -12,6 +13,9 @@ namespace CDI
 	private:
 		PlayGoController* 	controller;
 		Page* 				page;
+		QVector<double> vecXaxis;
+		QVector<double> vecYaxis;
+		QCustomPlot *customPlot;
 
 	public:
 		LoadModel(PlayGoController* playgocontroller);

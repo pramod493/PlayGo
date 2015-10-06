@@ -90,8 +90,44 @@ namespace CDI
 				(c4, c1, QPointF(300,200),
 				 false, false, 100, 50, 0, 720);
 		}
-		updateComponentScale(c1, 0.90f);
-		updateComponentScale(c4, 1.25f);
+//		updateComponentScale(c2, 1.25f);
+//		updateComponentScale(c1, 0.90f);
+//		updateComponentScale(c4, 1.25f);
+
+		{
+			// Do some plotting stuff
+			customPlot = new QCustomPlot();
+			customPlot->addGraph();
+			// Add initial values
+			vecXaxis.push_back(0);
+			//vecXaxis.push_back(c2->physicsBody()->GetAngularVelocity());
+			vecYaxis.push_back(c3->physicsBody()->GetAngularVelocity());
+			customPlot->graph(0)->setData(vecXaxis, vecYaxis);
+			customPlot->xAxis->setLabel("x-axis");
+			customPlot->yAxis->setLabel("y-axis");
+			customPlot->rescaleAxes();
+			customPlot->replot();
+
+			auto addPlotPoint = [=]()
+			{
+				//qDebug() << c1->rotation() << c2->rotation();
+				//qDebug() << vecXaxis << vecYaxis;
+				//vecXaxis.push_back(c2->physicsBody()->GetAngularVelocity());
+				vecXaxis.push_back(vecXaxis.last()+1);
+				//vecYaxis.push_back(fmod(c2->rotation(), 360));
+				// Lets see what all we can plot
+				vecYaxis.push_back(c3->physicsBody()->GetAngularVelocity());
+
+				// Clip the vectors beyond a given length
+				customPlot->graph(0)->setData(vecXaxis, vecYaxis);
+				customPlot->rescaleAxes();
+				customPlot->replot();
+			};
+
+			connect(page->getPhysicsManager(), &PhysicsManager::physicsStepComplete,
+					addPlotPoint);
+			customPlot->show();
+		}
 
 		return;	// stop at 4-bar
 		// 1
