@@ -10,6 +10,10 @@
 #include "commonfunctions.h"
 #include "physicsjoint.h"
 #include "SelectableActions.h"
+#include "qCustomPlot/qcustomplot.h"
+#include "drawplotui.h"
+
+#include <QMessageBox>
 
 class QGraphicsObject;
 class QGraphicsPathItem;
@@ -37,6 +41,7 @@ namespace CDI
 
 		QAction *_closeOverlayAction;
 
+		QAction *_plotParamsAction;
 		QAction *_componentLockAction;
 		QAction *_componentUnlockAction;
 		QAction *_componentEditAction;		// Edit shape action

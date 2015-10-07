@@ -23,6 +23,8 @@ namespace CDI
 		_mainController = NULL;
 
 		_closeOverlayAction			= new QAction(QIcon(":/images/overlay/close-02.png"), tr("Close"), this);
+
+		_plotParamsAction			= new QAction(QIcon(":/images/overlay/chart59.png"), tr("Plots"), this);
 		_componentLockAction		= new QAction(QIcon(":/images/overlay/lock.png"), tr("Lock"), this);
 		_componentUnlockAction		= new QAction(QIcon(":/images/overlay/unlock.png"), tr("Unlock"), this);
 		_componentEditAction		= new QAction(QIcon(":/images/overlay/edit.png"), tr("Edit"), this);
@@ -60,6 +62,16 @@ namespace CDI
 		// Close
 		connect(_closeOverlayAction, SIGNAL(triggered()),
 				this, SLOT(slotCloseOverlay()));
+
+		// Plot
+		connect(_plotParamsAction, &QAction::triggered,
+				[=](){
+			auto plotui = new DrawPlotUI();
+			plotui->component = _selectedComponent;
+			plotui->show();
+			slotCloseOverlay();}
+		);
+
 		// Lock
 		connect(_componentLockAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentLockAction()));

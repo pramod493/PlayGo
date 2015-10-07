@@ -11,5 +11,6 @@
         <file>images/overlay/unlock.png</file>
         <file>images/overlay/dummy.png</file>
         <file>images/overlay/layers.png</file>
+        <file>images/overlay/chart59.png</file>
     </qresource>
 </RCC>

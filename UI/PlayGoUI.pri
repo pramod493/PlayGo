@@ -9,7 +9,8 @@ SOURCES += \
     $$PWD/colorselectortoolbar.cpp \
     $$PWD/modelviewtreewidget.cpp \
     $$PWD/searchview.cpp \
-    $$PWD/graphicssearchitem.cpp 
+    $$PWD/graphicssearchitem.cpp \ 
+    $$PWD/drawplotui.cpp
 
 HEADERS += \
     $$PWD/tabletapplication.h \
@@ -21,6 +22,10 @@ HEADERS += \
     $$PWD/colorselectortoolbar.h \
     $$PWD/modelviewtreewidget.h \
     $$PWD/searchview.h \
-    $$PWD/graphicssearchitem.h
+    $$PWD/graphicssearchitem.h \
+    $$PWD/drawplotui.h
 
 DISTFILES +=
+
+FORMS += \
+    $$PWD/drawplotui.ui
