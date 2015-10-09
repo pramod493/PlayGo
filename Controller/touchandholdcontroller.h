@@ -132,25 +132,8 @@ namespace CDI
 
 	public slots:
 		void slotCloseOverlay();
-		void slotComponentLockAction();
-		void slotComponentUnlockAction();
 		void slotComponentEditAction();
-		void slotComponentCopyAction();
-		void slotComponentDisableScaleAction();
-		void slotComponentDeleteAction();
-		void slotInitLayerselectAction();
 		void slotLayerUpdate(cdLayerIndex index);
-		void slotEnableCollisionAction();
-		void slotDisableCollisionAction();
-
-		void slotJointDelete();
-		void slotEnableMotor();
-		void slotDisableMotor();
-		void slotEnableLimits();
-		void slotDisableLimits();
-		void slotEditJointSpeed();
-		void slotEditJointTorque();
-
 		void slotMotorParamsChange();
 	};
 }

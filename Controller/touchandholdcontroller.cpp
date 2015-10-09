@@ -68,60 +68,147 @@ namespace CDI
 				[=](){
 			auto plotui = new DrawPlotUI();
 			plotui->component = _selectedComponent;
+			plotui->physicsmanager = _mainController->page()->getPhysicsManager();
 			plotui->show();
 			slotCloseOverlay();}
 		);
 
 		// Lock
-		connect(_componentLockAction, SIGNAL(triggered()),
-				this, SLOT(slotComponentLockAction()));
+		connect(_componentLockAction, &QAction::triggered,
+				[&](){
+			if (_componentEditMode)
+			{
+				_selectedComponent->setStatic(true);
+			}
+			slotCloseOverlay();
+		});
+		//this, SLOT(slotComponentLockAction()));
 		// Unlock
-		connect(_componentUnlockAction, SIGNAL(triggered()),
-				this, SLOT(slotComponentUnlockAction()));
+		connect(_componentUnlockAction, &QAction::triggered,
+				[&](){
+			if (_componentEditMode)	_selectedComponent->setStatic(false);
+			slotCloseOverlay();
+		});
 		// Edit
 		connect(_componentEditAction, SIGNAL(triggered()),
 				this, SLOT(slotComponentEditAction()));
 		// Copy
-		connect(_componentCopyAction, SIGNAL(triggered()),
-				this, SLOT(slotComponentCopyAction()));
+		connect(_componentCopyAction,  &QAction::triggered,
+				[&](){
+			if (_componentEditMode && _selectedComponent != nullptr)
+			{
+				auto newComponent =
+						_mainController->_page->createComponent(_selectedComponent);
+				/*QLOG_INFO() << "Component copied!" << _selectedComponent->id().toString()
+							<< newComponent->id().toString();*/
+				newComponent->moveBy(20,20);
+			}
+			slotCloseOverlay();
+		});
+
 		// Disable scaling
-		connect(_componentDisableScaleAction, SIGNAL(triggered()),
-				this, SLOT(slotComponentDisableScaleAction()));
+		connect(_componentDisableScaleAction,  &QAction::triggered,
+				[&](){
+			if (!_componentEditMode) return;
+			_selectedComponent->disableScaling = !(_selectedComponent->disableScaling);
+			slotCloseOverlay();
+		});
+
 		// Delete
-		connect(_componentDeleteAction, SIGNAL(triggered()),
-				this, SLOT(slotComponentDeleteAction()));
+		connect(_componentDeleteAction,  &QAction::triggered,
+				[&](){
+			if (!_componentEditMode) return;
+			_mainController->_page->destroyComponent(_selectedComponent);
+			slotCloseOverlay();
+		});
+
 		// Layers
-		connect(_startLayerManager, SIGNAL(triggered()),
-				this, SLOT(slotInitLayerselectAction()));
+		connect(_startLayerManager,  &QAction::triggered,
+				[&](){
+			if (!_componentEditMode) return;
+			// Just initialize this shit
+			enableLayerOverlay(_selectedComponent, _scenePos);
+		});
 
 		// Enable collision
-		connect(_enableComponentCollision, SIGNAL(triggered()),
-				this, SLOT(slotEnableCollisionAction()));
+		connect(_enableComponentCollision,  &QAction::triggered,
+				[&](){
+			if (_componentEditMode)
+				QMessageBox::about(nullptr, "Collision layer update",
+								   "feature implementation is partial!@slotEnableCollisionAction");
+			slotCloseOverlay();
+		});
+		//this, SLOT(slotEnableCollisionAction()));
 		// Disable collision
-		connect(_disableComponentCollision, SIGNAL(triggered()),
-				this, SLOT(slotDisableCollisionAction()));
+		connect(_disableComponentCollision,  &QAction::triggered,
+				[&](){
+			if (_componentEditMode)
+				QMessageBox::about(nullptr, "Collision layer update",
+								   "feature implementation is partial!@slotEnableCollisionAction");
+			slotCloseOverlay();
+		});
 
 		// Joint delete
-		connect(_jointDeleteAction, SIGNAL(triggered()),
-				this, SLOT(slotJointDelete()));
+		connect(_jointDeleteAction, &QAction::triggered,
+				[&](){
+			if (_jointDeleteAction)
+			{
+				delete _selectedJoint;	// it takes care of stuff
+				_selectedJoint = nullptr;
+			}
+			slotCloseOverlay();
+		});
 		// Motor enable
-		connect(_enableMotorAction, SIGNAL(triggered()),
-				this, SLOT(slotEnableMotor()));
+		connect(_enableMotorAction,   &QAction::triggered,
+				[&]() {
+
+		});
+
 		// Motor disable
-		connect(_disableMotorAction, SIGNAL(triggered()),
-				this, SLOT(slotDisableMotor()));
+		connect(_disableMotorAction,  &QAction::triggered,
+				[&]() {
+
+		});
+
 		// Limits enable
-		connect(_enableLimitsAction, SIGNAL(triggered()),
-				this, SLOT(slotEnableLimits()));
+		connect(_enableLimitsAction,  &QAction::triggered,
+				[&](){
+			if (_jointEditMode && _selectedJoint->jointType() == e_revoluteJoint)
+			{
+				if (parentGroup) delete parentGroup;
+				parentGroup = 0;	// Clean up
+				enableJointLimitsSelection(static_cast<cdPinJoint*>(_selectedJoint), _scenePos);
+			} else
+			{
+				slotCloseOverlay();
+			}
+		});
+
 		// Limits disable
-		connect(_disableLimitsAction, SIGNAL(triggered()),
-				this, SLOT(slotDisableLimits()));
+		connect(_disableLimitsAction,  &QAction::triggered,
+				[&](){
+			if (_jointEditMode && _selectedJoint->jointType() == e_revoluteJoint)
+			{
+				auto pinjoint = dynamic_cast<cdPinJoint*>(_selectedJoint);
+				pinjoint->joint()->EnableLimit(false);
+				pinjoint->jointDef()->enableLimit = false;
+			}
+			slotCloseOverlay();
+		});
+
 		// Change speed
-		connect(_editJointSpeedAction, SIGNAL(triggered()),
-				this, SLOT(slotEditJointSpeed()));
+		connect(_editJointSpeedAction, &QAction::triggered,
+				[&]()
+		{
+			QMessageBox::about(nullptr, "Motor speed", "Edit the motor speed from the entry box");
+		});
+
 		// Change torque - Unused
-		connect(_editJointTorque, SIGNAL(triggered()),
-				this, SLOT(slotEditJointTorque()));
+		connect(_editJointTorque, &QAction::triggered,
+				[&]()
+		{
+			QMessageBox::about(nullptr, "Motor speed", "Edit the motor speed from the entry box");
+		});
 	}
 
 	PlayGoController *TouchAndHoldController::mainController() const
@@ -209,6 +296,8 @@ namespace CDI
 		addOverlayItem(_componentDeleteAction);
 		addOverlayItem(_componentCopyAction);
 		addOverlayItem(_startLayerManager);
+		// Show plot options
+		addOverlayItem(_plotParamsAction);
 
 		auto item = new SelectableActions(_closeOverlayAction, parentGroup);
 		item->setPos(0,0);
@@ -391,9 +480,9 @@ namespace CDI
 		case QEvent::TabletPress :
 		case QEvent::TabletMove :
 		{
-				QTabletEvent* tabletEvent = static_cast<QTabletEvent*>(event);
-				handleSelection(_view->mapToScene(tabletEvent->pos()), UI::Update);
-				return true;
+			QTabletEvent* tabletEvent = static_cast<QTabletEvent*>(event);
+			handleSelection(_view->mapToScene(tabletEvent->pos()), UI::Update);
+			return true;
 		}
 		case QEvent::TabletRelease :
 		{
@@ -423,22 +512,22 @@ namespace CDI
 
 		switch (inputState)
 		{
-			case UI::Began :
-			{
-				break;
-			}
-			case UI::Update :
-			{
-				break;
-			}
-			case UI::End :
-			{
-				break;
-			}
-			case UI::Cancel :
-			{
-				// This might not be meaningful in many cases
-			}
+		case UI::Began :
+		{
+			break;
+		}
+		case UI::Update :
+		{
+			break;
+		}
+		case UI::End :
+		{
+			break;
+		}
+		case UI::Cancel :
+		{
+			// This might not be meaningful in many cases
+		}
 		}
 	}
 
@@ -634,66 +723,16 @@ namespace CDI
 		_mainController->setTapOverride(false);
 	}
 
-	void TouchAndHoldController::slotComponentLockAction()
-	{
-		if (_componentEditMode)
-		{
-			_selectedComponent->setStatic(true);
-			slotCloseOverlay();
-		}
-	}
-
-	void TouchAndHoldController::slotComponentUnlockAction()
-	{
-		if (!_componentEditMode) return;
-		_selectedComponent->setStatic(false);
-		slotCloseOverlay();
-	}
-
 	void TouchAndHoldController::slotComponentEditAction()
 	{
-			if (!_componentEditMode && _selectedComponent) return;
-			// TODO - launch edit window
-			auto children = _selectedComponent->childItemByType(Pixmap::Type);
-			if (children.size())
-			{
-				// Component contains an image and can be edited
-
-			}
-	}
-
-	void TouchAndHoldController::slotComponentCopyAction()
-	{
-		if (_componentEditMode && _selectedComponent != nullptr)
+		if (!_componentEditMode && _selectedComponent) return;
+		// TODO - launch edit window
+		auto children = _selectedComponent->childItemByType(Pixmap::Type);
+		if (children.size())
 		{
-			auto newComponent =
-					_mainController->_page->createComponent(_selectedComponent);
-			/*QLOG_INFO() << "Component copied!" << _selectedComponent->id().toString()
-						<< newComponent->id().toString();*/
-			newComponent->moveBy(20,20);
+			// Component contains an image and can be edited
+
 		}
-		slotCloseOverlay();
-	}
-
-	void TouchAndHoldController::slotComponentDisableScaleAction()
-	{
-		if (!_componentEditMode) return;
-		_selectedComponent->disableScaling = !(_selectedComponent->disableScaling);
-		slotCloseOverlay();
-	}
-
-	void TouchAndHoldController::slotComponentDeleteAction()
-	{
-		if (!_componentEditMode) return;
-		_mainController->_page->destroyComponent(_selectedComponent);
-		slotCloseOverlay();
-	}
-
-	void TouchAndHoldController::slotInitLayerselectAction()
-	{
-		if (!_componentEditMode) return;
-		// Just initialize this shit
-		enableLayerOverlay(_selectedComponent, _scenePos);
 	}
 
 	void TouchAndHoldController::slotLayerUpdate(cdLayerIndex index)
@@ -705,80 +744,6 @@ namespace CDI
 		// Also updates the current layer of the page
 		_mainController->page()->setCurrentLayer(index);
 		slotCloseOverlay();
-	}
-
-	void TouchAndHoldController::slotEnableCollisionAction()
-	{
-		if (_componentEditMode)
-		{
-			QMessageBox::about(nullptr, "Collision layer update",
-							   "feature implementation is partial!@slotEnableCollisionAction");
-			slotCloseOverlay();
-		}
-	}
-
-	void TouchAndHoldController::slotDisableCollisionAction()
-	{
-		if (_componentEditMode)
-		{
-			QMessageBox::about(nullptr, "Collision layer update",
-							   "feature implementation is partial!@slotEnableCollisionAction");
-			slotCloseOverlay();
-		}
-	}
-
-	void TouchAndHoldController::slotJointDelete()
-	{
-		if (_jointDeleteAction)
-		{
-			delete _selectedJoint;	// it takes care of stuff
-			_selectedJoint = nullptr;
-			slotCloseOverlay();
-		}
-	}
-
-	void TouchAndHoldController::slotEnableMotor()
-	{
-
-	}
-
-	void TouchAndHoldController::slotDisableMotor()
-	{
-
-	}
-
-	void TouchAndHoldController::slotEnableLimits()
-	{
-		if (_jointEditMode && _selectedJoint->jointType() == e_revoluteJoint)
-		{
-			if (parentGroup) delete parentGroup;
-			parentGroup = 0;	// Clean up
-			enableJointLimitsSelection(static_cast<cdPinJoint*>(_selectedJoint), _scenePos);
-		} else
-		{
-			slotCloseOverlay();
-		}
-	}
-
-	void TouchAndHoldController::slotDisableLimits()
-	{
-		if (_jointEditMode && _selectedJoint->jointType() == e_revoluteJoint)
-		{
-			auto pinjoint = dynamic_cast<cdPinJoint*>(_selectedJoint);
-			pinjoint->joint()->EnableLimit(false);
-			pinjoint->jointDef()->enableLimit = false;
-		}
-		slotCloseOverlay();
-	}
-
-	void TouchAndHoldController::slotEditJointSpeed()
-	{
-		QMessageBox::about(nullptr, "Motor speed", "Edit the motor speed from the entry box");
-	}
-
-	void TouchAndHoldController::slotEditJointTorque()
-	{
-		QMessageBox::about(nullptr, "Motor speed", "Edit the motor speed from the entry box");
 	}
 
 	void TouchAndHoldController::slotMotorParamsChange()

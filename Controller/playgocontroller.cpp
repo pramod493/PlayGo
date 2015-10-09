@@ -13,6 +13,7 @@
 #include <QGraphicsColorizeEffect>
 #include <QGraphicsBlurEffect>
 #include <QPropertyAnimation>
+#include <QMatrix4x4>
 
 #include "touchandholdcontroller.h"
 #include "mainsettings.h"
@@ -26,10 +27,10 @@ namespace CDI
 PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 	:QObject(parent)
 {
-	if (view == NULL || parent == NULL)
+	if (view == nullptr || parent == nullptr)
 	{
 		QLOG_FATAL() << "Invalid scene and view reference.";
-		QMessageBox::about(NULL, "Fatal error!",
+		QMessageBox::about(nullptr, "Fatal error!",
 						   "Cannot initialize controller. Invalid arguments in the constructor.\n Exiting now...");
 		QApplication::quit();
 	}
@@ -81,7 +82,7 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 
 PlayGoController::~PlayGoController()
 {
-	if (tree != NULL) delete tree;
+	if (tree) delete tree;
 }
 
 void PlayGoController::initController()
@@ -116,8 +117,8 @@ void PlayGoController::initController()
 	_highlightBrush = QBrush(Qt::NoBrush);
 
 	_isDrawingStroke = false;
-	_currentStroke = NULL;
-	_currentPolygon = NULL;
+	_currentStroke = nullptr;
+	_currentPolygon = nullptr;
 
 	// Lasso parameters
 	_lasso = new QGraphicsPolygonItem();
@@ -139,17 +140,17 @@ void PlayGoController::initController()
 
 	// Gesture recognizer stroke
 	_tmpStrokes = QList<PenStroke*>();
-	_currentConnectStroke = NULL;
+	_currentConnectStroke = nullptr;
 
 	// Force line
-	forceLine = NULL;
+	forceLine = nullptr;
 
 	// Slider variables
-	_sliderComponentA = NULL;
-	_sliderComponentB = NULL;
+	_sliderComponentA = nullptr;
+	_sliderComponentB = nullptr;
 	_sliderStartPos = QPointF();
 	_sliderEndPos = QPointF();
-	_sliderLineItem = NULL;
+	_sliderLineItem = nullptr;
 
 
 	sketchRecognizer = new PDollarRecognizer(this);		// Will make sure that this gets deleted with the object
@@ -183,21 +184,20 @@ void PlayGoController::brushPress(QPointF pos, float pressure, int time)
 
 void PlayGoController::brushMove(QPointF pos, float pressure, int time)
 {
-	if (_page == NULL) return;
-	if (!(_currentStroke == NULL) && _isDrawingStroke)
-		_currentStroke->push_point(Point2DPT(pos.x(),pos.y(),pressure, time));
+	if (_page == nullptr || _currentStroke == nullptr || !_isDrawingStroke) return;
+	_currentStroke->push_point(Point2DPT(pos.x(),pos.y(),pressure, time));
 }
 
 void PlayGoController::brushRelease(QPointF pos, float pressure, int time)
 {
-	if (_page == NULL || _currentStroke == NULL || !_isDrawingStroke) return;
+	if (_page == nullptr || _currentStroke == nullptr || !_isDrawingStroke) return;
 
 	_isDrawingStroke = false;
 	_currentStroke->push_point(Point2DPT(pos.x(),pos.y(),pressure, time));
 	_currentStroke->applySmoothing(2);
 
 	// Do the addition to the component here
-	if (_page->currentComponent() == NULL)
+	if (_page->currentComponent() == nullptr)
 	{
 		Component* currentComponent = _page->createComponent();
 		QTransform t;
@@ -265,7 +265,7 @@ void PlayGoController::shapeRelease(QPointF pos)
 		}
 	}
 	_toplevelWindow->colorToolbar->slotRandomizeColor();	// randomizes the main color after each selection
-	_currentPolygon = NULL;
+	_currentPolygon = nullptr;
 	_isDrawingPolygon = false;
 }
 
@@ -283,12 +283,13 @@ void PlayGoController::eraserMove(QPointF pos)
 			delete selectedStrokes[i];
 	} else
 	{
-		QList<QGraphicsItem*> selectedItems = _page->getSelectedItems(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
-		QList<QGraphicsItem*>::iterator iter;
-		for (iter = selectedItems.begin(); iter != selectedItems.end();
-			 ++iter)
+		auto selectedItems = _page->getSelectedItems(Point2D(pos.x(),pos.y()), _defaultPen.widthF());
+//		QList<QGraphicsItem*>::iterator iter;
+//		for (iter = selectedItems.begin(); iter != selectedItems.end();
+//			 ++iter)
+		for(auto selectedItem : selectedItems)
 		{
-			QGraphicsItem* selectedItem = *(iter);
+			//QGraphicsItem* selectedItem = *(iter);
 			if (selectedItem->type() == Component::Type)
 			{
 				_page->destroyComponent(qgraphicsitem_cast<Component*>(selectedItem));
@@ -423,7 +424,7 @@ void PlayGoController::gestureSketchModeFilter(QPointF scenePos, UI::EventState 
 		{
 			QLOG_WARN() << "Current stroke should have been NULL.";
 			delete _currentConnectStroke;
-			_currentConnectStroke = NULL;
+			_currentConnectStroke = nullptr;
 		}
 
 		_currentConnectStroke = new PenStroke();
@@ -443,14 +444,14 @@ void PlayGoController::gestureSketchModeFilter(QPointF scenePos, UI::EventState 
 	}
 	case UI::End :
 	{
-		if (_currentConnectStroke == NULL) break;
+		if (_currentConnectStroke == nullptr) break;
 		_currentConnectStroke->push_point(scenePos);
 
 		sketchRecognizer->addStroke(_currentConnectStroke->points);
 		_tmpStrokes.push_back(_currentConnectStroke);
 		sketchRecognizer->gbRecognize();
 
-		_currentConnectStroke = NULL;
+		_currentConnectStroke = nullptr;
 		break;
 	}
 	case UI::Cancel :
@@ -699,16 +700,16 @@ void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventSta
 		{
 			if (graphicsitem->type() != Pixmap::Type) continue;
 			// Must have a component attached
-			if (graphicsitem->parentItem() == NULL) continue;
+			if (graphicsitem->parentItem() == nullptr) continue;
 			// Pixmap must be of type component
 			if (graphicsitem->parentItem()->type() != Component::Type) continue;
 
 			Pixmap *pixmap = qgraphicsitem_cast<Pixmap*>(graphicsitem);
 			// We will use the shape for later stages
 			if (pixmap->contains(pixmap->mapFromScene(scenePos)) == false) continue;
-			Component* component
-					= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
-			QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
+			//Component* component
+			//		= qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
+			//QTransform t = QTransform::fromTranslate(scenePos.x(), scenePos.y());
 //			forceLine = new ForceGraphicsItem(0,0,0,0);
 //			forceLine->setTransform(t);
 //			_scene->addItem(forceLine);
@@ -728,7 +729,7 @@ void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventSta
 	}
 	case UI::End :
 	{
-		if (forceLine == NULL)
+		if (forceLine == nullptr)
 		{
 			QLOG_ERROR() << "ERROR!! forceLine should not be NULL.";
 			return;
@@ -759,7 +760,7 @@ void PlayGoController::forceModeFilter(QPointF scenePos, UI::EventState eventSta
 			}
 		}
 		delete forceLine;
-		forceLine = NULL;
+		forceLine = nullptr;
 		break;
 	}
 	case UI::Cancel :
@@ -994,7 +995,7 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
 		// \todo This does not capture the mouse events generated by pen
 		// Doing this at parent level will disrupt touch to m ouse conversions to other widgets too
-		if ( (mouseEvent != NULL ) &&
+		if ( (mouseEvent != nullptr ) &&
 			 (mouseEvent->source() != Qt::MouseEventSource::MouseEventNotSynthesized))
 		{
 			event->ignore();
@@ -1055,7 +1056,7 @@ bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 		QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
 		// Filter out the mouse double click generated by the stylus since it
 		// it creates issues. Use only hand to touch
-		if ( (mouseEvent != NULL ) &&
+		if ( (mouseEvent != nullptr ) &&
 			 (mouseEvent->source() == Qt::MouseEventSource::MouseEventNotSynthesized))
 		{
 			event->ignore();
@@ -1104,6 +1105,7 @@ QList<Component*> PlayGoController::getSelectableComponentsByPhysics(QPointF sce
 		if (graphicsitem->type() == Pixmap::Type
 				|| graphicsitem->type() == Polygon2D::Type  ) // Replace to accomodate other widgets
 		{
+			// TODO Can be better organized
 			if (graphicsitem->contains(graphicsitem->mapFromScene(scenePos)))
 			{
 				Component* c = qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
@@ -1386,7 +1388,6 @@ void PlayGoController::searchAction()
 		searchItemGroup->addToGroup(selectable);
 		++i;
 	}
-
 	for(SearchResult* searchResult : results)
 	{
 		QPoint screenPos = QPoint(screen_startx+ i * (each_image_width+image_margin),
@@ -1394,7 +1395,12 @@ void PlayGoController::searchAction()
 		cdSearchGraphicsItem *resultItem = new cdSearchGraphicsItem(searchResult, each_image_width);
 		resultItem->setPos(_view->mapToScene(screenPos));
 		searchItemGroup->addToGroup(resultItem);
-
+		//// Use perspective view in order to show a nice gallery view
+		//{
+		//	QMatrix4x4 m = QMatrix4x4(resultItem->transform());
+		//	m.rotate(i*30, QVector3D(0,1,0));
+		//	resultItem->setTransform(m.toTransform());
+		//}
 		connect(resultItem, SIGNAL(signalSearchItemSelected(cdSearchGraphicsItem*)),
 				this, SLOT(onSearchItemSelect(cdSearchGraphicsItem*)));
 
@@ -1469,15 +1475,15 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 	{
 	case UI::Sketch :
 	{
-		if (_isDrawingStroke && _currentStroke != NULL)
+		if (_isDrawingStroke && _currentStroke != nullptr)
 		{
-			delete _currentStroke; _currentStroke = NULL;
+			delete _currentStroke; _currentStroke = nullptr;
 			_isDrawingStroke = false;
 		}
 		break;
 	}
 	case UI::Shapes :
-		if (_isDrawingPolygon && _currentPolygon != NULL)
+		if (_isDrawingPolygon && _currentPolygon != nullptr)
 		{
 			if (_currentPolygon->parentItem())
 			{
@@ -1532,7 +1538,7 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 		}
 	}
 	// create component radial menu first
-	Component * selectedComponent = 0;
+	Component * selectedComponent = nullptr;
 	for (auto graphicsitem : selectedItems)
 	{
 		if (graphicsitem->type() == Component::Type)
@@ -1541,7 +1547,7 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 			break;
 		}
 		if ((graphicsitem->type() == Polygon2D::Type  || graphicsitem->type() == Pixmap::Type)
-				&& graphicsitem->parentItem() != NULL)
+				&& graphicsitem->parentItem() != nullptr)
 		{
 			selectedComponent = qgraphicsitem_cast<Component*>(graphicsitem->parentItem());
 			break;
@@ -2040,7 +2046,7 @@ void PlayGoController::setMode(UI::MODE newMode)
 void PlayGoController::clearCurrentScene()
 {
 	_page->deleteAll();
-	_currentStroke = NULL;
+	_currentStroke = nullptr;
 }
 
 void PlayGoController::drawMenusOnView(QPainter * painter, const QRectF & rect)
@@ -2109,26 +2115,25 @@ void PlayGoController::loadImage(QString imagePath, QObject* obj, QDropEvent* ev
 
 	QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
 	colorize->setColor(Qt::red);
-	colorize->setStrength(0.1);
+	colorize->setStrength(1.0);
 	component->setGraphicsEffect(colorize);
 
 	QPropertyAnimation *animation = new QPropertyAnimation(colorize, "strength");
 	animation->setDuration(2000);
-	animation->setStartValue(0.1f);
-	animation->setEndValue(1.0f);
+	animation->setStartValue(1.0f);
+	animation->setEndValue(0);
 	animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void PlayGoController::startSimulation()
 {
-	if (_page)
-	{
-		if (_page->scene() && _page->getPhysicsManager()->debugView)
-			_page->getPhysicsManager()->debugView->scene = _page->scene();
-		setMode(UI::None);
-		_page->getPhysicsManager()->start(20);
-		_page->getPhysicsManager()->setEnableMotor(true);
-	}
+	if (_page == nullptr) return;
+
+	if (_page->scene() && _page->getPhysicsManager()->debugView)
+		_page->getPhysicsManager()->debugView->scene = _page->scene();
+	setMode(UI::None);
+	_page->getPhysicsManager()->start(20);
+	_page->getPhysicsManager()->setEnableMotor(true);
 }
 
 void PlayGoController::pauseSimulation()

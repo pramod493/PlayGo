@@ -15,7 +15,7 @@ namespace CDI
 	float MainWindowAlpha = 0.75f;
 
 	//// Search related variables
-	QString SketchSaveFile("Imput.png");
+	QString SketchSaveFile("Input.png");
 	QString DatabaseDirectory("../../Database/Images/");
 	QString LogFilePath("./Debug/LogFile.txt");
 

@@ -12,43 +12,28 @@ namespace CDI
 		init();
 		_points = QVector<Point2DPT*>();
 		recalculateAABB();
-
 		setZValue(Z_STROKEVIEW);
-
 		_isStrokeFinalized = false;
 	}
 
 	Stroke::Stroke(QVector<Point2DPT*> points, QGraphicsItem* parent)
-		:QGraphicsPathItem(parent)
+		:Stroke(parent)
 	{
-		_points = QVector<Point2DPT*>();
-		// Perform deep copy
-		QVector<Point2DPT*>::const_iterator iter;
 		_points.reserve(_points.size());
-		for(iter = points.constBegin();
-			iter != points.constEnd();
-			++iter)
+		for (auto pt : points)
 		{
-			Point2DPT* pt = (*iter);
 			Point2DPT* copy = new Point2DPT(*pt);
 			_points.push_back(copy);
 		}
 		recalculateAABB();
-
-		setZValue(Z_STROKEVIEW);
-
-		_isStrokeFinalized = false;
 	}
 
 	Stroke::~Stroke()
 	{
-		if (parentItem()!= NULL)
+		if (auto graphicsitem = parentItem())
 		{
-			QGraphicsItem* graphicsitem = parentItem();
-			if (graphicsitem->type() == Component::Type)
+			if (Component* component = qgraphicsitem_cast<Component*>(graphicsitem))
 			{
-				Component* component =
-						qgraphicsitem_cast<Component*>(graphicsitem);
 				component->removeFromComponent(this);
 			}
 		}
@@ -110,7 +95,6 @@ namespace CDI
 		float width = pen().widthF() + margin;
 		float sqrWidth = width*width;
 		int num_points = _points.size() - 1;
-//		Point2DPT** points = _points.data();
 		for (int i=0; i< num_points; i++)
 		{
 			Point2DPT* p1 = _points[i];

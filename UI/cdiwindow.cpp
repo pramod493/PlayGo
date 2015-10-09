@@ -158,7 +158,7 @@ namespace CDI
 		//mainToolbar->addAction(resetAction);	// Not sure what to make of the reset simulation
 
 #ifdef Q_OS_WIN
-		mainToolbar->setIconSize(QSize(48,48));
+		mainToolbar->setIconSize(QSize(32,32));
 #endif
 #ifdef Q_OS_LINUX
 		mainToolbar->setIconSize(QSize(32,32));

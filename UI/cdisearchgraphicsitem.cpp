@@ -12,7 +12,7 @@ namespace CDI {
 		if (dim < 0) dim = 150;
 
 		setPen(QPen(Qt::green));
-		setBrush(QBrush(QColor(20,20,20,200), Qt::BDiagPattern));
+		setBrush(QBrush(QColor(20,20,20,200)/*, Qt::BDiagPattern*/));
 		setRect(0,0,dim, dim);
 
 		setAcceptDrops(true);

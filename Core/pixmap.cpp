@@ -7,9 +7,9 @@ namespace CDI
 	{
 		_id = uniqueHash();
 		_highlighted = false;
-		_physicsShape = NULL;
+		_physicsShape = nullptr;
 
-//        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+		//setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
 		setShapeMode(QGraphicsPixmapItem::MaskShape);
 
 		setZValue(Z_IMAGEVIEW);
@@ -25,12 +25,8 @@ namespace CDI
 	}
 
 	Pixmap::Pixmap(QString filepath, QGraphicsItem* parent)
-		: QGraphicsPixmapItem(parent)
+		: Pixmap(parent)
 	{
-		_id = uniqueHash();
-		_highlighted = false;
-		_physicsShape = NULL;
-
 		_filename = filepath;
 		QFile f(_filename);
 		if (f.exists())
@@ -38,58 +34,24 @@ namespace CDI
 			QPixmap p = QPixmap();
 			p.load(_filename);
 			setPixmap(p);
-//			initializePhysicsShape();
 		}
-
-		// NOTE - Set shape mode to AABB again if it hinders performance
-		// setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
-		setShapeMode(QGraphicsPixmapItem::MaskShape);
-
-		setZValue(Z_IMAGEVIEW);
-
-#ifdef CDI_DEBUG_DRAW_SHAPE
-		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
-		ellipse->setPen(QPen(Qt::blue));
-		ellipse->setBrush(QBrush(Qt::green, Qt::SolidPattern));
-		ellipse->setRect(QRectF(-10,-10,20,20));
-		ellipse->setTransform(QTransform());
-		ellipse->setZValue(1.0f);
-#endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
 	Pixmap::Pixmap(const QPixmap &pixmap, QString filepath, QGraphicsItem* parent)
-		: QGraphicsPixmapItem(pixmap, parent)
+		: Pixmap(parent)
 	{
-		_id = uniqueHash();
-		_highlighted = false;
-		_physicsShape = NULL;
-
+		setPixmap(pixmap);
 		_filename = filepath;
-//		setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
-		setShapeMode(QGraphicsPixmapItem::MaskShape);
-
-		setZValue(Z_IMAGEVIEW);
-
-#ifdef CDI_DEBUG_DRAW_SHAPE
-		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
-		ellipse->setPen(QPen(Qt::blue));
-		ellipse->setBrush(QBrush(Qt::green, Qt::SolidPattern));
-		ellipse->setRect(QRectF(-10,-10,20,20));
-		ellipse->setTransform(QTransform());
-		ellipse->setZValue(1.0f);
-#endif //CDI_DEBUG_DRAW_SHAPE
 	}
 
 	Pixmap::Pixmap(const Pixmap& copy)
-		:QGraphicsPixmapItem(copy.pixmap(), copy.parentItem())
+		: Pixmap(copy.parentItem())
 	{
-		_id = uniqueHash();
-		_highlighted = false;
+		setPixmap(copy.pixmap());
 		_physicsShape = new PhysicsShape(*copy._physicsShape);
 		_filename = copy.filename();
 		setShapeMode(copy.shapeMode());
 		setZValue(copy.zValue());
-
 		setTransform(copy.transform());
 	}
 

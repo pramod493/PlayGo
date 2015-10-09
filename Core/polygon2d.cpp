@@ -30,23 +30,10 @@ namespace CDI
 	}
 
 	Polygon2D::Polygon2D(const QPolygonF& polygon, QGraphicsItem* parent)
-		:QGraphicsPolygonItem(polygon, parent)
+		:Polygon2D(parent)
+		  //QGraphicsPolygonItem(polygon, parent)
 	{
-		_highlighted = false;
-		_id = uniqueHash();
-		applyCustomRenderSettings = false;
-		_internalPolygon = QPolygonF(polygon);
-		_physicsShape = NULL;
-
-		setZValue(Z_POLYGONVIEW);
-
-#ifdef CDI_DEBUG_DRAW_SHAPE
-		QGraphicsEllipseItem *ellipse = new QGraphicsEllipseItem(this);
-		ellipse->setRect(QRectF(-10,-10,20,20));
-		ellipse->setTransform(QTransform());
-
-		ellipse->setBrush(QBrush(Qt::green));
-#endif //CDI_DEBUG_DRAW_SHAPE
+		setPolygon(polygon);
 	}
 
 	Polygon2D::Polygon2D(const Polygon2D& copy)

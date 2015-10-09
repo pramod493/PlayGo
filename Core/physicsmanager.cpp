@@ -384,7 +384,7 @@ namespace CDI
 		}
 		emit physicsStepComplete();
 
-		{
+		if (false){
 			for(auto joint : _jointList)
 			{
 				if(auto pinjoint = dynamic_cast<cdPinJoint*>(joint))

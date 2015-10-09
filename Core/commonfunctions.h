@@ -63,6 +63,7 @@ namespace CDI
 		NONE
 	};
 
+
 	enum SelectionType : int {
 		OnItem,
 		Inside,
@@ -173,4 +174,5 @@ namespace CDI
 																		 float minPolygonSize = 4.0f, bool ignoreSmalls = true);
 
 }
+Q_DECLARE_FLAGS(itemtype, CDI::ItemType)
 #endif //__CDI__COMMONFUNCTIONS__

@@ -15,26 +15,26 @@ using namespace CDI;
 vector<string> getDummyResults()
 {
 	vector<string> ret;
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/REV_SHAFT_15.png"                );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/BEARING_SHAFT_57_08.png"         );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/SINUSOID.png"                    );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/0_1875_BALL_CUTTER_14.png"       );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/ASHAFT_PRT_06.png"               );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/ARIES63_01.png"                  );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/32T_4D_05W_14.png"               );
-	ret.push_back(getHomeDirectory().toStdString() +"/trans/SHAFT_62_08.png"                 );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/NUT_244_BACK_SHORTS_INNER_04.png");
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/84TEETH2_14.png"                 );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/GEAR32_15.png"                   );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/8MM_FLATHEAD_SCREWDRIVER_03.png" );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/88T_106D_05W_02.png"             );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/PIVOT_PIN.png"                   );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/TRACK_01.png"                    );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/1250195_02.png"                  );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/54TEETH2_16.png"                 );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/0_1875_BALL_CUTTER_PRT_14.png"   );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/BEARING_SHAFT_57_05.png"         );
-	ret.push_back(getHomeDirectory().toStdString() + "/trans/CLUSTER_COUNTERSHAFT_PRT_14.png" );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
+	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
 	return ret;
 }
 
@@ -85,7 +85,7 @@ namespace CDI
 	QList<SearchResult*> SearchManager::search(QString filePath, int numResults)
 	{
 		vector<string> results;
-		if(true)	// TODO - Eliminate for now
+		if(false)	// TODO - Eliminate for now
 		{
 			results = getDummyResults();
 		} else
@@ -100,14 +100,13 @@ namespace CDI
 		}
 		QDir originialImageDir(origImagePath);
 		QList<SearchResult*> searchResults;
-		for(vector<string>::iterator it = results.begin();
-			it != results.end(); ++it)
+		for(auto filepath : results)
 		{
-			QString str = QString::fromStdString(*it);
+			QString str = QString::fromStdString(filepath);
 			QFileInfo fileinfo = QFileInfo(str);
 			QString justFilename(fileinfo.fileName());
 			QString newFilepath = originialImageDir.filePath(justFilename);
-			SearchResult *searchResult = new SearchResult(newFilepath);
+			auto searchResult = new SearchResult(newFilepath);
 			searchResults.push_back(searchResult);
 		}
 		return searchResults;
