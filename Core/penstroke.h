@@ -29,7 +29,6 @@ protected:
 		int type() const { return Type; }
 
 		void push_point(QPointF& point);
-
 	};
 }
 #endif // PENSTROKE_H

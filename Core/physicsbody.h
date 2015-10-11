@@ -11,7 +11,7 @@ namespace CDI
 	class PhysicsManager;
 	class Component;
 	class Polygon2D;
-	class PhysicsBody : public AbstractModelItem
+	class PhysicsBody : public Item
 	{
 	protected:
 		b2Body* _b2body;

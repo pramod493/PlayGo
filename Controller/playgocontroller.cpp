@@ -16,7 +16,6 @@
 #include <QMatrix4x4>
 
 #include "touchandholdcontroller.h"
-#include "mainsettings.h"
 
 #include "cdiboxdebugdraw.h"
 #include <QDockWidget>
@@ -68,7 +67,7 @@ PlayGoController::PlayGoController(SketchView *view, CDIWindow *parent)
 
 	initController();
 
-	// We are not using the SearchView any more for displaying search results
+	// SaerchView has been removed
 	searchItemGroup = nullptr;
 	_searchResultsDisplayed = false;
 	// Triggers the closing of search results
@@ -360,6 +359,8 @@ void PlayGoController::connectPress(QPointF scenePos)
 	case ApplyForce :
 		forceModeFilter(scenePos, UI::Began);
 		break;
+	default :
+		break;
 	}
 }
 
@@ -383,6 +384,8 @@ void PlayGoController::connectMove(QPointF scenePos)
 		break;
 	case ApplyForce :
 		forceModeFilter(scenePos, UI::Update);
+		break;
+	default:
 		break;
 	}
 }
@@ -1133,6 +1136,8 @@ void PlayGoController::sketchAction(QTabletEvent *event)
 	case QEvent::TabletRelease :
 		brushRelease(sceneMappedPos, pressure, time);
 		break;
+	default :
+		break;
 	}
 }
 
@@ -1159,6 +1164,8 @@ void PlayGoController::sketchAction(QMouseEvent *event)
 			brushRelease(sceneMappedPos, pressure, time);
 			break;
 		}
+	default:
+		break;
 	}
 }
 
@@ -1175,6 +1182,8 @@ void PlayGoController::shapeAction(QTabletEvent *event)
 		break;
 	case QEvent::TabletRelease :
 		shapeRelease(scenePos);
+		break;
+	default:
 		break;
 	}
 }
@@ -1200,6 +1209,8 @@ void PlayGoController::shapeAction(QMouseEvent *event)
 			shapeRelease(scenePos);
 			break;
 		}
+	default:
+		break;
 	}
 }
 
@@ -1218,6 +1229,8 @@ void PlayGoController::eraseAction(QTabletEvent *event)
 		break;
 	case QEvent::TabletRelease :
 		eraserRelease(pos);
+		break;
+	default:
 		break;
 	}
 }
@@ -1243,6 +1256,8 @@ void PlayGoController::eraseAction(QMouseEvent *event)
 			eraserRelease(pos);
 			break;
 		}
+	default:
+		break;
 	}
 }
 
@@ -1260,6 +1275,8 @@ void PlayGoController::selectAction(QTabletEvent *event)
 		break;
 	case QEvent::TabletRelease :
 		lassoRelease(pos);
+		break;
+	default:
 		break;
 	}
 }
@@ -1285,6 +1302,8 @@ void PlayGoController::selectAction(QMouseEvent *event)
 			lassoRelease(pos);
 			break;
 		}
+	default:
+		break;
 	}
 }
 
@@ -1301,6 +1320,8 @@ void PlayGoController::connectAction(QTabletEvent *event)
 		break;
 	case QEvent::TabletRelease :
 		connectRelease(sceneMappedPos);
+		break;
+	default:
 		break;
 	}
 }
@@ -1326,6 +1347,8 @@ void PlayGoController::connectAction(QMouseEvent *event)
 			connectRelease(sceneMappedPos);
 			break;
 		}
+	default:
+		break;
 	}
 }
 
@@ -1520,6 +1543,8 @@ void PlayGoController::overrideOnTapAndHold(QTapAndHoldGesture *gesture)
 		pauseSimulation();
 		break;
 	}
+	default:
+		break;
 	}
 
 	// Get underlying component
@@ -1707,6 +1732,8 @@ void PlayGoController::onMouseEventFromView(QMouseEvent *event, QGraphicsView *v
 		break;
 	case UI::Connect :
 		connectAction(event);
+		break;
+	default:
 		break;
 	}
 }
@@ -1912,6 +1939,8 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 		{
 			break;
 		}
+		default:
+			break;
 		}
 	}
 

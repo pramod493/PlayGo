@@ -394,7 +394,6 @@ namespace CDI
 		vector<vector<cv::Point> > outerContours;
 		vector<vector<vector<cv::Point> > > allInnerContours;
 
-
 		gbFindContours(imagePath.toStdString(), outerContours, allInnerContours, true);
 
 		// Sanity check

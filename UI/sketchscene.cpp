@@ -51,6 +51,8 @@ namespace CDI
 				sceneEvent->accept();
 				return true;
 			}
+			default :
+				break;
 			}
 		}
 		return retval;

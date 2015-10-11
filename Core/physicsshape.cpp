@@ -1,5 +1,4 @@
 #include "physicsshape.h"
-#include "image.h"
 #include <QPixmap>
 
 namespace CDI

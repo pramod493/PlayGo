@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
 	QStyle* style = QStyleFactory::create("windowsvista");
 	if (style)	app.setStyle(style);
-#endif Q_OS_WIN
+#endif //Q_OS_WIN
 
 	// Initialize the QsLog logger
 
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 	 * **************************************************************/
 	if (false) {
 
-		QCustomPlot* customPlot = new QCustomPlot();
+		QCustomPlot *customPlot = new QCustomPlot;
 		// Plot 01
 		{
 			// generate some data:

@@ -8,8 +8,6 @@ SOURCES += \
     $$PWD/sketchscene.cpp \
     $$PWD/colorselectortoolbar.cpp \
     $$PWD/modelviewtreewidget.cpp \
-    $$PWD/searchview.cpp \
-    $$PWD/graphicssearchitem.cpp \ 
     $$PWD/drawplotui.cpp
 
 HEADERS += \
@@ -21,8 +19,6 @@ HEADERS += \
     $$PWD/sketchscene.h \
     $$PWD/colorselectortoolbar.h \
     $$PWD/modelviewtreewidget.h \
-    $$PWD/searchview.h \
-    $$PWD/graphicssearchitem.h \
     $$PWD/drawplotui.h
 
 DISTFILES +=

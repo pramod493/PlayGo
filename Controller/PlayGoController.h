@@ -40,7 +40,6 @@ namespace CDI
 	class CDIWindow;
 	class ConnectController;
 	class TouchAndHoldController;
-	class cdState;
 	class cdSearchGraphicsItem;
 	class LoadModel;
 	/**
@@ -410,7 +409,6 @@ namespace CDI
 
 		friend class ConnectController;
 		friend class TouchAndHoldController;
-		friend class cdState;
 		friend class LoadModel;
 	};
 }

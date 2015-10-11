@@ -6,7 +6,6 @@ namespace CDI
 {
 	PhysicsBody::PhysicsBody(Component *component, b2Body *boxBody)
 	{
-		setParentItem(component);
 		shapes = QVector<Polygon2D*>();
 		_b2body = boxBody;
 	}
@@ -29,8 +28,8 @@ namespace CDI
 
 	QTransform PhysicsBody::transform() const
 	{
-		if (parentItem() != NULL)
-			return parentItem()->transform();
+		//		if (parentItem() != NULL)
+		//			return parentItem()->transform();
 		return QTransform();
 	}
 

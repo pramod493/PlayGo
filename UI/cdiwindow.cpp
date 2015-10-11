@@ -73,6 +73,7 @@ namespace CDI
 		searchDock = new QDockWidget(tr("Search results"), this);
 		searchDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
 							  Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		// Removed SearchView
 		searchDock->setWidget(searchView);
 		addDockWidget(Qt::RightDockWidgetArea, searchDock);*/
 

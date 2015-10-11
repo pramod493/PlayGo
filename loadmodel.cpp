@@ -90,7 +90,7 @@ namespace CDI
 					(c4, c1, QPointF(300,200),
 					 false, false, 100, 50, 0, 720);
 		}
-		//		updateComponentScale(c2, 1.25f);
+		updateComponentScale(c2, 1.25f);
 		//		updateComponentScale(c1, 0.90f);
 		//		updateComponentScale(c4, 1.25f);
 		// Testing out some of the graph examples

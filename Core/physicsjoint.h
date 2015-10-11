@@ -26,7 +26,10 @@ namespace CDI
 	public:
 		cdJoint(b2JointType type, QGraphicsItem* parent)
 			: QObject(), QGraphicsPathItem(parent),
-			_boxJointType(type), _id(uniqueHash()) {}
+			  _dirtyInternals(false),
+			  _id(uniqueHash()),
+			  _boxJointType(type)
+		{}
 
 		virtual ~cdJoint() {}
 		/**

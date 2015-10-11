@@ -12,6 +12,7 @@
  \mainpage PlayGo core component documentation
  \section Introducion to datastructure
  All objetcs are derived from AbstractModelItem object
+ Not applicable anymore
  \section Conact Info
 Author: Pramod Kumar
 email: pramod493@gmail.com
@@ -27,7 +28,7 @@ namespace CDI
 	 */
 	class PlayGo : public QObject
 	{
-        Q_OBJECT
+		Q_OBJECT
 	protected:
 		QUuid _rootID;
 

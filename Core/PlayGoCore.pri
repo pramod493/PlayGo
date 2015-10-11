@@ -16,14 +16,12 @@ HEADERS += $$PWD/clipper.hpp \
 	$$PWD/cdiboxdebugdraw.h \
 	$$PWD/forceitem.h \
 	$$PWD/penstroke.h \
-	$$PWD/scenebutton.h \
 	$$PWD/cdcontactlistener.h \
 	$$PWD/material.h
 SOURCES += $$PWD/clipper.cpp \
 	$$PWD/grabcut.cpp \
 	$$PWD/forceitem.cpp \
 	$$PWD/penstroke.cpp \
-	$$PWD/scenebutton.cpp \
 	$$PWD/cdcontactlistener.cpp \
 	$$PWD/material.cpp
 
@@ -38,7 +36,6 @@ HEADERS += \
 SOURCES += \
 	$$PWD/ramerdouglaspeucker.cpp  \
 	$$PWD/commonfunctions.cpp  \
-	$$PWD/abstractmodelitem.cpp  \
 	$$PWD/cdi2qtwrapper.cpp  \
 	$$PWD/point2dpt.cpp
 

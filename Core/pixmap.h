@@ -18,6 +18,8 @@ namespace CDI
 		QString _filename;
 
 		PhysicsShape* _physicsShape;
+		vector<vector<cv::Point>> outerContours;
+		vector<vector<vector<cv::Point>>> allInnerContours;
 
 	public:
 		Pixmap(QGraphicsItem* parent = 0);

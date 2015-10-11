@@ -4,23 +4,23 @@ namespace CDI
 {
 	SearchResult::SearchResult()
 	{
-        _id = uniqueHash();
-		resultFilePath = QString();
+		_id = uniqueHash();
+		resultFilePath = "";
 		metadataExists = false;
 		tags = QStringList();
-    }
+	}
 
-    SearchResult::SearchResult(QString& resultImagePath)
-    {
-        _id = uniqueHash();
-        resultFilePath = resultImagePath;
-        metadataExists = false;
-        tags = QStringList();
-    }
+	SearchResult::SearchResult(QString& resultImagePath)
+	{
+		_id = uniqueHash();
+		resultFilePath = resultImagePath;
+		metadataExists = false;
+		tags = QStringList();
+	}
 
 	SearchResult::SearchResult(const SearchResult &result)
 	{
-        _id = uniqueHash();
+		_id = uniqueHash();
 		resultFilePath = result.resultFilePath;
 		metadataExists = result.metadataExists;
 		tags = result.tags;
@@ -28,13 +28,13 @@ namespace CDI
 
 	SearchResult::~SearchResult()
 	{
-        // Nothing to delete here. Does not have anythin on stack
+		// Nothing to delete here. Does not have anythin on stack
 	}
 
-    QUuid SearchResult::id() const
-    {
-        return _id;
-    }
+	QUuid SearchResult::id() const
+	{
+		return _id;
+	}
 
 	ItemType SearchResult::type() const
 	{
@@ -43,7 +43,7 @@ namespace CDI
 
 	QDataStream& SearchResult::serialize(QDataStream& stream) const
 	{
-        stream << _id;
+		stream << _id;
 		stream << resultFilePath;
 		stream << metadataExists;
 		stream << tags;
@@ -52,7 +52,7 @@ namespace CDI
 
 	QDataStream& SearchResult::deserialize(QDataStream& stream)
 	{
-        stream >> _id;
+		stream >> _id;
 		stream >> resultFilePath;
 		stream >> metadataExists;
 		stream >> tags;

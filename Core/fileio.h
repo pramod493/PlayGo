@@ -7,7 +7,6 @@
 #include "commonfunctions.h"
 #include "abstractmodelitem.h"
 #include "stroke.h"
-#include "image.h"
 #include "component.h"
 #include "playgo.h"
 

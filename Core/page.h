@@ -111,16 +111,6 @@ namespace CDI
 
 		cdLayerIndex currentLayer() const;
 
-		/**
-		 * @brief getParent returns the immediate parent Component or
-		 * Assembly of a given AbstractModelItem object
-		 * In case no such parent is present, NULL is returned.
-		 * In case the item is not present in the
-		 * @param item
-		 * @return parent object of the item
-		 */
-//		AbstractModelItem* getParent(QUuid id);
-
 		QGraphicsItem* getItemPtrById(QUuid id);
 
 		Component* getComponentPtrById(QUuid id);	// These are also QGraphicsItem objects

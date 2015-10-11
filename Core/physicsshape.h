@@ -10,7 +10,6 @@
 namespace CDI
 {
 	class Polygon2D;
-	class Image;
 	class Stroke;
 
 	/**
