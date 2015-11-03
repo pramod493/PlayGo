@@ -31,11 +31,9 @@ include ($$PWD/Indexer-Minimal/External Libraries.pri)
 SOURCES += $$PWD/main.cpp \
 		$$PWD/miscfunctions.cpp \
 		$$PWD/converttopolygons.cpp \
-		$$PWD/batchpolygonize.cpp \
 		$$PWD/loadmodel.cpp
 HEADERS += \
 		$$PWD/converttopolygons.h \
-		$$PWD/batchpolygonize.h \
 		$$PWD/LoadModel.h
 
 CONFIG += c++11
@@ -43,6 +41,3 @@ CONFIG += c++11
 QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
 
 RC_FILE = PlayGoIcon.rc
-
-FORMS += \
-	$$PWD/batchpolygonize.ui

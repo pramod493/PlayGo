@@ -21,7 +21,5 @@ HEADERS += \
     $$PWD/modelviewtreewidget.h \
     $$PWD/drawplotui.h
 
-DISTFILES +=
-
 FORMS += \
     $$PWD/drawplotui.ui

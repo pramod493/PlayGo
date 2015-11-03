@@ -166,7 +166,7 @@ public slots:
 			lin_mom_y.push_back(physicsbody->GetLinearVelocity().y * physicsbody->GetMass());
 			lin_mom_y_graph->setData(steps, lin_mom_y);
 		}
-		if (steps.length() > 300)
+		if (steps.length() > 750)
 		{
 			auto stripper = [](QVector<double>& tostrip)
 			{

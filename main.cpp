@@ -20,7 +20,6 @@
 #include "QsLogDest.h"
 #include "filesystemwatcher.h"
 #include <QStyleFactory>
-#include "batchpolygonize.h"
 #include "reconizerwindow.h"
 
 //#include <QGraphicsWebView>
@@ -79,17 +78,6 @@ int main(int argc, char *argv[])
 	logger.addDestination(debugDestination.get());
 	logger.addDestination(fileDestination.get());
 	/* Example on how to use QsLog*/
-
-	/****************************************************************
-	 * Launch batch polygonizer window
-	 * Note that we do not use this info right now
-	 * **************************************************************/
-	if (false) {
-		// This initiates the batch conversion of polygons
-		BatchPolygonize* batchpolygonize = new BatchPolygonize;
-		batchpolygonize->show();
-		return app.exec();
-	}
 
 	/****************************************************************
 	 * Test QCustomPlot basic plotting
