@@ -7,7 +7,8 @@ unix {
     LIBS += -ltbb
 }
 
-win32 {
+# The keyword for windows seems to have changed in the new version. Please check again
+win32:contains(QMAKE_HOST.arch, x86_64) {
     #------------------------------------------------------------
     #       WINDOWS SPECIFIC OPTIONS
     INCLUDEPATH += $$PWD/boost_1_58_0/
@@ -28,6 +29,11 @@ win32 {
     Debug: LIBS += "-L$$PWD/opencv/build/x64/vc12/lib" -lopencv_ts300d -lopencv_world300d
 }
 
+#--------------------------------------------------------------
+# Intel TBB libraries create issues when building for android
+# Easiest way to install android opencv and tbb libraries is
+# through NVidia android dev kit
+#--------------------------------------------------------------
 android {
     #-------------------------------------------------------------
     #       ANDROID SPECIFIC OPTIONS
