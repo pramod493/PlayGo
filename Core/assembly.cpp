@@ -8,7 +8,9 @@ namespace CDI
 		_id = uniqueHash();
 		_data = new AssemblyData;
 	}
-
+    /**
+     * @brief Assembly::~Assembly
+     */
 	Assembly::~Assembly()
 	{
 		delete _data;

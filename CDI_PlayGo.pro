@@ -2,8 +2,10 @@
 # Pramod Kumar
 # Purdue University
 #----------------------------------------------------------------------
-QT       += core gui widgets multimedia network webkitwidgets
+QT       += core gui widgets multimedia network #webkitwidgets
 
+# sensors, sql are not used
+# remove printsupport option might break qplot library
 QT      += sensors printsupport sql
 
 TARGET = PlayGo
@@ -14,9 +16,15 @@ TEMPLATE = app
 
 RESOURCES += images.qrc \
 	overlayimages.qrc
+## ---------------------------------------------------------------------
+## TUIO is a touch library. It compiles fine on windows but throws error
+## when using on windows. You need to install separate drivers on windows
+## which will generate touch input from TUIO output
+
 #unix {
 #include ($$PWD/QtTuio/qTUIO.pri)
 #}
+## ----------------------------------------------------------------------
 
 include ($$PWD/Core/PlayGoCore.pri)
 
