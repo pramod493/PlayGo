@@ -25,7 +25,6 @@ include ($$PWD/Controller/Controller.pri)
 include ($$PWD/Indexer-Minimal/External Libraries.pri)
 
 SOURCES += \
-			$$PWD/initbatchpolygonize.cpp \
 			$$PWD/batchpolygonize.cpp
 
 HEADERS += \

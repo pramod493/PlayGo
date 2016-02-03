@@ -1,3 +1,4 @@
+#include <QApplication>
 #include <QMessageBox>
 #include <vector>
 #include <QStringList>
@@ -20,6 +21,18 @@
 
 using namespace std;
 using namespace CDI;
+
+int main(int argc, char* argv[])
+{
+	/****************************************************************
+	 * Launch batch polygonizer window
+	 * Note that we do not use this info right now
+	 * **************************************************************/
+	QApplication app (argc, argv);
+	BatchPolygonize *batchpolygonize = new BatchPolygonize;
+	batchpolygonize->show();
+	app.exec();
+}
 
 BatchPolygonize::BatchPolygonize(QWidget *parent) :
 	QMainWindow(parent),

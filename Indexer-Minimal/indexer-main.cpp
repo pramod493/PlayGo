@@ -43,7 +43,8 @@ int main(int argc, char *argv[])
 	vector<string> names = engine->Query(file,40);
 	for(int i =0; i< names.size(); i++)
 	{
-		qDebug() << QString::fromStdString(names[i]);
+		cout << names[i] << endl;
+		//qDebug() << QString::fromStdString(names[i]);
 	}
     return EXIT_SUCCESS;
 }
