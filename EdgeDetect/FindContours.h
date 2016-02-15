@@ -16,4 +16,4 @@ using namespace std;
 void gbFindContours(string imgDir,
 	vector<vector<cv::Point> > &outerContours,
 	vector<vector<vector<cv::Point> > > &innerContours,
-	bool SaveForDebug=false);
+    bool SaveForDebug);
