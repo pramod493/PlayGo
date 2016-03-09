@@ -34,7 +34,9 @@ include ($$PWD/UI/PlayGoUI.pri)
 
 include ($$PWD/Controller/Controller.pri)
 
-include ($$PWD/Indexer-Minimal/External Libraries.pri)
+include ($$PWD/opencv.pri)
+include ($$PWD/boost.pri)
+include ($$PWD/tbb.pri)
 
 SOURCES += $$PWD/main.cpp \
 		$$PWD/miscfunctions.cpp \
