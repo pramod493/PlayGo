@@ -8,6 +8,9 @@
 *.so
 *.dll
 *.dylib
+# for user generated lib files
+*.lib
+*.pdb
 
 # Qt-es
 /.qmake.cache
@@ -36,14 +39,7 @@ x64/
 *.vcxproj.filters
 *.suo
 
-###########
-Search_images/
-
-# Others
-.dropbox
-
-search_database_images/
-AdrianPart/
 .idea/
 desktop.ini
 /.project
+#Do not copy libs
