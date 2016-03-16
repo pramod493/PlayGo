@@ -57,6 +57,9 @@ namespace CDI
 		// Simulation managed actions
 		QAction *playAction, *pauseAction, *resetAction;
 
+		// group ungroup action
+		QAction *groupAction, *ungroupAction;
+
 		// Toolbars
 		QToolBar *mainToolbar;
 		ColorSelectorToolbar* colorToolbar;

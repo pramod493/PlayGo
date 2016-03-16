@@ -124,6 +124,9 @@ namespace CDI
 		saveImageAction		= new QAction(QIcon(":/images/save.png"), tr("Save as Image"), this);
 		cameraLoadAction	= new QAction(QIcon(":/images/Camera.png"), tr("Import from camera"), this);
 		closeAction			= new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
+
+		groupAction = new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
+		ungroupAction = new QAction(QIcon(":/images/turn-off.png"), tr("Exit"), this);
 	}
 
 	void CDIWindow::setupToolbar()
@@ -137,6 +140,11 @@ namespace CDI
 
 		mainToolbar->addAction(closeAction);
 
+		mainToolbar->addSeparator();
+
+		// Create group/ungroup action
+		mainToolbar->addAction(groupAction);
+		mainToolbar->addAction(ungroupAction);
 		mainToolbar->addSeparator();
 
 		mainToolbar->addAction(brushSelectAction);

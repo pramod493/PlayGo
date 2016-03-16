@@ -13,5 +13,3 @@ HEADERS += \
     $$PWD/touchandholdcontroller.h \
     $$PWD/SelectableActions.h \
     $$PWD/pinjointlimitselector.h
-
-FORMS +=

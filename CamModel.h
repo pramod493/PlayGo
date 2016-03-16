@@ -6,7 +6,7 @@ namespace CDI
 	{
 		Q_OBJECT
 	public:
-		CamModel(PlayGoController *controller)
+		CamModel(PlayGoController *controller);
 		
 		void createComponents();
 
