@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <component.h>
-#include "qCustomPlot/qcustomplot.h"
+#include "qcustomplot.h"
 #include "component.h"
 #include "physicsmanager.h"
 #include "ui_drawplotui.h"

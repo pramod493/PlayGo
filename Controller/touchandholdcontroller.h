@@ -10,7 +10,7 @@
 #include "commonfunctions.h"
 #include "physicsjoint.h"
 #include "SelectableActions.h"
-#include "qCustomPlot/qcustomplot.h"
+#include "qcustomplot.h"
 #include "drawplotui.h"
 
 #include <QMessageBox>

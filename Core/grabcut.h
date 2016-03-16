@@ -17,5 +17,5 @@ namespace CDI
 
 	cv::Mat grabCutBackground(cv::Rect rectangle, cv::Mat& image, string outputfile, vector<vector<cv::Point> > &outerContours, vector<vector<vector<cv::Point> > > &innerContours);
 
-	int grabcut_process_image(PlayGoController* controller, string imagepath, string outputfile);
+	int grabcut_process_image(/*PlayGoController* controller,*/ string imagepath, string outputfile);
 }

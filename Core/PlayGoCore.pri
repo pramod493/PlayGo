@@ -1,22 +1,8 @@
-
-## Add the search engine component here
-#include ($$PWD/../Indexer-Minimal/Indexer.pri)
-
-INDEXER_SRC=$$PWD/../Indexer-Minimal
-INCLUDEPATH +=$$PWD/../Indexer-Minimal
-CONFIG(debug, debug|release): LIBS += -L$$PWD/../lib -lindexerd
-CONFIG(release, debug|release): LIBS += -L$$PWD/../lib -lindexer
-
-include ($$PWD/../poly2tri/poly2tri.pri)
-include ($$PWD/../Physics/QBox2D.pri)
-include ($$PWD/../EdgeDetect/Edge Detect.pri)
-# Enable when adding plots
-include ($$PWD/../qCustomPlot/qCustomPlot.pri)
-
-include ($$PWD/../QsLog/QsLog.pri)
-
+#
+# Pramod Kumar
+#
 #DEFINES += CDI_DEBUG_DRAW_SHAPE
-
+# Enable when adding plots
 INCLUDEPATH += $$PWD
 
 HEADERS += $$PWD/clipper.hpp \
@@ -89,4 +75,10 @@ SOURCES += \
 	$$PWD/physicsmanager.cpp  \
 	$$PWD/searchmanager.cpp \
 	$$PWD/filesystemwatcher.cpp
+
+HEADERS += $$PWD/FindContours.h
+SOURCES += $$PWD/FindContours.cpp
+
+HEADERS += $$PWD/sketchscene.h
+SOURCES += $$PWD/sketchscene.cpp
 

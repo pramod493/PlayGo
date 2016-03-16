@@ -31,10 +31,6 @@ namespace CDI
 	class Component;
 	class cdJoint;
 
-	using cdComponentGraph
-	= adjacency_list<vecS, vecS, undirectedS, Component*/*, cdJoint*, GraphProperty*/>;
-	using componentVertex = graph_traits<cdComponentGraph>::vertex_descriptor;
-	using componentEdge = graph_traits<cdComponentGraph>::edge_descriptor;
 	//typedef std::pair<Component*, Component*> Edge;
 	// Use the b2BodyDef for setting the value of physics components
 	/**
@@ -130,8 +126,6 @@ namespace CDI
 		bool _enableDebugView;		/**< Determines whether debug view will be updated or not */
 	public:
 		BoxDebugScene* debugView;	/**< Renders the debug information */
-
-		cdComponentGraph connectionsGraph;
 
 	public:
 		/**

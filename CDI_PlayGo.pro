@@ -25,18 +25,7 @@ RESOURCES += images.qrc \
 #include ($$PWD/QtTuio/qTUIO.pri)
 #}
 ## ----------------------------------------------------------------------
-
-include ($$PWD/Core/PlayGoCore.pri)
-
-include ($$PWD/P-Dollar-Recognizer/P_Dollar.pri)
-
-include ($$PWD/UI/PlayGoUI.pri)
-
-include ($$PWD/Controller/Controller.pri)
-
-include ($$PWD/opencv.pri)
-include ($$PWD/boost.pri)
-include ($$PWD/tbb.pri)
+include ($$PWD/externallib.pri)
 
 SOURCES += $$PWD/main.cpp \
 		$$PWD/miscfunctions.cpp \

@@ -11,7 +11,7 @@
 #include <QDebug>
 #include "asmopencv.h"
 #include "QsLog.h"
-#include "PlayGoController.h"
+//#include "PlayGoController.h"
 
 using namespace cv;
 
@@ -99,12 +99,13 @@ namespace CDI
 	{
 	protected:
 		QGraphicsRectItem* rectItem;
-		PlayGoController * _controller;
+		// Instead of calling controller, it should emit a signal and pass image
+		//PlayGoController * _controller;
 		QString _outpath;
 		QPointF initPos;
 		QPointF finalPos;
 	public:
-		grabcutView(PlayGoController *controller,
+		grabcutView(/*PlayGoController *controller,*/
 					QString outputPath,
 					QWidget *parent)
 			: QGraphicsView(parent)
@@ -117,7 +118,7 @@ namespace CDI
 			finalPos = QPointF();
 
 			_outpath = outputPath;
-			_controller = controller;
+			//_controller = controller;
 
 			Qt::WindowFlags flags = windowFlags();
 			setWindowFlags(flags | Qt::WindowStaysOnTopHint);
@@ -186,7 +187,7 @@ namespace CDI
 												  QMessageBox::Yes | QMessageBox::No);
 					if (reply == QMessageBox::Yes)
 					{
-						_controller->loadImage(_outpath);
+						//_controller->loadImage(_outpath);
 						deleteLater();
 					} else
 					{
@@ -212,9 +213,9 @@ namespace CDI
 		}
 	};
 
-	int grabcut_process_image(PlayGoController *controller, string imagepath, string outputfile)
+	int grabcut_process_image(/*PlayGoController *controller,*/ string imagepath, string outputfile)
 	{
-		grabcutView *view = new grabcutView(controller, QString::fromStdString(outputfile), NULL);
+		grabcutView *view = new grabcutView(/*controller,*/ QString::fromStdString(outputfile), NULL);
 		view->show();
 		QPixmap pixmap = QPixmap();
 		pixmap.load(QString::fromStdString(imagepath));

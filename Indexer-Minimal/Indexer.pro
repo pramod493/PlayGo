@@ -4,19 +4,17 @@
 #-----------------------------------------------------------
 QT       -= core gui
 
-CONFIG(debug, debug|release): TARGET = indexerd
-CONFIG(release, debug|release): TARGET = indexer
+TARGET = indexer
 
 TEMPLATE = lib
 CONFIG += staticlib
 
-include ($$PWD/../opencv.pri)
-include ($$PWD/../boost.pri)
-include ($$PWD/../tbb.pri)
-
+win32 {
+	INCLUDEPATH += C:/Boost/include/boost-1_60/
+	INCLUDEPATH += C:/opencv/build/include/
+	INCLUDEPATH += C:/tbb/include/
+}
 include ($$PWD/Indexer.pri)
-
 #SOURCES += indexer-main.cpp
-DESTDIR = $$PWD/../lib/
-CONFIG += c++11
-QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
+
+include ($$PWD/../common.pri)

@@ -2093,7 +2093,7 @@ void PlayGoController::onExternalImageAdd(const QString &path)
 								  QMessageBox::Yes | QMessageBox::No);
 	if (reply == QMessageBox::Yes)
 	{
-		grabcut_process_image(this, path.toStdString(), "Cropped.png");
+		grabcut_process_image(/*this,*/ path.toStdString(), "Cropped.png");
 	}
 }
 
