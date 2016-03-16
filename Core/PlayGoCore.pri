@@ -1,4 +1,12 @@
-include ($$PWD/../Indexer-Minimal/Indexer.pri)
+
+## Add the search engine component here
+#include ($$PWD/../Indexer-Minimal/Indexer.pri)
+
+INDEXER_SRC=$$PWD/../Indexer-Minimal
+INCLUDEPATH +=$$PWD/../Indexer-Minimal
+CONFIG(debug, debug|release): LIBS += -L$$PWD/../lib -lindexerd
+CONFIG(release, debug|release): LIBS += -L$$PWD/../lib -lindexer
+
 include ($$PWD/../poly2tri/poly2tri.pri)
 include ($$PWD/../Physics/QBox2D.pri)
 include ($$PWD/../EdgeDetect/Edge Detect.pri)

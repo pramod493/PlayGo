@@ -4,7 +4,9 @@
 #-----------------------------------------------------------
 QT       -= core gui
 
-TARGET = Indexer
+CONFIG(debug, debug|release): TARGET = indexerd
+CONFIG(release, debug|release): TARGET = indexer
+
 TEMPLATE = lib
 CONFIG += staticlib
 
@@ -15,5 +17,6 @@ include ($$PWD/../tbb.pri)
 include ($$PWD/Indexer.pri)
 
 #SOURCES += indexer-main.cpp
+DESTDIR = $$PWD/../lib/
 CONFIG += c++11
 QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
