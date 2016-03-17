@@ -5,12 +5,13 @@
 TEMPLATE = subdirs
 SUBDIRS += \
 		poly2tri \
-		box2d \
-		indexer \
-		qslog \
-		playgocore \
-		playgoui
+		Physics \
+		Indexer \
+		QsLog \
+		Core \
+		UI
 
-CONFIG += ordered 
+CONFIG += ordered
 
 SUBDIRS += 	CDI_PlayGo
+CDI_PlayGo.absolute_path($$PWD)

@@ -37,7 +37,7 @@ win32 {
 }
 
 #NOTE - This might not work on linux where libs are named differently
-INCLUDEPATH += $$PWD/Indexer-Minimal
+INCLUDEPATH += $$PWD/Indexer
 INCLUDEPATH += $$PWD/poly2tri
 INCLUDEPATH += $$PWD/Physics
 INCLUDEPATH += $$PWD/QsLog

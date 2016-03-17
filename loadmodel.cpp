@@ -412,3 +412,11 @@ namespace CDI
 		createComponents();
 	}
 }
+
+
+/*
+usage:
+	LoadModel* test = new LoadModel(window->controller);
+	QObject::connect(window->saveImageAction, SIGNAL(triggered()),
+					 test, SLOT(runTest()));
+*/

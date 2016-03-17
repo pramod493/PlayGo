@@ -92,3 +92,10 @@ void ReconizerWindow::on_DetectButton_clicked()
 	myScene->pdRecognizer->gbRecognize();
 	myScene->clearStrokes();
 }
+
+/*
+usage:
+Launch gesture recognizer window
+ReconizerWindow* recognizerWindow =  new ReconizerWindow;
+	recognizerWindow->show();
+*/

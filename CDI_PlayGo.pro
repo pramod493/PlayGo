@@ -27,13 +27,14 @@ RESOURCES += images.qrc \
 ## ----------------------------------------------------------------------
 include ($$PWD/externallib.pri)
 
-SOURCES += $$PWD/main.cpp \
-		$$PWD/miscfunctions.cpp \
-		$$PWD/converttopolygons.cpp \
-		$$PWD/loadmodel.cpp
-HEADERS += \
-		$$PWD/converttopolygons.h \
-		$$PWD/LoadModel.h
+SOURCES += $$PWD/main.cpp
+#SOURCES += $$PWD/main.cpp \
+#		$$PWD/miscfunctions.cpp \
+#		$$PWD/converttopolygons.cpp \
+#		$$PWD/loadmodel.cpp
+#HEADERS += \
+#		$$PWD/converttopolygons.h \
+#		$$PWD/LoadModel.h
 
 CONFIG += c++11
 
