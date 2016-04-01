@@ -54,6 +54,8 @@ namespace CDI
 
 		FileSystemWatcher* watcher = new FileSystemWatcher();
 #ifdef Q_OS_WIN
+		// TODO Always check for directory existence before setting up the watch folder.
+		// Do not abuse try-catch for normal usage
 		watcher->setDirectory(QString("C:/Database/watched"));
 				//watcher->setDirectory(QString("C:/Users/Pramod/Dropbox/Camera Uploads"));
 #endif

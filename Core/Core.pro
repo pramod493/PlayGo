@@ -3,7 +3,7 @@ TARGET = playgocore
 TEMPLATE = lib
 CONFIG += staticlib
 
-INCLUDEPATH += $$PWD/../Indexer-Minimal
+INCLUDEPATH += $$PWD/../Indexer
 INCLUDEPATH += $$PWD/../poly2tri
 INCLUDEPATH += $$PWD/../Physics
 INCLUDEPATH += $$PWD/../QsLog

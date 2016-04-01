@@ -1,7 +1,6 @@
 // To convert to visual studio, see http://doc.qt.io/qt-5/winrt-support.html
 // qmake -tp vc <your project>.pro "CONFIG+=windeployqt"
 
-#include <iostream>
 #include <QDebug>
 #include <QDir>
 #include <QFile>
@@ -12,13 +11,7 @@
 #include "commonfunctions.h"
 #include "QsLog.h"
 #include "QsLogDest.h"
-#include "filesystemwatcher.h"
 #include <QStyleFactory>
-#include "reconizerwindow.h"
-
-#include <QSsl>
-#include <QGraphicsView>
-#include <QGraphicsScene>
 
 #ifdef Q_OS_LINUX
 #ifdef ENABLE_TUIO
@@ -45,8 +38,12 @@ void SetupStyles(QApplication& app)
 #endif //Q_OS_WIN
 }
 
-void SetupLogger(QApplication& app)
+int main(int argc, char *argv[])
 {
+//	return grabcut_load("grabcut.png");
+	CDI::TabletApplication app(argc, argv);
+
+	SetupStyles(app);
 	/****************************************************************
 	 * Looger initialization
 	 * **************************************************************/
@@ -66,16 +63,8 @@ void SetupLogger(QApplication& app)
 				QsLogging::DestinationFactory::MakeDebugOutputDestination() );
 	logger.addDestination(debugDestination.get());
 	logger.addDestination(fileDestination.get());
-	/* Example on how to use QsLog*/
-}
 
-int main(int argc, char *argv[])
-{
-//	return grabcut_load("grabcut.png");
-	CDI::TabletApplication app(argc, argv);
-
-	SetupStyles(app);
-	SetupLogger(app);	/***************************************************************
+	/***************************************************************
 	 * Launch PlayGo main window
 	 **************************************************************/
 	CDI::CDIWindow *window =  new CDI::CDIWindow();
@@ -87,11 +76,10 @@ int main(int argc, char *argv[])
 					 window, SLOT(onStylusLeave()));
 
 	window->initWidgets();
-//	window->showFullScreen();
 	window->show();
-
 	// Now that we have done loading the workspace, let's set the intial values
 	window->brushSelectAction->trigger();
 	window->brushWidthSlider->setValue(7);
+
 	return app.exec();
 }

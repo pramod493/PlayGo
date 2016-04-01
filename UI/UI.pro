@@ -7,7 +7,7 @@ win32 {
 	INCLUDEPATH += C:/opencv/build/include/
 	INCLUDEPATH += C:/tbb/include/
 }
-INCLUDEPATH += $$PWD/../Indexer-Minimal
+INCLUDEPATH += $$PWD/../Indexer
 INCLUDEPATH += $$PWD/../poly2tri
 INCLUDEPATH += $$PWD/../Physics
 INCLUDEPATH += $$PWD/../QsLog

@@ -2,11 +2,11 @@
 # Pramod Kumar
 # Purdue University
 #----------------------------------------------------------------------
-QT       += core gui widgets multimedia network #webkitwidgets
+QT       += core gui widgets multimedia network
 
 # sensors, sql are not used
 # remove printsupport option might break qplot library
-QT      += sensors printsupport sql
+QT      += printsupport sql
 
 TARGET = PlayGo
 
