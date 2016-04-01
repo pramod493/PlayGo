@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "component.h"
 #include <boost/graph/adjacency_list.hpp>	// how about adjacency_matrix?
 
@@ -6,18 +7,9 @@ using namespace boost;
 
 namespace CDI
 {
-	class Assembly;
 	class Component;
 	class cdJoint;
-
-	class AssemblyData
-	{
-		QHash<QUuid, Component*> components;
-		QHash<QUuid, QGraphicsItem*> joints;	// TODO
-
-		friend class Assembly;
-	};
-
+	class AssemblyPrivateData;
 	class Assembly : public QGraphicsItemGroup
 	{
 	public:
@@ -26,16 +18,16 @@ namespace CDI
 	protected:
 		QUuid _id;
 
-		AssemblyData* _data;
+		std::unique_ptr<AssemblyPrivateData> _data;
 
 	public:
 		Assembly(QGraphicsItem* parent = 0);
 
 		virtual ~Assembly();
 
-		int type() const { return Type; }
+		int type() const;
 
-		QUuid id() const { return _id; }
+		QUuid id() const;
 
 		virtual void addComponent(Component* component);
 
