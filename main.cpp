@@ -13,14 +13,6 @@
 #include "QsLogDest.h"
 #include <QStyleFactory>
 
-#ifdef Q_OS_LINUX
-#ifdef ENABLE_TUIO
-#include <qtuio.h>
-#endif //ENABLE_TUIO
-#endif //Q_OS_LINUX
-
-#include "LoadModel.h"
-
 /****************************************************************
  * Set up themes
  * **************************************************************/

@@ -22,7 +22,6 @@
 #include "sketchview.h"
 #include "sketchscene.h"
 #include "PlayGoController.h"
-#include "playgocore.h"
 #include "cdi2qtwrapper.h"
 
 class QDockWidget;

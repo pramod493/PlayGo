@@ -10,7 +10,8 @@ namespace CDI {
 
 	/**
 	 * @brief The Item class is base class for all the components derived in the Model
-	 * @remarks - Can we also have item type for manager classes?
+	 * @remarks - Can we also have item type for manager classes?. Also see
+	 * http://stackoverflow.com/questions/318064/how-do-you-declare-an-interface-in-c
 	 * NOTE - Manager classes might might have settings that we need to store
 	 */
 	class Item

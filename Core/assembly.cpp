@@ -1,4 +1,5 @@
 #include "assembly.h"
+#include "component.h"
 #include <QUuid>
 namespace CDI
 {

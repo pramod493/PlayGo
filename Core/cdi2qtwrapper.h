@@ -21,8 +21,7 @@ namespace CDI
 	// create a list of IDs which will be assigned to qgraphicsitem which in turn can be used to
 	// identify the item type
 	enum GraphicsItemType {
-		STROKEVIEW = 1,
-		PENSTROKEVIEW,
+		STROKEVIEW = 1,		// PENSTROKEVIEW, // deprecated
 		POLYGONVIEW,
 		IMAGEVIEW,
 		ARROWVIEW,			// accesories

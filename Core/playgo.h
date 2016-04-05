@@ -19,7 +19,7 @@ email: pramod493@gmail.com
  */
 namespace CDI
 {
-	const int VERSION_STR = 0;
+	const int VERSION_STR = 1;
 	/**
 	 * @brief
 	 * The root object which contains all the components.

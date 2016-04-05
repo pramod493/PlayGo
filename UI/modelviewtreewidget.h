@@ -3,10 +3,13 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QTransform>
-#include "playgocore.h"
+#include <QGraphicsItem>
 
 namespace CDI
 {
+	class PlayGo;
+	class Assembly;
+	class Component;
 	class ModelViewTreeWidget : public QTreeWidget
 	{
 		Q_OBJECT

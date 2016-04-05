@@ -1,19 +1,13 @@
-#pragma once
-#include <QtAlgorithms>
+#ifndef SEARCHMANAGER_H
+#define SEARCHMANAGER_H
+
 #include <QObject>
 #include <QString>
 #include <QList>
 #include <QImage>
-#include <QFile>
-#include <QTextStream>
-
-// Juxtapoze
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include "wbbice.h"
-#include "wbsearchengine.h"
-#include "asmopencv.h"
 #include "searchresult.h"
+
+class wbSearchEngine;
 namespace CDI
 {
 	/**
@@ -73,3 +67,5 @@ namespace CDI
 		QList<SearchResult *> search(QString filePath, int numResults= 20);
 	};
 }
+
+#endif //SEARCHMANAGER_H

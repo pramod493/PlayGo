@@ -1,14 +1,13 @@
 #pragma once
 
 #include <QGraphicsScene>
-#include <QEvent>
-#include <QGraphicsSceneMouseEvent>
-#include <QTouchEvent>
 #include "commonfunctions.h"
-#include "page.h"
 
+class QEvent;
+class QTouchEvent;
 namespace CDI
 {
+	class Page;
 	/**
 	 * @brief The SketchScene class primarily handles the rendering of all the scene objects
 	 */

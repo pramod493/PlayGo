@@ -1,14 +1,14 @@
 #pragma once
 #include <memory>
-#include "component.h"
-#include <boost/graph/adjacency_list.hpp>	// how about adjacency_matrix?
-
-using namespace boost;
+#include <QUuid>
+#include <QDataStream>
+#include <QGraphicsItemGroup>
+#include "commonfunctions.h"
+#include "cdi2qtwrapper.h"
 
 namespace CDI
 {
 	class Component;
-	class cdJoint;
 	class AssemblyPrivateData;
 	class Assembly : public QGraphicsItemGroup
 	{

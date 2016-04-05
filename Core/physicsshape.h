@@ -1,12 +1,13 @@
 #pragma once
-#include "box2dworld.h"
 #include "abstractmodelitem.h"
 #include "commonfunctions.h"
-#include "poly2tri.h"
 #include <vector>
 #include <QPainter>
 #include <QPolygonF>
+#include <QPixmap>
 
+class b2Body;
+namespace p2t { class Triangle;}
 namespace CDI
 {
 	class Polygon2D;

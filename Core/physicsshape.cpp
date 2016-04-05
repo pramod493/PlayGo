@@ -1,6 +1,8 @@
 #include "physicsshape.h"
 #include <QPixmap>
-
+#include <QtAlgorithms>
+#include "box2dworld.h"
+#include "poly2tri.h"
 namespace CDI
 {
 	PhysicsShape::PhysicsShape()
@@ -40,11 +42,15 @@ namespace CDI
 
 	PhysicsShape::~PhysicsShape()
 	{
+		/*
 		for (int i=0; i< trias.size(); i++)
 		{
 			delete trias[i];
 			trias[i] = 0;
 		}
+		*/
+		qDeleteAll(trias);
+		qDeleteAll(polygons);
 	}
 
 	ItemType PhysicsShape::type() const

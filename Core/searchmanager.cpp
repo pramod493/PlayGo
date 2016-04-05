@@ -1,4 +1,5 @@
 #include "searchmanager.h"
+#include <QtAlgorithms>
 #include <QDir>
 #include "QsLog.h"
 #include <vector>
@@ -7,8 +8,17 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QDir>
-
+#include <QFile>
+#include <QTextStream>
 #include <QMessageBox>
+
+// Juxtapoze
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include "wbbice.h"
+#include "wbsearchengine.h"
+#include "asmopencv.h"
+#include "searchresult.h"
 
 using namespace std;
 using namespace CDI;

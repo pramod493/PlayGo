@@ -1,6 +1,9 @@
+
+#include <QVectorIterator>
 #include "stroke.h"
 #include "component.h"
 #include "QsLog.h"
+#include "commonfunctions.h"
 
 using namespace std;
 

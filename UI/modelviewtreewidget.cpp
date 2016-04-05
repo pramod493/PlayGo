@@ -6,6 +6,9 @@
 #include "pixmap.h"
 #include "polygon2d.h"
 #include "physicsjoint.h"
+#include "playgo.h"
+#include "assembly.h"
+#include "component.h"
 
 namespace CDI
 {

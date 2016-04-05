@@ -5,10 +5,8 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 #include <QVector>
-#include <QVectorIterator>
-#include "point2dpt.h"
-#include "commonfunctions.h"
 #include "cdi2qtwrapper.h"
+#include "point2dpt.h"
 
 namespace CDI
 {

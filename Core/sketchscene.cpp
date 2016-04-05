@@ -1,5 +1,9 @@
+#include <QTouchEvent>
+#include <QEvent>
+#include <QGraphicsSceneMouseEvent>
 #include "sketchscene.h"
 #include "QsLog.h"
+#include "page.h"
 
 namespace CDI
 {

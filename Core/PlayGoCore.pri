@@ -5,17 +5,13 @@
 # Enable when adding plots
 INCLUDEPATH += $$PWD
 
-HEADERS += $$PWD/clipper.hpp \
+HEADERS +=  \
 	$$PWD/grabcut.h \
-	$$PWD/cdiboxdebugdraw.h \
-	$$PWD/forceitem.h \
-	$$PWD/penstroke.h \
+        $$PWD/cdiboxdebugdraw.h \
 	$$PWD/cdcontactlistener.h \
 	$$PWD/material.h
-SOURCES += $$PWD/clipper.cpp \
-	$$PWD/grabcut.cpp \
-	$$PWD/forceitem.cpp \
-	$$PWD/penstroke.cpp \
+SOURCES +=  \
+        $$PWD/grabcut.cpp \
 	$$PWD/cdcontactlistener.cpp \
 	$$PWD/material.cpp
 
@@ -67,7 +63,6 @@ HEADERS += \
 	$$PWD/fileio.h \
 	$$PWD/physicsmanager.h \
 	$$PWD/searchmanager.h \
-	$$PWD/playgocore.h \
 	$$PWD/filesystemwatcher.h
 
 SOURCES += \

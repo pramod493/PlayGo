@@ -2,7 +2,6 @@
 #define __PLAYGO_CORE_H__
 
 #include "asmopencv.h"
-#include "clipper.hpp"
 #include "grabcut.h"
 #include "ramerdouglaspeucker.h"
 #include "filesystemwatcher.h"

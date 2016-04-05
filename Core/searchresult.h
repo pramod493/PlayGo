@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEARCHRESULT_H
+#define SEARCHRESULT_H
 #include "abstractmodelitem.h"
 #include <QString>
 
@@ -31,3 +32,5 @@ namespace CDI
         QDataStream& deserialize(QDataStream &stream);
 	};
 }
+
+#endif //SEARCHRESULT_H
