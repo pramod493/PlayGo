@@ -13,5 +13,4 @@ SUBDIRS += \
 
 CONFIG += ordered
 
-SUBDIRS += 	CDI_PlayGo
-CDI_PlayGo.absolute_path($$PWD)
+SUBDIRS += 	exec
