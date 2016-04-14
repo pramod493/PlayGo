@@ -3,6 +3,7 @@
 #include "QsLog.h"
 #include "sketchscene.h"
 #include <QGraphicsSceneMouseEvent>
+#include "cdi2qtwrapper.h"
 
 namespace CDI {
 	cdSearchGraphicsItem::cdSearchGraphicsItem(

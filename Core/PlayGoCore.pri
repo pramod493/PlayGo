@@ -71,9 +71,16 @@ SOURCES += \
 	$$PWD/searchmanager.cpp \
 	$$PWD/filesystemwatcher.cpp
 
+# Need this for gesture recognizer
+HEADERS += penstroke.h
+SOURCES += penstroke.cpp
+
 HEADERS += $$PWD/FindContours.h
 SOURCES += $$PWD/FindContours.cpp
 
 HEADERS += $$PWD/sketchscene.h
 SOURCES += $$PWD/sketchscene.cpp
+
+HEADERS += forceitem.h
+SOURCES += forceitem.cpp
 

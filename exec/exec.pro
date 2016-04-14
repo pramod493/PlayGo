@@ -14,8 +14,8 @@ CONFIG   += console
 
 TEMPLATE = app
 
-RESOURCES += images.qrc \
-	overlayimages.qrc
+RESOURCES += $$PWD/../images.qrc \
+        $$PWD/../overlayimages.qrc
 ## ---------------------------------------------------------------------
 ## TUIO is a touch library. It compiles fine on windows but throws error
 ## when using on windows. You need to install separate drivers on windows
@@ -41,3 +41,4 @@ CONFIG += c++11
 QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
 
 RC_FILE = PlayGoIcon.rc
+
