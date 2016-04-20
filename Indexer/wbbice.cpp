@@ -110,8 +110,6 @@ cv::Mat wbBICE::GetDescriptor(cv::Mat &img)
 		}
 		irow = irow + overlap_width;
 	}
-	//Mat descriptor(Size(descriptor_dim,patch_count),CV_8U,Scalar::all(0)); // patches arranged vertically
-	//cv::Mat descriptor = cv::Mat::zeros(Size(descriptor_dim,patch_count),CV_8UC1);
 	cv::Mat descriptor = cv::Mat::zeros(Size(descriptor_dim,patch_count),CV_8UC1);
 	cv::Mat * ptr_desc = &descriptor;
 
@@ -130,9 +128,6 @@ cv::Mat wbBICE::GetDescriptor(cv::Mat &img)
 		fs<<"descriptor"<<result;
 		fs.release();
 	}
-	// QString  m_data_dir = QString("/home/william/Datasets/allpics");
-	// SearchEngine * engine = new SearchEngine("HARRIS","ORB","BruteForce-Hamming");
-	//engine->StartBICEngine(m_data_dir.toStdString());
 	if ( m_verbose ) cout<<"time for gradient normalization="<<(t1-t0).seconds()<<endl;
 	if (m_verbose ) cout<<"time for computing patch descriptors  = %g\n"<< (t3-t2).seconds()<<endl;
 

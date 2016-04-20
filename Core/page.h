@@ -12,8 +12,6 @@
 #include "searchmanager.h"
 #include "physicsmanager.h"
 
-using namespace boost;
-
 namespace CDI
 {
 	class PlayGo;

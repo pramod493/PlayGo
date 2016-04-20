@@ -22,6 +22,8 @@
 
 using namespace std;
 using namespace CDI;
+
+#ifdef ENABLE_DUMMY_RESULTS
 vector<string> getDummyResults()
 {
 	vector<string> ret;
@@ -47,6 +49,7 @@ vector<string> getDummyResults()
 	ret.push_back(getHomeDirectory().toStdString() +"/trans/GEAR32_15.png"                    );
 	return ret;
 }
+#endif //ENABLE_DUMMY_RESULTS
 
 namespace CDI
 {
@@ -95,19 +98,18 @@ namespace CDI
 	QList<SearchResult*> SearchManager::search(QString filePath, int numResults)
 	{
 		vector<string> results;
-		if(false)	// TODO - Eliminate for now
+		#ifdef ENABLE_DUMMY_RESULTS
+		results = getDummyResults();
+		#else
+		if (_databaseIndexed == false)	// Index the database first time search is called
 		{
-			results = getDummyResults();
-		} else
-		{
-			if (_databaseIndexed == false)
-			{
-				_databaseIndexed = true;
-				searchEngine->Index();
-				searchEngine->Load();
-			}
-			results = searchEngine->Query(filePath.toStdString(), numResults);
+			_databaseIndexed = true;
+			searchEngine->Index();
+			searchEngine->Load();
 		}
+		results = searchEngine->Query(filePath.toStdString(), numResults);
+		#endif //ENABLE_DUMMY_RESULTS
+
 		QDir originialImageDir(origImagePath);
 		QList<SearchResult*> searchResults;
 		for(auto filepath : results)

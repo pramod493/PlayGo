@@ -10,6 +10,10 @@ namespace CDI
 	bool touchConvertInit = false;
 	QMap<int, QTouchEvent::TouchPoint> *cdTouchPointMap;
 
+	/**
+	 * @brief convertToTouchEvent is used to generate fake touch input
+	 * (replicates some of the behavior of TUIO
+	 */
 	QTouchEvent* convertToTouchEvent(QGraphicsView* view,
 			 QGraphicsScene* scene, QPointF viewPos, UI::EventState eventState)
 	{

@@ -353,13 +353,6 @@ namespace CDI
 		bool onTouchEventFromView(QTouchEvent* event);
 
 		/**
-		 * @brief Receives touch events which were not accepted/processed by the
-		 * scene
-		 * @param event QTouchEvent pointer from scene
-		 */
-		bool onTouchEventFromScene(QTouchEvent* event);
-
-		/**
 		 * @brief Manages gesture events received from viewport.
 		 * @param event QGestureEvent
 		 * @return
@@ -375,16 +368,11 @@ namespace CDI
 		 */
 		void onPhysicsMaskUpdate();
 
+		/**
+		 * @brief connectionModeReset resets the component participating in creating joints
+		 * and any associated data.
+		 */
 		void connectionModeReset();
-
-		void setToEdit();
-
-		void setModeScribble();
-		void setModeLockItem();
-		void setModeHingeJoint();
-		void setModeSliderJoint();
-		void setModeSpringJoint();
-		void setModeForce();
 
 		void setMode(UI::MODE newMode);
 

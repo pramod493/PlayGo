@@ -811,18 +811,18 @@ void PlayGoController::createConnectionsToolbar()
 
 	_toplevelWindow->addToolBar(Qt::TopToolBarArea, connectionOptionsToolbar);
 
-	connect(scribbleModeSelection, SIGNAL(triggered()),
-			this, SLOT(setModeScribble()));
-	connect(lockItemAction, SIGNAL(triggered()),
-			this, SLOT(setModeLockItem()));
-	connect(hingeSelectAction, SIGNAL(triggered()),
-			this, SLOT(setModeHingeJoint()));
-	connect(sliderSelectAction, SIGNAL(triggered()),
-			this, SLOT(setModeSliderJoint()));
-	connect(springSelectAction, SIGNAL(triggered()),
-			this, SLOT(setModeSpringJoint()));
-	connect(forceSelectAction, SIGNAL(triggered()),
-			this, SLOT(setModeForce()));
+	connect(scribbleModeSelection, &QAction::triggered,
+			[&](){_activeConnectionMode=GestureSketch;});
+	connect(lockItemAction, &QAction::triggered,
+			[&](){connectionModeReset();_activeConnectionMode=StaticJoint;});
+	connect(hingeSelectAction, &QAction::triggered,
+			[&](){connectionModeReset();_activeConnectionMode=HingeJoint;});
+	connect(sliderSelectAction, &QAction::triggered,
+			[&](){connectionModeReset();_activeConnectionMode=SliderJoint;});
+	connect(springSelectAction, &QAction::triggered,
+			[&](){connectionModeReset();_activeConnectionMode=SpringJoint;});
+	connect(forceSelectAction, &QAction::triggered,
+			[&](){connectionModeReset();_activeConnectionMode=ApplyForce;});
 
 	/////---------------------------
 	/// Create entry boxes
@@ -975,9 +975,7 @@ bool PlayGoController::onModeChange(UI::MODE oldmode, UI::MODE newmode)
 	}
 	return retval;
 }
-namespace {
 
-}
 bool PlayGoController::eventFilter(QObject *obj, QEvent *event)
 {
 	if (obj != _viewport) return false;
@@ -1887,22 +1885,6 @@ bool PlayGoController::onTouchEventFromView(QTouchEvent *event)
 	return false;
 }
 
-bool PlayGoController::onTouchEventFromScene(QTouchEvent *event)
-{
-	// Here the event is not accepted and therefore we are free to do whatever we wish
-	// NOTE - This might create issues when we are displaying scene in a view != sketchview
-	if (event->touchPoints().count() == 1)
-	{
-		// pan
-
-	} else if (event->touchPoints().count() == 2)
-	{
-
-	}
-
-	return false;
-}
-
 void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 {
 	if (QTapAndHoldGesture *tap_and_hold =
@@ -1918,85 +1900,40 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 			overrideOnTapAndHold(tap_and_hold);
 		}
 	}
+	auto getGestureState = [](Qt::GestureState s) {
+		switch (s)
+		{
+		case Qt::GestureStarted:
+			return "Started--";
+		case Qt::GestureUpdated:
+			return "Updated--";
+		case Qt::GestureFinished:
+			return "Finished--";
+		case Qt::GestureCanceled:
+			return "Canceled--";
+		case Qt::NoGesture:
+			return "--No gesture--";
+		}
+	};
 
+	QString msg =  "Gesture received--";
 	if (QTapGesture *tap = static_cast<QTapGesture*>(event->gesture(Qt::TapGesture)))
 	{
-		switch (tap->state())
-		{
-		case Qt::GestureStarted :
-		{
-			break;
-		}
-		case Qt::GestureUpdated :
-		{
-			break;
-		}
-		case Qt::GestureFinished :
-		{
-			break;
-		}
-		case Qt::GestureCanceled :
-		{
-			break;
-		}
-		default:
-			break;
-		}
+		msg = msg + "Tap Gesture--" + getGestureState(tap->state());
 	}
 
-	QString msg =  "Gesture received>>";
-	if (QTapGesture *tap = static_cast<QTapGesture*>(event->gesture(Qt::TapGesture)))
-	{
-		msg = msg +  "Tap Gesture>>";
-		if (tap->state() == Qt::GestureStarted)
-			msg += "Started>>";
-		if (tap->state() == Qt::GestureUpdated)
-			msg += "Updated>>";
-		if (tap->state() == Qt::GestureFinished)
-			msg += "Finished>>";
-		if (tap->state() == Qt::GestureCanceled)
-			msg += "Canceled>>";
-	}
 	if (QTapAndHoldGesture *tap_and_hold =
 			static_cast<QTapAndHoldGesture*>(event->gesture(Qt::TapAndHoldGesture)))
 	{
-		msg = msg + "Tap and Hold Gesture>>";
-		if (tap_and_hold->state() == Qt::GestureStarted)
-		{
-			msg += "Started>>";
-		}
-		if (tap_and_hold->state() == Qt::GestureUpdated)
-			msg += "Updated>>";
-		if (tap_and_hold->state() == Qt::GestureFinished)
-		{
-			msg += "Finished>>";
-		}
-		if (tap_and_hold->state() == Qt::GestureCanceled)
-			msg += "Canceled>>";
+		msg = msg + "Tap and Hold Gesture--" + getGestureState(tap_and_hold->state());
 	}
 	if (QPanGesture *pan = static_cast<QPanGesture*>(event->gesture(Qt::PanGesture)))
 	{
-		msg = msg + "Pan Gesture>>";
-		if (pan->state() == Qt::GestureStarted)
-			msg += "Started>>";
-		if (pan->state() == Qt::GestureUpdated)
-			msg += "Updated>>";
-		if (pan->state() == Qt::GestureFinished)
-			msg += "Finished>>";
-		if (pan->state() == Qt::GestureCanceled)
-			msg += "Canceled>>";
+		msg = msg + "Pan Gesture--" + getGestureState(pan->state());
 	}
 	if (QSwipeGesture *swipe = static_cast<QSwipeGesture *>(event->gesture(Qt::PanGesture)))
 	{
-		msg = msg + "Swipe Gesture>>";
-		if (swipe->state() == Qt::GestureStarted)
-			msg += "Started>>";
-		if (swipe->state() == Qt::GestureUpdated)
-			msg += "Updated>>";
-		if (swipe->state() == Qt::GestureFinished)
-			msg += "Finished>>";
-		if (swipe->state() == Qt::GestureCanceled)
-			msg += "Canceled>>";
+		msg = msg + "Swipe Gesture--" + getGestureState(swipe->state());
 	}
 	QLOG_INFO() << msg;
 }
@@ -2015,49 +1952,6 @@ void PlayGoController::connectionModeReset()
 	_sliderStartPos = QPointF();
 	_sliderEndPos = QPointF();
 	_sliderLineItem = nullptr;
-}
-
-void PlayGoController::setToEdit()
-{
-	setMode(UI::Edit);
-}
-
-void PlayGoController::setModeScribble()
-{
-	_activeConnectionMode = GestureSketch;
-}
-
-void PlayGoController::setModeLockItem()
-{
-	connectionModeReset();
-	_activeConnectionMode  = StaticJoint;
-}
-
-void PlayGoController::setModeHingeJoint()
-{
-	//		QMessageBox::about(NULL, "MSG", "Set to hinge mode");
-	connectionModeReset();
-	_activeConnectionMode = HingeJoint;
-}
-
-void PlayGoController::setModeSliderJoint()
-{
-	connectionModeReset();
-	_activeConnectionMode = SliderJoint;
-}
-
-void PlayGoController::setModeSpringJoint()
-{
-	//		QMessageBox::about(NULL, "MSG", "Set to spring mode");
-	connectionModeReset();
-	_activeConnectionMode = SpringJoint;
-}
-
-void PlayGoController::setModeForce()
-{
-	//		QMessageBox::about(NULL, "MSG", "Set to force mode");
-	connectionModeReset();
-	_activeConnectionMode = ApplyForce;
 }
 
 void PlayGoController::setMode(UI::MODE newMode)
