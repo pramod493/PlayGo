@@ -3,7 +3,6 @@
 #include <QUuid>
 namespace CDI
 {
-
 	class AssemblyPrivateData 
 	{
 		// Contains data private to assembly. 

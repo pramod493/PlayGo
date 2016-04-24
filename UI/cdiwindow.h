@@ -101,9 +101,6 @@ namespace CDI
 
 		void closeEvent(QCloseEvent *event);
 
-	signals:
-		void onBrushSizeChanged(int size);
-
 	public slots:
 		/**
 		 * @brief Clear removes all the items from the scene.
@@ -121,11 +118,6 @@ namespace CDI
 
 		void setMode(UI::MODE newmode);
 
-		void setBrushWidth(int size);
-
-		void setBrushColor(QString, QColor);
-
-		void onSearchTrigger();
 		/**
 		 * @brief onStylusEnter is called when a tablet device is near
 		 * Use this to disable mouse input as well as other tasks
@@ -133,11 +125,5 @@ namespace CDI
 		void onStylusEnter();
 
 		void onStylusLeave();
-
-		void startSimulation();
-
-		void pauseSimulation();
-
-		void cameraLoad();
 	};
 }

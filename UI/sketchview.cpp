@@ -43,7 +43,6 @@ namespace CDI
 
 		// Rotate the view so that y-axis is positive in upwards direction
 		QTransform t = QTransform();
-//		t = t.rotate(180);
 		t = t.translate(2500,2500);
 		setTransform(t);
 

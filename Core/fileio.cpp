@@ -10,7 +10,6 @@ namespace CDI
 			// Unable to open file in write only mode
 			return false;
 		}
-
 		QDataStream stream(&f);
 		saveTo(stream);
 		f.close();

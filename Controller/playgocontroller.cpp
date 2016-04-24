@@ -326,7 +326,7 @@ void PlayGoController::lassoRelease(QPointF pos)
 	//_lasso->setPolygon(_lassoPolygon);
 	_lasso->update(_lasso->boundingRect());
 
-	QList<Stroke*> selectedStrokes = _page->getSelectedStrokes(_lassoPolygon, 1.0f);
+	QList<Stroke*> selectedStrokes = _page->getSelectedStrokes(_lassoPolygon,0.5f);
 	if (selectedStrokes.size()) _itemHighlighted = true;
 	for (int i=0; i < selectedStrokes.size(); i++)
 	{
@@ -1914,6 +1914,7 @@ void PlayGoController::onGestureEventFromView(QGestureEvent *event)
 		case Qt::NoGesture:
 			return "--No gesture--";
 		}
+		return "----";
 	};
 
 	QString msg =  "Gesture received--";

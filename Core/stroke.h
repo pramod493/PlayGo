@@ -69,6 +69,11 @@ namespace CDI
 
 		void highlight(bool value);
 
+		/**
+		 * @brief finalize sets the stroke as final. Thus using an image for the stroke.
+		 */
+		void finalize();
+
 		QDataStream& serialize(QDataStream& stream) const;
 
 		QDataStream& deserialize(QDataStream& stream);

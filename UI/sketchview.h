@@ -14,6 +14,8 @@ namespace CDI
 	{
 		Q_OBJECT
 	protected:
+		// TODO SketchView should not own Page pointer. It should be owned by PlayGo/root
+		// entity. Also shared_ptr should help in this regard.
 		Page* _page;
 
 	public:

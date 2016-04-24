@@ -8,12 +8,12 @@
 using namespace std;
 /**
  * @brief gbFindContours create  contours from image at given file path
- * @param imgDir
- * @param outerContours
- * @param innerContours
- * @param SaveForDebug
+ * @param imgDir Image path
+ * @param outerContours Contains outer contour
+ * @param innerContours Contains inner contour
+ * @param SaveForDebug Saves intermediate files in the working directory
  */
 void gbFindContours(string imgDir,
 	vector<vector<cv::Point> > &outerContours,
 	vector<vector<vector<cv::Point> > > &innerContours,
-    bool SaveForDebug);
+    bool SaveForDebug = false);

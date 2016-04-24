@@ -45,11 +45,14 @@ namespace CDI
 
 	void Stroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 	{
-		Q_UNUSED(widget)
-		Q_UNUSED(option)
-		// Hide when hidden
-		if (isVisible() == false) return;
-		if (_points.size() < 3) return;
+		if (_isStrokeFinalized && !_highlighted)
+		{
+			QGraphicsPathItem::paint(painter, option, widget);
+			return;
+		}
+		// NOTE - Seperate draw routine is invoked when drawn. Let it be so.
+
+		if (!isVisible() || _points.size() < 3) return;
 
 		painter->setBrush(brush());
 		QPen _pen = QPen(pen());
@@ -85,6 +88,7 @@ namespace CDI
 	{
 		_points = points;
 		recalculateAABB();
+		finalize();
 	}
 
 	bool Stroke::contains(const QPointF &point) const
@@ -118,16 +122,19 @@ namespace CDI
 
 	bool Stroke::isContainedWithin(QPolygonF *polygon, float percentmatch)
 	{
-		Q_UNUSED(percentmatch)
 		QVector<Point2DPT*>::const_iterator iter;
+		auto failedpoints = 0;
 		for (iter = _points.constBegin();
 			 iter != _points.constEnd();
 			 ++iter)
 		{
 			Point2DPT* pt = (*iter);
-			if (polygon->containsPoint(*pt, Qt::WindingFill) == false) return false;
+			if (polygon->containsPoint(*pt, Qt::WindingFill) == false) failedpoints++;
 		}
-		return true;
+		QLOG_INFO() << "NUM POINTS" << _points.size() << "failed:" << failedpoints;
+		// True as long as 90% is selected
+		if (failedpoints < percentmatch * _points.size()) return true;
+		return false;
 	}
 
 	QRectF Stroke::boundingRect() const
@@ -159,8 +166,8 @@ namespace CDI
 
 	void Stroke::applySmoothing(int order)
 	{
-		int num_points = _points.size()-1;
-		Point2DPT** points = _points.data();
+		auto num_points = _points.size()-1;
+		auto points = _points.data();
 		for (int j =0; j< order; j++)
 			for (int index = 1;index < num_points; index++)
 			{
@@ -170,15 +177,9 @@ namespace CDI
 						(0.5f *(points[index-1]->pressure() + points[index+1]->pressure()) );
 			}
 
-		QPainterPath localPath = QPainterPath();
-		localPath.moveTo(*_points[0]);
-		for (int index = 0;index < num_points; index++)
-		{
-			localPath.lineTo(*_points[index]);
-		}
-		setPath(localPath);
-		_isStrokeFinalized = true;
+		finalize();
 		recalculateAABB();
+
 	}
 
 	bool Stroke::isHighlighted() const
@@ -191,6 +192,20 @@ namespace CDI
 		if (_highlighted == value) return;
 		_highlighted = value;
 		update(boundingRect());
+	}
+
+	void Stroke::finalize()
+	{
+		auto data = _points.data();
+		auto num_points = _points.size();
+		if (num_points < 2) return;	// Need at least 2 points
+		auto path = QPainterPath(*data[0]);
+		for (auto i=1; i < num_points; i++)
+		{
+			path.lineTo(*data[i]);
+		}
+		setPath(path);
+		_isStrokeFinalized = true;
 	}
 
 	QDataStream& Stroke::serialize(QDataStream &stream) const
@@ -267,7 +282,7 @@ namespace CDI
 			return;
 		}
 		prepareGeometryChange();
-		int num_points = _points.size();
+		auto num_points = _points.size();
 		Point2DPT** points = _points.data();
 
 		_x_min=points[0]->x(); _y_min=points[0]->y();

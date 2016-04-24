@@ -8,6 +8,9 @@ QT       += core gui widgets multimedia network
 # remove printsupport option might break qplot library
 QT      += printsupport sql
 
+###############################################
+#### NOT USED ##############
+#############################################
 TARGET = PlayGo
 
 CONFIG   += console

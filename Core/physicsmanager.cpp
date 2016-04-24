@@ -418,7 +418,6 @@ namespace CDI
 
 	void PhysicsManager::quickPause(bool enable)
 	{
-		QLOG_WARN() << "Quick pause is disabled!";
 		return;
 		_quickpause = enable;
 	}

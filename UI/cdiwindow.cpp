@@ -170,10 +170,10 @@ namespace CDI
 
 #ifdef Q_OS_WIN
 		mainToolbar->setIconSize(QSize(32,32));
-#endif
+#endif //Q_OS_WIN
 #ifdef Q_OS_LINUX
 		mainToolbar->setIconSize(QSize(32,32));
-#endif // Q_OS_WIN
+#endif // Q_OS_LINUX
 		brushWidthSlider = new QSlider(Qt::Horizontal);
 		brushWidthSlider->setRange(2,20);
 		brushWidthSlider->setSingleStep(1);
@@ -203,12 +203,12 @@ namespace CDI
 
 	void CDIWindow::connectActions()
 	{
-		// New
-		connect(newAction, SIGNAL(triggered()),
-				this, SLOT(clear()));
+		// New scene.
+		connect(newAction, &QAction::triggered,
+				this, &CDIWindow::clear);
 		// Save
-		connect(saveImageAction, SIGNAL(triggered()),
-				this, SLOT(save()));
+		connect(saveImageAction, &QAction::triggered,
+				this, &CDIWindow::save);
 
 		// Alternate approach to connecting with signals
 		connect(brushSelectAction, &QAction::triggered,
@@ -221,63 +221,83 @@ namespace CDI
 				[&](){this->setMode(UI::Connect);});
 		connect(marqueeAction, &QAction::triggered,
 				[&](){this->setMode(UI::Select);});
+
 		// Pen width
-		connect(brushWidthSlider, SIGNAL(valueChanged(int)),
-				this, SLOT(setBrushWidth(int)));
+		//connect(brushWidthSlider, SIGNAL(valueChanged(int)), this, SLOT(setBrushWidth(int)));
+		connect(brushWidthSlider, &QSlider::valueChanged,
+				[&](int size){controller->setBrushWidth(size);});
+
 		// Pen color
-		connect(colorToolbar, SIGNAL(signalColorChange(QString,QColor)),
-				this, SLOT(setBrushColor(QString,QColor)));
+		connect(colorToolbar, &ColorSelectorToolbar::signalColorChange,
+				[&](QString name, QColor col){
+			controller->setBrushColor(col);});
+
 		// Search trigger
-		connect(searchAction, SIGNAL(triggered()),
-				this, SLOT(onSearchTrigger()));
+		connect(searchAction, &QAction::triggered,
+				[&](){
+			// NOTE We are not using searchDock anymore
+			if (!(searchDock==nullptr)) searchDock->setVisible(true);
+			controller->searchAction();});
 
 		// Exit program
 		connect(closeAction, SIGNAL(triggered()),
 				this, SLOT(exit()));
 
 		// Step through simulation
-		connect(playAction, SIGNAL(triggered()),
-				this, SLOT(startSimulation()));
+		connect(playAction, &QAction::triggered,
+				[&](){controller->startSimulation();});
 
 		// Pause simulation
-		connect(pauseAction, SIGNAL(triggered()),
-				this, SLOT(pauseSimulation()));
+		connect(pauseAction, &QAction::triggered,
+				[&](){controller->pauseSimulation();});
 
 		// Loads the camera widget
-		connect(cameraLoadAction, SIGNAL(triggered()),
-				this, SLOT(cameraLoad()));
+		connect(cameraLoadAction, &QAction::triggered,
+				[&](){controller->loadCamera();});
 	}
 
 	void CDIWindow::closeEvent(QCloseEvent* event)
 	{
 		// TODO - Trigger save warning
-		save();
+		clear();	// cleanup everything before deleting. Also save
 		delete this;
 		QMainWindow::closeEvent(event);
 	}
 
 	void CDIWindow::clear()
 	{
-		if (controller != NULL)
+		//TODO This should also prompt to save the current scene.
+		QMessageBox::StandardButton reply;
+		reply = QMessageBox::question(this, "Clear current scene", "Save current scene?",
+									  QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+		switch (reply)
+		{
+		case QMessageBox::Yes :	// Save before deleting
+			save();
 			controller->clearCurrentScene();
+			break;
+		case QMessageBox::No :
+			controller->clearCurrentScene();
+			break;
+		case QMessageBox::Cancel :	// Do nothing.
+			break;
+		}
 	}
 
 	void CDIWindow::save()
 	{
-		if(playgo!= NULL)
-		{
-			// Need to think more in this regard
-			//playgo->SaveModel("PlayGoData.dat");
-		}
+		if (playgo == nullptr) return;
+		playgo->SaveModel("Data.dat");
 	}
 
 	void CDIWindow::exit()
 	{
 		QMessageBox::StandardButton reply;
-		reply  = QMessageBox::question(this, "Exit", "Exit?",
+		reply  = QMessageBox::question(this, "Exit", "Exit?\nAny unsaved changes will be lost.",
 									   QMessageBox::Yes | QMessageBox::No);
 		if (reply == QMessageBox::Yes)
 		{
+			controller->clearCurrentScene();
 			QApplication::quit();
 		}
 	}
@@ -285,27 +305,6 @@ namespace CDI
 	void CDIWindow::setMode(UI::MODE newmode)
 	{
 		controller->setMode(newmode);
-	}
-
-	void CDIWindow::setBrushWidth(int size)
-	{
-		controller->setBrushWidth(size);
-	}
-
-	void CDIWindow::setBrushColor(QString name, QColor col)
-	{
-		controller->setBrushColor(col);
-	}
-
-	void CDIWindow::onSearchTrigger()
-	{
-		if (controller!= NULL)
-		{
-//			if (searchDock)
-//				searchDock->setVisible(true);
-			QLOG_INFO() << "Search selection";
-			controller->searchAction();
-		}
 	}
 
 	void CDIWindow::onStylusEnter()
@@ -319,39 +318,5 @@ namespace CDI
 		if (controller)
 			controller->stylusLeave();
 	}
-
-	void CDIWindow::startSimulation()
-	{
-		if (controller)
-			controller->startSimulation();
-	}
-
-	void CDIWindow::pauseSimulation()
-	{
-		if (controller)
-			controller->pauseSimulation();
-	}
-
-	void CDIWindow::cameraLoad()
-	{
-		if (controller)
-			controller->loadCamera();
-	}
 }
-/*
- *
-		if (0) {
-			//             Testing out duplicate scenes. We can show same scene in multiple views.
-			// Zoom works too
-			QGraphicsView* view = new QGraphicsView();
-			view->setScene(sketchScene);
-			view->fitInView(0,0,1000,1000,Qt::KeepAspectRatio);
-			view->show();
 
-			view->setAttribute(Qt::WA_AcceptTouchEvents, true);
-			QLinearGradient gradient = QLinearGradient(0,0,0,1000);
-			gradient.setColorAt(0.0,QColor(255,175,175,100));
-			gradient.setColorAt(1.0, QColor(200,200,200,255));
-			view->setBackgroundBrush(QBrush(gradient));
-		}
-		*/

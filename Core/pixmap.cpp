@@ -58,7 +58,6 @@ namespace CDI
 	void Pixmap::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 	{
 		QGraphicsPixmapItem::paint(painter, option, widget);
-
 #ifdef CDI_DEBUG_DRAW_SHAPE
 		painter->setPen(QPen(Qt::red));
 		painter->drawRect(boundingRect());
