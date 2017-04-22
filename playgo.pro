@@ -9,7 +9,8 @@ SUBDIRS += \
 		Indexer \
 		QsLog \
 		Core \
-		UI
+                UI \
+                P-Dollar-Recognizer
 
 CONFIG += ordered
 

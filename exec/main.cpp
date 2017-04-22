@@ -32,6 +32,7 @@ void SetupStyles(QApplication& app)
 
 int main(int argc, char *argv[])
 {
+    std::cout << "Starting up" << std::endl;
 //	return grabcut_load("grabcut.png");
 	CDI::TabletApplication app(argc, argv);
 

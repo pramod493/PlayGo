@@ -22,8 +22,8 @@ unix {
 }
 win32 {
 	INCLUDEPATH += C:/opencv/build/include/
-	Release: LIBS += -LC:/opencv/build/x64/vc14/lib -lopencv_world310
-	Debug: LIBS += "-LC:/opencv/build/x64/vc14/lib" -lopencv_world310d
+        Release: LIBS += -LC:/opencv/build/x64/vc14/lib -lopencv_world320
+        Debug: LIBS += "-LC:/opencv/build/x64/vc14/lib" -lopencv_world320d
 }
 
 #tbb
