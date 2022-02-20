@@ -43,3 +43,4 @@ x64/
 desktop.ini
 /.project
 #Do not copy libs
+.DS_Store
