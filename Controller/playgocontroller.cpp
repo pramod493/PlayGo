@@ -2056,8 +2056,10 @@ void PlayGoController::startSimulation()
 	if (_page->scene() && _page->getPhysicsManager()->debugView)
 		_page->getPhysicsManager()->debugView->scene = _page->scene();
 	setMode(UI::None);
-	_page->getPhysicsManager()->start(20);
-	_page->getPhysicsManager()->setEnableMotor(true);
+	auto* physicsManager = _page->getPhysicsManager();
+	physicsManager->setEnableGravity(true);
+	physicsManager->setEnableMotor(true);
+	physicsManager->start(20);
 }
 
 void PlayGoController::pauseSimulation()

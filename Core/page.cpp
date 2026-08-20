@@ -20,7 +20,6 @@ namespace CDI
 		_searchManager = new SearchManager(this);
 
 		PhysicsSettings settings = PhysicsSettings();
-		settings.gravity = Point2D(0,0);
 		settings.timeStep = 1.0f/60.0f;
 		_physicsManager = new PhysicsManager(settings, this);
 

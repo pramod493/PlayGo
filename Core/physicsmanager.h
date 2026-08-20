@@ -63,7 +63,7 @@ namespace CDI
 			positionIterations = 4;
 			gravity = Point2D(0.0f,10.0f);
 			enableSleep = true;
-			enableGravity = false;
+			enableGravity = true;
 			enableMotor = false;
 		}
 

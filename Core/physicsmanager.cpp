@@ -54,7 +54,9 @@ namespace CDI
 
 	void PhysicsManager::init()
 	{
-		b2Vec2 gravity(_settings.gravity.x(), _settings.gravity.y());
+		b2Vec2 gravity = _settings.enableGravity
+				? b2Vec2(_settings.gravity.x(), _settings.gravity.y())
+				: b2Vec2(0, 0);
 		_b2World = new b2World(gravity);
 		_b2World->SetAllowSleeping(_settings.enableSleep);
 
