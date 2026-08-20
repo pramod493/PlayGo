@@ -253,7 +253,7 @@ namespace CDI
 		currentAngleHandle->setPen((pen.setWidth(2), pen));
 		currentAngleHandle->setBrush(QBrush(Qt::yellow));
 		currentAngleHandle->setAcceptTouchEvents(false);
-		currentAngleHandle->setAcceptedMouseButtons(false);
+		currentAngleHandle->setAcceptedMouseButtons(Qt::NoButton);
 		currentAngleHandle->setText(
 					QString("Current angle=") +
 					QString::number((int)p_physicsJoint->jointAngle())+ QString("°"));
@@ -293,4 +293,3 @@ namespace CDI
 		p_physicsJoint->enableLimits(true, min(lowerAngle, upperAngle),  max(lowerAngle, upperAngle));
 	}
 }
-

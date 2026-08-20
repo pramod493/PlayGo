@@ -78,7 +78,7 @@ void gbFindContours(string imgDir,
 	vector<cv::Vec4i> hierarchy;
 
 	// Find contours
-	cv::findContours(mask, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	cv::findContours(mask, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	// Store them as required
 	// in hierarchy, the order is : 

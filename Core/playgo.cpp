@@ -116,7 +116,7 @@ namespace CDI
 	Page* PlayGo::getPageById(QString id)
 	{
 		QUuid uid = QUuid(id);
-		if (uid.isNull()) return false;
+		if (uid.isNull()) return nullptr;
 		return getPageById(uid);
 	}
 
@@ -222,4 +222,3 @@ namespace CDI
 //		return item.deserialize(stream);
 //	}
 }
-

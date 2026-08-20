@@ -32,6 +32,9 @@ Makefile*
 *.qmlproject.user.*
 debug/
 release/
+build/
+build-native/
+lib/
 x64/
 *.pro.user
 *.sdf

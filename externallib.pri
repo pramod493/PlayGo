@@ -1,7 +1,3 @@
-unix {
-	LIBS += -lboost_filesystem -lboost_system
-}
-
 win32 {
 	INCLUDEPATH += C:/Boost/include/boost-1_60/
 
@@ -18,7 +14,8 @@ win32 {
 
 #opencv
 unix {
-	LIBS += -lopencv_core -lopencv_features2d -lopencv_shape -lopencv_ts -lopencv_imgproc -lopencv_photo -lopencv_imgcodecs
+	CONFIG += link_pkgconfig
+	PKGCONFIG += opencv4
 }
 win32 {
 	INCLUDEPATH += C:/opencv/build/include/
@@ -27,9 +24,6 @@ win32 {
 }
 
 #tbb
-unix {
-	LIBS += -ltbb
-}
 win32 {
 	INCLUDEPATH += C:/tbb/include/
 	Release: LIBS += -LC:/tbb/lib/intel64/vc14/ -ltbb
@@ -50,18 +44,22 @@ INCLUDEPATH += $$PWD/Controller
 
 #NOTE - This might not work on linux where libs are named differently
 CONFIG(debug, debug|release): LIBS += -L$$PWD/lib \
+			-lplaygoui_debug \
+			-lplaygocore_debug \
+			-lpdollar_debug \
+			-lindexer_debug \
 			-lpoly2tri_debug \
 			-lbox2d_debug \
-			-lindexer_debug \
-			-lplaygocore_debug \
-			-lplaygoui_debug \
-			-lqslog_debug \
-			-lpdollar_debug
+			-lqslog_debug
 CONFIG(release, debug|release): LIBS += -L$$PWD/lib \
+			-lplaygoui \
+			-lplaygocore \
+			-lpdollar \
+			-lindexer \
 			-lpoly2tri \
 			-lbox2d \
-			-lindexer \
-			-lplaygocore \
-			-lplaygoui \
-			-lqslog \
-			-lpdollar
+			-lqslog
+
+unix {
+	LIBS += -lboost_filesystem -lboost_system -ltbb
+}

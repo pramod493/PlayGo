@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QDateTime>
+#include <QStandardPaths>
 
 #include "tabletapplication.h"
 #include "cdiwindow.h"
@@ -49,7 +50,14 @@ int main(int argc, char *argv[])
 	// init the logging mechanism
 	QsLogging::Logger& logger = QsLogging::Logger::instance();
 	logger.setLoggingLevel(QsLogging::TraceLevel);
-	const QString sLogPath(QDir(app.applicationDirPath()).filePath(logfilename));
+	const QString logDirectory =
+			QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+	if (!QDir().mkpath(logDirectory))
+	{
+		qCritical() << "Unable to create log directory:" << logDirectory;
+		return EXIT_FAILURE;
+	}
+	const QString sLogPath(QDir(logDirectory).filePath(logfilename));
 	QsLogging::DestinationPtr fileDestination(
 				QsLogging::DestinationFactory::MakeFileDestination(sLogPath) );
 	QsLogging::DestinationPtr debugDestination(

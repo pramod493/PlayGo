@@ -36,9 +36,8 @@ SOURCES += $$PWD/main.cpp
 #		$$PWD/converttopolygons.h \
 #		$$PWD/LoadModel.h
 
-CONFIG += c++11
+CONFIG += c++17
 
 QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
 
 RC_FILE = PlayGoIcon.rc
-

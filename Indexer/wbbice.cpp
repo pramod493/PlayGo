@@ -1,4 +1,4 @@
-#include "tbb/tbb.h"
+#include <chrono>
 #include "tbb/parallel_for.h"
 #include "wbbice.h"
 #include "parallelbice.h"
@@ -79,13 +79,12 @@ cv::Mat wbBICE::GetDescriptor(cv::Mat &img)
 		listOfMatrices.push_back(m);
 	}
 
-	tbb::task_scheduler_init init;
-	tbb::tick_count t0 = tbb::tick_count::now();
+	const auto t0 = std::chrono::steady_clock::now();
 
 	tbb::parallel_for(tbb::blocked_range2d<size_t>(0,m,2,0,n,2),
 					  ApplyClassifyTheta(g,g_x,g_y,g_avg,out_t,listOfMatrices),tbb::auto_partitioner());
 
-	tbb::tick_count t1 = tbb::tick_count::now();
+	const auto t1 = std::chrono::steady_clock::now();
 	std::vector<cv::Mat> listOfPatches;
 	std::vector<int> theta_class_id;
 
@@ -113,13 +112,12 @@ cv::Mat wbBICE::GetDescriptor(cv::Mat &img)
 	cv::Mat descriptor = cv::Mat::zeros(Size(descriptor_dim,patch_count),CV_8UC1);
 	cv::Mat * ptr_desc = &descriptor;
 
-	tbb::tick_count t2 = tbb::tick_count::now();
+	const auto t2 = std::chrono::steady_clock::now();
 
 	tbb::parallel_for(tbb::blocked_range<size_t>(0,patch_count,1),
 					  ComputeBICEPatchDescriptors(listOfPatches,theta_class_id,ptr_desc,m_num_theta_classes,m_num_bin_x, m_num_bin_y,m_tau),tbb::auto_partitioner());
 
-	tbb::tick_count t3 = tbb::tick_count::now();
-	init.terminate();
+	const auto t3 = std::chrono::steady_clock::now();
 
 	cv::Mat result = descriptor.reshape ( 0, 1 );
 	if(m_debug)// print the matrix
@@ -128,8 +126,12 @@ cv::Mat wbBICE::GetDescriptor(cv::Mat &img)
 		fs<<"descriptor"<<result;
 		fs.release();
 	}
-	if ( m_verbose ) cout<<"time for gradient normalization="<<(t1-t0).seconds()<<endl;
-	if (m_verbose ) cout<<"time for computing patch descriptors  = %g\n"<< (t3-t2).seconds()<<endl;
+	if (m_verbose)
+		cout << "time for gradient normalization="
+			 << std::chrono::duration<double>(t1 - t0).count() << endl;
+	if (m_verbose)
+		cout << "time for computing patch descriptors="
+			 << std::chrono::duration<double>(t3 - t2).count() << endl;
 
 	img.release();
 	desx.release();

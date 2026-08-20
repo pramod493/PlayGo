@@ -21,7 +21,7 @@ namespace CDI
 						  vector<vector<cv::Point> >& outerContours,
 						  vector<vector<vector<cv::Point> > >& innerContours)
 	{
-		cvtColor(image, image, CV_RGBA2RGB);
+		cvtColor(image, image, cv::COLOR_RGBA2RGB);
 		imwrite("Initial.png", image);
 		cv::Mat result; // segmentation result (4 possible values)
 		cv::Mat bgModel, fgModel; // the models (internally used)
@@ -41,7 +41,7 @@ namespace CDI
 		vector<cv::Vec4i> hierarchy;
 
 		// Find contours
-		cv::findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+		cv::findContours(result, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 		// Store them as required
 		// in hierarchy, the order is :
